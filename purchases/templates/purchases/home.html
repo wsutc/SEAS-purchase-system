@@ -1,0 +1,36 @@
+{% extends "purchases/layout.html" %}
+{% block title %}
+    Home
+{% endblock %}
+{% block content %}
+    <h2>Recently Added Manufacturers</h2>
+    <h3>Current Timezone: {{ get_local_timezone }}</h3>
+    {% if manufacturer_list %}
+        <table class="manufacturer_list">
+            <thead>
+                <tr>
+                    <th>Date Added</th>
+                    <th>Name</th>
+                    <th>Website</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for manufacturer in manufacturer_list %}
+                    <tr>
+                        <td>{{ manufacturer.created_date | date:"DATETIME_FORMAT" }}</td>
+                        <td>
+                            {{ manufacturer.name }}
+                        </td>
+                        {% if manufacturer.website %}                        
+                            <td><a href="{{ manufacturer.website }}">{{ manufacturer.website }}</a></td>
+                        {% else %}
+                            <td></td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No manufacturers have been added. Use the <a href="{% url 'add_mfg' %}">Add Manufacturer</a> form</p>
+    {% endif %}
+{% endblock %}

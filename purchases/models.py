@@ -1,3 +1,4 @@
+from asyncio.windows_events import NULL
 from django.db import models
 from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
@@ -9,8 +10,9 @@ class Manufacturer(models.Model):
     name = models.CharField("Name of Manufacturer",max_length=50)
     website = models.URLField("URL of Manufacturer",blank=True)
     wsu_discount = models.BooleanField("Does WSU get a discount?",default=False)
-    mfg_logo = models.ImageField("Manufacturer Logo (optional)",blank=True)
-    created_date = models.DateTimeField("Date manufacturer added")
+    discount_percentage = models.FloatField(default=0)
+    # mfg_logo = models.ImageField("Manufacturer Logo (optional)",blank=True)
+    created_date = models.DateTimeField("Date manufacturer added",auto_now_add=True)
     phone = PhoneNumberField("Manufacturer Phone Number (optional)",blank=True)
 
     def __str__(self):
@@ -19,14 +21,15 @@ class Manufacturer(models.Model):
 class Vendor(models.Model):
     name = models.CharField("Name of Vendor",max_length=50)
     wsu_discount = models.BooleanField("Does WSU get a discount?",default=False)
+    discount_percentage = models.FloatField(default=0)
     website = models.URLField("URL/Link to Vendor Website")
-    vendor_logo = models.ImageField("Vendor Logo (optional)",blank=True)
-    phone = PhoneNumberField("Vendor Phone Number",null=False,blank=False)
-    street1 = models.CharField("Address 1",max_length=50,blank=False)
+    # vendor_logo = models.ImageField("Vendor Logo (optional)",blank=True)
+    phone = PhoneNumberField("Vendor Phone Number",null=False,blank=True)
+    street1 = models.CharField("Address 1",max_length=50,blank=True)
     street2 = models.CharField("Address 2 (optional)",max_length=50,blank=True)
-    city = models.CharField("City",max_length=50)
-    state = models.CharField("State",max_length=50)
-    zip = models.CharField("ZIP Code",max_length=10)
+    city = models.CharField("City",max_length=50,blank=True)
+    state = models.CharField("State",max_length=50,blank=True)
+    zip = models.CharField("ZIP Code",max_length=10,blank=True)
 
     def __str__(self):
         return "Vendor: %s" % (self.name)
@@ -43,19 +46,22 @@ class Product(models.Model):
 
     name = models.CharField("Name of Product",max_length=50)
     description = models.TextField("Description of product")
-    created_date = models.DateTimeField("Date Product Created")
-    original_manufacturer = models.ForeignKey("Original Manufacturer",Manufacturer)
+    created_date = models.DateTimeField("Date Product Created",auto_now_add=True)
+    original_manufacturer = models.ForeignKey(Manufacturer,on_delete=models.PROTECT)
     specification = models.TextField("Detailed Specifications (required if no specification sheet)")
     spec_sheet = models.FileField("Specifications",upload_to='products',blank=True)
-    picture = models.ImageField("Product Image (options)",upload_to='products',blank=True)
+    # picture = models.ImageField("Product Image (options)",upload_to='products',blank=True)
     substitution = models.CharField(
         "Product Replacement",
         choices=SUBSTITUTIONS,
-        default='buyers_choice'
+        default='buyers_choice',
+        max_length=150
     )
-    # approved_substitutes = models.ForeignKey('self',null=True,on_delete=models.PROTECT)
-    # approved_vendors = models.ForeignKey("Approved Vendor(s)",Vendor,on_delete=models.CASCADE)
+    approved_substitutes = models.ForeignKey('self',null=True,on_delete=models.PROTECT,blank=True)
+    approved_vendors = models.ForeignKey(Vendor,on_delete=models.CASCADE,null=True)
     last_price = models.DecimalField("Last Price",decimal_places=2,max_digits=10)
+    link = models.URLField("Direct Link",blank=True)
+    identifier = models.CharField("Unique Identifier (ASIN/UPC/PN/etc.)",max_length=50,blank=True)
 
     def __str__(self):
         return "Vendor: %s" % (self.name)
@@ -74,22 +80,19 @@ class Accounts(models.Model):
 
 ###--------------------------------------- Request Setup -------------------------------------
 
+class Department(models.Model):
+    code = models.CharField("Code/Abbreviation",max_length=10)
+    name = models.CharField("Full Department Name",max_length=150)
+
+    def __str__(self):
+        return "%s &#8594; %s" % (self.name,self.code)
+
 class Requisitioner(models.Model):
     first_name = models.CharField("First Name",max_length=50,blank=False)
     last_name = models.CharField("Last Name",max_length=50,blank=False)
     phone = models.CharField("Phone Number",max_length=10,blank=False)
     email = models.EmailField("Email",max_length=50,blank=False)
-
-    SEAS = 'seas'
-    DEPARTMENTS = (
-        (SEAS, 'SEAS'),
-    )
-
-    department = models.CharField(
-        "Department or Group",
-        choices=DEPARTMENTS,
-        default='seas'
-    )
+    department = models.ForeignKey(Department,on_delete=models.PROTECT)
 
     def __str__(self):
         return "Name: %s %s" % (self.first_name,self.last_name)
@@ -99,7 +102,7 @@ class PurchaseRequest(models.Model):
     requisitioner = models.ForeignKey(Requisitioner,on_delete=models.PROTECT)
     number = models.CharField(max_length=10,unique=True)
     products = models.ManyToManyField(Product)
-    created_date = models.DateTimeField("Created Date")
+    created_date = models.DateTimeField("Created Date",auto_now_add=True)
     need_by_date = models.DateField("Date Required (optional)",blank=True)
     tax_exempt = models.BooleanField("Tax Exempt?",default=False)
     accounts = models.ManyToManyField(Accounts)
@@ -128,7 +131,8 @@ class PurchaseRequest(models.Model):
     purchase_type = models.CharField(
         "Choose One",
         choices=PURCHASE_TYPE,
-        default='PCARD'
+        default='PCARD',
+        max_length=150
     )
 
     def save(self, *args, **kwargs):
@@ -148,12 +152,12 @@ class PurchaseRequest(models.Model):
 class PurchaseOrder(models.Model):
     id = models.AutoField(primary_key=True,editable=False)
     number = models.CharField(max_length=10,unique=True)
-    source_PR = models.ManyToManyField("Source Purchase Request(s)",PurchaseRequest)
+    # source_PR = models.ManyToManyField("Source Purchase Request(s)",PurchaseRequest)
     vendor = models.ForeignKey("Vendor",Vendor)
-    products = models.ManyToManyField(Product)
-    created_date = models.DateTimeField("Created Date")
+    # products = models.ManyToManyField(Product)
+    created_date = models.DateTimeField("Created Date",auto_now_add=True)
     tax_exempt = models.BooleanField("Tax Exempt?",default=False)
-    accounts = models.ManyToManyField(Accounts)
+    # accounts = models.ManyToManyField(Accounts)
     subtotal = models.DecimalField("Subtotal",decimal_places=2,max_digits=10)
     shipping = models.DecimalField("Shipping ($)",decimal_places=2,max_digits=10)
     sales_tax = models.DecimalField("Sales Tax ($)",decimal_places=2,max_digits=10)

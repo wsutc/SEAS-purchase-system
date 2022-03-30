@@ -1,9 +1,9 @@
 {% extends "purchases/layout.html" %}
 {% block title %}
-    Add a Manufacturer
+    Add a Product
 {% endblock %}
 {% block content %}
-    <form method="POST" class="add-manufacturer-form">
+    <form method="POST" class="add-product-form">
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit" class="save btn btn-default">Save</button>
