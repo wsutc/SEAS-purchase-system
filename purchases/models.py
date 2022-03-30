@@ -53,8 +53,8 @@ class Product(models.Model):
         choices=SUBSTITUTIONS,
         default='buyers_choice'
     )
-    approved_substitutes = models.ForeignKey('self',null=True,on_delete=models.PROTECT)
-    approved_vendors = models.ForeignKey("Approved Vendor(s)",Vendor,on_delete=models.CASCADE)
+    # approved_substitutes = models.ForeignKey('self',null=True,on_delete=models.PROTECT)
+    # approved_vendors = models.ForeignKey("Approved Vendor(s)",Vendor,on_delete=models.CASCADE)
     last_price = models.DecimalField("Last Price",decimal_places=2,max_digits=10)
 
     def __str__(self):
