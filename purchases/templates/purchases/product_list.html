@@ -1,0 +1,43 @@
+{% extends "purchases/layout.html" %}
+{% block title %}
+List of Products
+{% endblock %}
+{% block content %}
+    <h2>All Products</h2>
+    {% if product_list %}
+        <table class="product_list">
+            <thead>
+                <tr>
+                    <th>Manufacturer</th>
+                    <th>Name</th>
+                    <th>Vendor</th>
+                    <th>Link</th>
+                    <th>ID</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in product_list %}
+                    <tr>
+                        <td>{{ product.original_manufacturer }}</td>
+                        <td>
+                            {{ product.name }}
+                        </td>
+                        {% if product.approved_vendors %}
+                            <td><a href="{% url 'home' %}" >{{ product.approved_vendors }}</a></td>
+                        {% else %}
+                            <td></td>
+                        {% endif %}
+                        {% if product.link %}                        
+                            <td><a href="{{ product.link }}">{{ product.link }}</a></td>
+                        {% else %}
+                            <td></td>
+                        {% endif %}
+                        <td>{{ product.identifier }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No products have been added. Use the <a href="{% url 'add_product' %}">Add Product</a> form</p>
+    {% endif %}
+{% endblock %}

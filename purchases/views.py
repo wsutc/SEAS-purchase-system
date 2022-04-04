@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.utils.timezone import datetime
-from purchases.models import Manufacturer
+from purchases.models import Manufacturer, Product
 from django.views.generic import ListView
 
 from purchases.forms import AddManufacturerForm, AddVendorForm, AddProductForm
@@ -13,6 +13,13 @@ class HomeListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(HomeListView, self).get_context_data(**kwargs)
+        return context
+
+class ProductListView(ListView):
+    model = Product
+
+    def get_context_data(self, **kwargs):
+        context = super(ProductListView, self).get_context_data(**kwargs)
         return context
 
 def add_mfg(request):
