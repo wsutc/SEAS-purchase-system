@@ -16,7 +16,7 @@ class Manufacturer(models.Model):
     phone = PhoneNumberField("Manufacturer Phone Number (optional)",blank=True)
 
     def __str__(self):
-        return "Manufacturer: %s" % (self.name)
+        return self.name
 
 class Vendor(models.Model):
     name = models.CharField("Name of Vendor",max_length=50)
@@ -32,7 +32,7 @@ class Vendor(models.Model):
     zip = models.CharField("ZIP Code",max_length=10,blank=True)
 
     def __str__(self):
-        return "Vendor: %s" % (self.name)
+        return self.name
 
 class Product(models.Model):
     FREE = 'buyers_choice'
@@ -64,7 +64,7 @@ class Product(models.Model):
     identifier = models.CharField("Unique Identifier (ASIN/UPC/PN/etc.)",max_length=50,blank=True)
 
     def __str__(self):
-        return "Vendor: %s" % (self.name)
+        return self.name
 
 ###--------------------------------------- Imported Data -------------------------------------
 
@@ -131,7 +131,7 @@ class PurchaseRequest(models.Model):
     purchase_type = models.CharField(
         "Choose One",
         choices=PURCHASE_TYPE,
-        default='PCARD',
+        default='pcard',
         max_length=150
     )
 

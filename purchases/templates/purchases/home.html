@@ -4,7 +4,18 @@
 {% endblock %}
 {% block content %}
     <h2>Recently Added Manufacturers</h2>
-    <h3>Current Timezone: {{ get_local_timezone }}</h3>
+    {% load tz %}
+    {% localtime on %}
+    {% get_current_timezone as TIME_ZONE %}
+    {% now "SHORT_DATETIME_FORMAT" as CURRENT_TIME_LOCAL %}
+        <p>Local Time: {{ CURRENT_TIME_LOCAL }}</p>
+    {% endlocaltime %}
+    {% localtime off %}
+    {% get_current_timezone as TIME_ZONE %}
+    {% now "SHORT_DATETIME_FORMAT" as CURRENT_TIME_UTC %}
+        <p>UTC Time: {{ CURRENT_TIME_UTC }}</p>
+    {% endlocaltime %}
+    <h3>Current Time: {% now "SHORT_DATETIME_FORMAT" %}</h3>
     {% if manufacturer_list %}
         <table class="manufacturer_list">
             <thead>

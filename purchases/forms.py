@@ -1,5 +1,5 @@
 from django import forms
-from purchases.models import Manufacturer, Product, Vendor
+from purchases.models import Manufacturer, Product, PurchaseRequest, Vendor
 
 class AddManufacturerForm(forms.ModelForm):
     class Meta:
@@ -42,4 +42,21 @@ class AddProductForm(forms.ModelForm):
             "last_price",
             "link",
             "identifier"
+        )
+
+class NewPRForm(forms.ModelForm):
+    class Meta:
+        model = PurchaseRequest
+        fields = (
+            "products",
+            "need_by_date",
+            "tax_exempt",
+            "accounts",
+            "subtotal",
+            "shipping",
+            "sales_tax",
+            "grand_total",
+            "justification",
+            "instruction",
+            "purchase_type"
         )

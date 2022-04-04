@@ -1,10 +1,10 @@
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
-from django.utils.timezone import datetime
+from django.utils.timezone import datetime,activate
 from purchases.models import Manufacturer, Product
 from django.views.generic import ListView
 
-from purchases.forms import AddManufacturerForm, AddVendorForm, AddProductForm
+from purchases.forms import AddManufacturerForm, AddVendorForm, AddProductForm, NewPRForm
 
 
 # Create your views here.
@@ -57,3 +57,14 @@ def add_product(request):
             return redirect("home")
     else:
         return render(request, "purchases/add_product.html", {"form": form})
+
+def new_pr(request):
+    form = NewPRForm(request.POST or None)
+
+    if request.method == "POST":
+        if form.is_valid():
+            pr = form.save(commit=False)
+            pr.save()
+            return redirect("home")
+    else:
+        return render(request, "purchases/new_pr.html", {"form": form})

@@ -13,6 +13,7 @@ List of Products
                     <th>Vendor</th>
                     <th>Link</th>
                     <th>ID</th>
+                    <th>Created Date</th>
                 </tr>
             </thead>
             <tbody>
@@ -23,16 +24,17 @@ List of Products
                             {{ product.name }}
                         </td>
                         {% if product.approved_vendors %}
-                            <td><a href="{% url 'home' %}" >{{ product.approved_vendors }}</a></td>
+                            <td><a href="{{ product.approved_vendors.website }}">{{ product.approved_vendors }}</a></td>
                         {% else %}
-                            <td></td>
+                            <td>[none]</td>
                         {% endif %}
                         {% if product.link %}                        
-                            <td><a href="{{ product.link }}">{{ product.link }}</a></td>
+                            <td><a href="{{ product.link }}">Product Link</a></td>
                         {% else %}
                             <td></td>
                         {% endif %}
                         <td>{{ product.identifier }}</td>
+                        <td>{{ product.created_date }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
