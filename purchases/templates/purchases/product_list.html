@@ -5,40 +5,43 @@ List of Products
 {% block content %}
     <h2>All Products</h2>
     {% if product_list %}
-        <table class="product_list">
-            <thead>
-                <tr>
-                    <th>Manufacturer</th>
-                    <th>Name</th>
-                    <th>Vendor</th>
-                    <th>Link</th>
-                    <th>ID</th>
-                    <th>Created Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for product in product_list %}
-                    <tr>
-                        <td>{{ product.original_manufacturer }}</td>
-                        <td>
-                            {{ product.name }}
-                        </td>
-                        {% if product.approved_vendors %}
-                            <td><a href="{{ product.approved_vendors.website }}">{{ product.approved_vendors }}</a></td>
-                        {% else %}
-                            <td>[none]</td>
-                        {% endif %}
-                        {% if product.link %}                        
-                            <td><a href="{{ product.link }}">Product Link</a></td>
-                        {% else %}
-                            <td></td>
-                        {% endif %}
-                        <td>{{ product.identifier }}</td>
-                        <td>{{ product.created_date }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
+    <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
+        <table class="table table-striped">
+          <thead>
+          <tr>
+            <th scope="col">Manufacturer</th>
+            <th scope="col">Name</th>
+            <th scope="col">Vendor</th>
+            <th scope="col">Link</th>
+            <th scope="col">ID</th>
+            <th scope="col">Created Date</th>
+          </tr>
+          </thead>
+          <tbody>
+            {% for product in product_list %}
+            <tr>
+                <td>{{ product.original_manufacturer }}</td>
+                <td>
+                    {{ product.name }}
+                </td>
+                {% if product.approved_vendors %}
+                    <td><a href="{{ product.approved_vendors.website }}">{{ product.approved_vendors }}</a></td>
+                {% else %}
+                    <td>[none]</td>
+                {% endif %}
+                {% if product.link %}                        
+                    <td><a href="{{ product.link }}">Product Link</a></td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+                <td>{{ product.identifier }}</td>
+                <td>{{ product.created_date }}</td>
+            </tr>
+        {% endfor %}
+          </tbody>
         </table>
+        </div>
+    </div>
     {% else %}
         <p>No products have been added. Use the <a href="{% url 'add_product' %}">Add Product</a> form</p>
     {% endif %}

@@ -149,6 +149,40 @@ class PurchaseRequest(models.Model):
     def __str__(self):
         return self.number
 
+class PurchaseRequestItems(models.Model):
+    product = models.ForeignKey(Product,on_delete=models.PROTECT)
+    quantity = models.DecimalField(blank=False,decimal_places=3,max_digits=3)
+
+    EACH = 'each'
+    KIT = 'kit'
+    PACK = 'pack'
+    FT = 'ft'
+    IN = 'in'
+    M = 'meters'
+    MM = 'mm'
+    LBS = 'lbs'
+    GALLONS = 'gallons'
+    UNIT = (
+        (EACH, 'Each'),
+        (KIT, 'Kit'),
+        (PACK, 'Pack'),
+        (FT, 'ft'),
+        (IN, 'in'),
+        (M, 'meters'),
+        (MM, 'mm'),
+        (LBS, 'pounds'),
+        (GALLONS, 'gallons')
+    )
+
+    unit = models.CharField(
+        "Choose One",
+        choices=UNIT,
+        default='each',
+        max_length=30
+    )
+
+    pr_number = models.ForeignKey(PurchaseRequest,on_delete=models.PROTECT)
+
 class PurchaseOrder(models.Model):
     id = models.AutoField(primary_key=True,editable=False)
     number = models.CharField(max_length=10,unique=True)
@@ -176,3 +210,37 @@ class PurchaseOrder(models.Model):
 
     def __str__(self):
         return self.number
+
+class PurchaseOrderItems(models.Model):
+    product = models.ForeignKey(Product,on_delete=models.PROTECT)
+    quantity = models.DecimalField(blank=False,decimal_places=3,max_digits=3)
+
+    EACH = 'each'
+    KIT = 'kit'
+    PACK = 'pack'
+    FT = 'ft'
+    IN = 'in'
+    M = 'meters'
+    MM = 'mm'
+    LBS = 'lbs'
+    GALLONS = 'gallons'
+    UNIT = (
+        (EACH, 'Each'),
+        (KIT, 'Kit'),
+        (PACK, 'Pack'),
+        (FT, 'ft'),
+        (IN, 'in'),
+        (M, 'meters'),
+        (MM, 'mm'),
+        (LBS, 'pounds'),
+        (GALLONS, 'gallons')
+    )
+
+    unit = models.CharField(
+        "Choose One",
+        choices=UNIT,
+        default='each',
+        max_length=30
+    )
+
+    pr_number = models.ForeignKey(PurchaseOrder,on_delete=models.PROTECT)

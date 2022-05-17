@@ -68,3 +68,8 @@ def new_pr(request):
             return redirect("home")
     else:
         return render(request, "purchases/new_pr.html", {"form": form})
+
+def manufacturers(request):
+    return {
+        'manufacturers': Manufacturer.objects.all()
+    }

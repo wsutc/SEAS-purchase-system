@@ -17,16 +17,17 @@
     {% endlocaltime %}
     <h3>Current Time: {% now "SHORT_DATETIME_FORMAT" %}</h3>
     {% if manufacturer_list %}
-        <table class="manufacturer_list">
-            <thead>
-                <tr>
-                    <th>Date Added</th>
-                    <th>Name</th>
-                    <th>Website</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for manufacturer in manufacturer_list %}
+    <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
+        <table class="table table-striped">
+          <thead>
+          <tr>
+            <th scope="col">Date Added</th>
+            <th scope="col">Name</th>
+            <th scope="col">Website</th>
+          </tr>
+          </thead>
+          <tbody>
+            {% for manufacturer in manufacturer_list %}
                     <tr>
                         <td>{{ manufacturer.created_date | date:"DATETIME_FORMAT" }}</td>
                         <td>
@@ -39,8 +40,10 @@
                         {% endif %}
                     </tr>
                 {% endfor %}
-            </tbody>
+          </tbody>
         </table>
+        </div>
+    </div>
     {% else %}
         <p>No manufacturers have been added. Use the <a href="{% url 'add_mfg' %}">Add Manufacturer</a> form</p>
     {% endif %}
