@@ -1,0 +1,32 @@
+{% extends 'purchases/layout.html' %}
+
+{% block content %}
+
+<h1 class="wsu-c-heading">{{ object.name }}</h1>
+
+{% comment %} <p><a href="{{ object.website }}">{{ object.website }}</a>
+<p>Does WSU get a discount?: {{ object.wsu_discount }}</p> {% endcomment %}
+
+<div class="row g-3">
+    <ul class="list-group list-group-flush">
+        <li class="list-group-item"><a href="{{ object.website }}">{{ object.website }}</a></li>
+        <li class="list-group-item">Does WSU get a discount: {{ object.wsu_discount }}</li>
+        <li class="list-group-item">Discount Percentage: {{ object.discount_percentage }}%</li>
+        {% if object.state %}
+        <li class="list-group-item">
+            {% if object.street1 %}<div>{{ object.street1 }}</div>{% endif %}
+            {% if object.street2 %}<div>{{ object.street2 }}</div>{% endif %}
+            {% if object.city %}
+                <div>{{ object.city }}, {{ object.state.name }} {{ object.zip }}</div>
+            {% elif object.zip %}
+                <div>{{ object.state.name }}</div>
+                <div>{{ object.zip }}</div>
+            {% else %}
+                <div>{{ object.state.name }}</div>
+            {% endif %}
+        </li>
+        {% endif %}
+    </ul>
+</div>
+
+{% endblock %}

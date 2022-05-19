@@ -4,7 +4,8 @@ List of Products
 {% endblock %}
 {% block content %}
     <h2>All Products</h2>
-    {% if product_list %}
+    <p>{{ object_list.count }}</p>
+    {% if object_list.count %}
     <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
         <table class="table table-striped">
           <thead>
@@ -18,14 +19,15 @@ List of Products
           </tr>
           </thead>
           <tbody>
-            {% for product in product_list %}
+            {% for product in object_list %}
             <tr>
                 <td>{{ product.original_manufacturer }}</td>
                 <td>
+                    {% comment %} <a href="{{ product.get_absolute_url }}">{{ product.name }}</a> {% endcomment %}
                     {{ product.name }}
                 </td>
                 {% if product.approved_vendors %}
-                    <td><a href="{{ product.approved_vendors.website }}">{{ product.approved_vendors }}</a></td>
+                    <td><a href="{{ product.approved_vendors.get_absolute_url }}">{{ product.approved_vendors }}</a></td>
                 {% else %}
                     <td>[none]</td>
                 {% endif %}

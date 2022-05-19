@@ -1,10 +1,12 @@
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.utils.timezone import datetime,activate
-from purchases.models import Manufacturer, Product
+from django.shortcuts import get_object_or_404
+from .models import Manufacturer, Product, Vendor
 from django.views.generic import ListView
+from django.views.generic.detail import DetailView
 
-from purchases.forms import AddManufacturerForm, AddVendorForm, AddProductForm, NewPRForm
+from .forms import AddManufacturerForm, AddVendorForm, AddProductForm, NewPRForm
 
 
 # Create your views here.
@@ -21,6 +23,25 @@ class ProductListView(ListView):
     def get_context_data(self, **kwargs):
         context = super(ProductListView, self).get_context_data(**kwargs)
         return context
+
+class VendorListView(ListView):
+    model = Vendor
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+# def all_vendors(request):
+#     vendors = Vendor.objects.all()
+#     return render(request, 'purchases/all_vendors.html', {'vendors': vendors})
+
+# def vendor_detail(request, slug):
+#     vendor = get_object_or_404(Vendor, slug=slug)
+#     return render(request, 'purchases/vendor_detail.html', {'vendor': vendor})
+
+class VendorDetailView(DetailView):
+    model = Vendor
+    query_pk_and_slug = True
 
 def add_mfg(request):
     form = AddManufacturerForm(request.POST or None)
@@ -68,8 +89,3 @@ def new_pr(request):
             return redirect("home")
     else:
         return render(request, "purchases/new_pr.html", {"form": form})
-
-def manufacturers(request):
-    return {
-        'manufacturers': Manufacturer.objects.all()
-    }

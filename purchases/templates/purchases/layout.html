@@ -1,61 +1,501 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>{% block title %}title{% endblock %}</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
-        {% load static %}
-        <link rel="stylesheet" type="text/css" href="{% static 'purchases/site.css' %}"/>
-    </head>
+<head>
+    <style type="text/css">span.iconify, i.iconify, iconify-icon { display: inline-block; width: 1em; }</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="profile" href="http://gmpg.org/xfn/11">
+    <link rel="apple-touch-icon"
+          sizes="180x180"
+          href="https://repo.wsu.edu/favicon/apple-touch-icon.png">
+    <link rel="icon"
+          type="image/png"
+          sizes="32x32"
+          href="https://repo.wsu.edu/favicon/favicon-32x32.png">
+    <link rel="icon"
+          type="image/png"
+          sizes="16x16"
+          href="https://repo.wsu.edu/favicon/favicon-16x16.png">
+    <script type="text/javascript">var  isIE11 = !!window.MSInputMethodContext && !!document.documentMode;</script>
+    {% load static %}
+    {% comment %} <link rel="stylesheet" type="text/css" href="{% static 'purchases/site.css' %}"/> {% endcomment %}
+    <title>{% block title %}{% endblock %}</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor"
+      crossorigin="anonymous">
+<link rel="dns-prefetch" href="//code.iconify.design">
+<link rel="dns-prefetch" href="//polyfill.io">
+<link rel="dns-prefetch" href="//fonts.googleapis.com">
+<link rel="dns-prefetch" href="//s.w.org">
+<link rel="stylesheet"
+      id="wsu_style_guide-sass-styles-css"
+      href="https://brand.wsu.edu/wp-content/themes/wsu-style-guide/dist/frontEnd.css?ver=1.0.0"
+      type="text/css"
+      media="all">
+<link rel="icon"
+      href="https://s3.wp.wsu.edu/uploads/sites/2793/2021/09/icon.svg"
+      sizes="32x32">
+<link rel="icon"
+      href="https://s3.wp.wsu.edu/uploads/sites/2793/2021/09/icon.svg"
+      sizes="192x192">
+<link rel="apple-touch-icon"
+      href="https://s3.wp.wsu.edu/uploads/sites/2793/2021/09/icon.svg">
+<meta name="msapplication-TileImage"
+      content="https://s3.wp.wsu.edu/uploads/sites/2793/2021/09/icon.svg">
 
-    <header class="p-3 bg-dark text-white">
-        <div class="container">
-          <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
-            <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none">
-              <svg class="bi me-2" width="40" height="32" role="img" aria-label="Bootstrap"><use xlink:href="#bootstrap"></use></svg>
-            </a>
-    
-            <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
-              <li><a href="{% url 'home' %}" class="nav-link px-2 text-secondary">Home</a></li>
-              <li><a href="{% url 'new_pr' %}" class="nav-link px-2 text-white">New Purchase Request</a></li>
-              <li><a href="{% url 'add_mfg' %}" class="nav-link px-2 text-white">Add Manufacturer</a></li>
-              <li><a href="{% url 'add_vendor' %}" class="nav-link px-2 text-white">Add Vendor</a></li>
-              <li><a href="{% url 'add_product' %}" class="nav-link px-2 text-white">Add Product</a></li>
-              <li><a href="{% url 'product_list' %}" class="nav-link px-2 text-white">List Products</a></li>
-            </ul>
-    
-            <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">
-              <input type="search" class="form-control form-control-dark text-white bg-dark" placeholder="Search..." aria-label="Search">
-            </form>
-    
-            <div class="text-end">
-              <button type="button" class="btn btn-outline-light me-2">Login</button>
-              <button type="button" class="btn btn-warning">Sign-up</button>
-            </div>
+body {
+  margin-top: 50;
+}
+
+{% comment %} <style>
+.content-wrap {
+  margin-right: 60px;
+}
+</style> {% endcomment %}
+
+<style>
+  .save {
+    padding-top: 18px;
+    padding-bottom: 18px;
+    padding-left: 48px;
+    padding-right: 48px;
+    background-color: #ca1237;
+    border-radius: 7px;
+    --bs-btn-border-color: #ca1237;
+    --bs-btn-hover-bg: #4d4d4d;
+    transition-property: all;
+    transition-duration: 0.333s;
+    transition-timing-function: cubic-bezier(0, 0, 0.03, 1);
+    transition-delay: 0s;
+    font-weight: 600;
+  }
+  .wsu-c-heading {
+    position: relative;
+  }
+  .wsu-c-heading::after {
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    display: block;
+    width: 2.25em;
+    height: 0.075em;
+    content: "";
+    background-color: #ca1237;
+  }
+</style>
+
+<style>
+  .wsu-u-visually-hidden {
+    position:absolute;
+    overflow:hidden;
+    clip:rect(1px, 1px, 1px, 1px);
+    width:1px;
+    height:1px;
+    margin:-1px;
+    padding:0;
+    clip-path:inset(50%)
+  }
+  .wsu-u-spacer {
+    display:flex;
+    align-items:center;
+    flex-flow:column wrap;
+    justify-content:space-between;
+    height:200px;
+    margin:20px 0;
+    padding:20px 40px;
+    background:linear-gradient(-195deg, #fff, #e6e6e6)
+  }
+  @media only screen and (min-width: 768px) {
+    .wsu-u-spacer{flex-flow:row nowrap}
+  }
+  .wsu-u-title {
+    font-family:monospace;
+    display:flex;
+    align-items:center;
+    justify-content:center
+  }
+  .wsu-u-toc {
+    display:block;
+    max-width:400px;
+    margin:15px auto;
+    padding:10px 20px;
+    color:#fff;
+    background:linear-gradient(-195deg, gray, #4d4d4d);
+    font-size:14px;
+    font-weight:300;
+    line-height:1.5;
+    transition:box-shadow 300ms cubic-bezier(0, 0, 0.03, 1);
+    box-shadow:0 8px 10px 1px rgba(0,0,0,0.03),0 3px 14px 2px rgba(0,0,0,0.03),0 4px 15px 0 rgba(0,0,0,0.02)
+  }
+  .wsu-u-toc p {
+    margin:0
+  }
+  .wsu-u-toc a {
+    transition:color 300ms cubic-bezier(0, 0, 0.03, 1);
+    color:#fff
+  }
+  .wsu-u-toc a:hover {
+    color:#ccc
+  }
+  .wsu-u-requirements {
+    width:400px
+  }
+  .wsu-u-pad--none {
+    padding-top:0;
+    padding-right:0;
+    padding-bottom:0;
+    padding-left:0
+  }
+  .wsu-u-pad--less {
+    padding-top:0;
+    padding-right:0;
+    padding-bottom:0;
+    padding-left:0
+  }
+  .wsu-u-pad--more {
+    padding-top:0;
+    padding-right:0;
+    padding-bottom:0;
+    padding-left:0
+  }
+  .wsu-u-pad-bottom--none {
+    padding-bottom:0
+  }
+  .wsu-u-pad-top--none {
+    padding-top:0
+  }
+  .wsu-u-pad-left--none {
+    padding-left:0
+  }
+  .wsu-u-pad-right--none {
+    padding-right:0
+  }
+  .wsu-u-textalign--left {
+    text-align:left
+  }
+  .wsu-u-textalign--right {
+    text-align:right
+  }
+  .wsu-u-textalign--center {
+    text-align:center
+  }
+  .wsu-u-background--gray-0 {
+    background-color:#f2f2f2
+  }
+  .wsu-u-background--gray-5 {
+    background-color:#f2f2f2
+  }
+  .wsu-u-background--gray-10 {
+    background-color:#e6e6e6
+  }
+  .wsu-u-background--gray-15 {
+    background-color:#d9d9d9
+  }
+  .wsu-u-background--gray-20 {
+    background-color:#ccc
+  }
+  .wsu-u-background--gray-25 {
+    background-color:#bfbfbf
+  }
+  .wsu-g-footer-wrapper {
+    font-family:"Montserrat",sans-serif;
+    font-size:16px;
+    line-height:1.6;
+    color:#262626;
+    -moz-osx-font-smoothing:grayscale;
+    -webkit-font-smoothing:antialiased;
+    background-color:#333;
+    width:100%
+  }
+  .wsu-g-footer{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    flex-direction:column;
+    text-align:center}
+    @media only screen and (min-width: 768px) {
+      .wsu-g-footer {
+        flex-direction:row;
+        text-align:initial
+      }
+    }
+    .wsu-g-footer__copyright {
+      padding:20px;
+      padding-top:5px;
+      width:100%;
+      color:#f7f7f7;
+      font-size:14px;
+      font-weight:400;
+      line-height:1.5
+    }
+    @media only screen and (min-width: 768px) {
+      .wsu-g-footer__copyright {
+        width:initial;padding-top:20px
+      }
+    }
+    .wsu-g-footer__nav {
+      order:-1
+    }
+    @media only screen and (min-width: 768px) {
+      .wsu-g-footer__nav {
+        margin-right:20px;
+        order:initial
+      }
+    }
+    .wsu-g-footer__nav-list {
+      display:flex;
+      margin:0;
+      padding:0;
+      list-style:none;
+      width:100%
+    }
+    .wsu-g-footer__nav-item,.wsu-g-footer__nav-item--show-more {
+      position:relative
+    }
+    .wsu-g-footer__nav-item>.wsu-g-footer__social-list-container,.wsu-g-footer__nav-item--show-more>.wsu-g-footer__social-list-container {
+      opacity:0
+    }
+    .wsu-g-footer__nav-item:hover>.wsu-g-footer__social-list-container,.wsu-g-footer__nav-item--show-more:hover>.wsu-g-footer__social-list-container {
+      opacity:1
+    }
+    .wsu-g-footer__nav-item--show-more .wsu-g-footer__nav-link::before {
+      font-family:"wsu-icons";
+      position:absolute;
+      right:-20px;
+      content:'\F109';
+      transition:transform 300ms cubic-bezier(0, 0, 0.03, 1)
+    }
+    .wsu-g-footer__nav-item--show-more:hover .wsu-g-footer__nav-link::before {
+      transform:rotate(180deg)
+    }
+    .wsu-g-footer__nav-link {
+      display:flex;
+      align-items:center;
+      padding:20px 10px;
+      text-decoration:none;
+      position:relative;
+      font-size:13px;
+      font-weight:400;
+      line-height:1.5
+    }
+    .wsu-g-footer__nav-link::after {
+      position:absolute;
+      z-index:-1;
+      z-index:6000;
+      top:calc(92% - 5px);
+      left:50%;
+      width:100%;
+      height:5px;
+      content:" ";
+      transition:300ms cubic-bezier(0, 0, 0.03, 1) top,300ms cubic-bezier(0, 0, 0.03, 1) opacity;
+      transform:translateX(-50%);
+      opacity:0;background-color:
+      #CA1237
+    }
+    .wsu-g-footer__nav-link:hover::after {
+      top:92%;opacity:1
+    }
+    .wsu-g-footer__nav-link:link,.wsu-g-footer__nav-link:visited {
+      color:#f7f7f7
+    }
+    @media only screen and (min-width: 768px) {
+      .wsu-g-footer__nav-link {
+        font-size:14px;
+        font-weight:400;
+        line-height:1.5;
+        padding:20px 15px
+      }
+    }
+    .wsu-g-footer__nav-arrow {
+      fill:white;
+      width:16px;
+      height:16px
+    }
+    .wsu-g-footer__social-list-container {
+      position:absolute;
+      right:20px;
+      bottom:100%;
+      padding:10px 0
+    }
+    .wsu-g-footer__social-list {
+      margin:0;
+      padding:15px 0;
+      list-style:none;
+      border-radius:3px;
+      background-color:#404040
+    }
+    .wsu-g-footer__social-item {
+      font-size:24px;
+      font-weight:400;
+      line-height:1.5
+    }
+    .wsu-g-footer__social-link {
+      display:block;
+      padding:10px 20px;
+      transition:color 300ms cubic-bezier(0, 0, 0.03, 1);
+      text-decoration:none;color:#b3b3b3
+    }
+    .wsu-g-footer__social-link:hover {
+      color:#fff
+    }
+</style>
+</head>
+
+<nav class="site-header">
+  <a class="site-header--brand" href="https://wsu.edu/">
+    <span class="site-header--brand-logo">
+      <svg role="img"
+        aria-labelledby="wsuLogoTitle wsuLogoDesc"
+        enable-background="new 0 0 70.2 69.6"
+        version="1.1"
+        viewBox="0 0 70.2 69.6"
+        xml:space="preserve"
+        xmlns="http://www.w3.org/2000/svg">
+        <title id="wsuLogoTitle">WSU Cougar Head Logo</title>
+        <path class="st0"
+          d="m42.8 69.6s3.6-1.5 5.5-7.4c1 2.3 1.5 4.8 1.3 7.3-2.3 0.1-4.5 0.2-6.8 0.1zm14.9-11.8c-10.4 1.4-12.2-20.3-12.2-20.3s3.5 11.1 10.9 10.7c7.7-0.4 5.5-12.2 5.5-12.2s7.5 20.2-4.2 21.8zm-47.7-5c-3.3 1-6.6 1.8-10 2.4 0 0 5.9-4.5 10.3-18.3l4.3 3.9-0.8 2.6c1.1 1.5 1.9 3.1 2.5 4.9 1.6-3.6 1.5-7.7-0.3-11.2l-0.5 1.6-1.7-1.5-2.8-2.7c1.2-3.6 3-7 5.3-10.1l0.4 0.4 3.3 3.8-1 1.7c1.5 1.7 2.9 3.4 4.2 5.3 0.6-3.4 0.4-6.8-0.4-10.1l-1.5 1.4-3.6-4.2c4.5-4.7 10-8.2 16.2-10.3-0.4 0.4-0.7 0.8-1 1.3-2 2.9-4.1 8.1-2.4 16.4 0.3 1.3 0.7 3.2 1.1 5.1 0.9 3.8 1.9 8.2 2.2 10.9 0.7 5.7 0.1 9.4-1.8 11.4-1.3 1.4-3.5 2-6.4 1.9v-1.4c0-2.4-0.3-4.8-0.8-7.2l-0.8-2.7-1.2 2.6c-1.9 4.1-8.6 14.1-17.2 16.1 2.6-4.2 4.1-9 4.4-14zm25.4 16.4h-0.5-0.1-0.3c-0.5 0-0.8-0.1-1.2-0.1-0.7-0.1-1.6-0.2-2.6-0.4-6.4-1.1-12.9-1.7-19.4-2 6.2-3.6 10.4-9.9 12-12.5 0.2 1.3 0.3 2.5 0.3 3.8 0 0.8 0 1.6-0.1 2.2l-0.1 1.1 1.1 0.1c0.7 0.1 1.3 0.1 1.9 0.1 3.3 0 5.7-0.8 7.3-2.5 2.4-2.5 3.1-6.7 2.3-13.1-0.4-2.9-1.4-7.4-2.3-11.1-0.5-2-0.9-3.8-1.1-5-1.5-7.6 0.3-12.3 2.1-14.8 1.3-1.9 3.2-3.4 5.5-4.2h0.1l3.3-10.8h1.1l-2.3 10.3c0.7-0.1 1.2-0.2 1.7-0.3l3-9.5h1.1l-2 9.2c2.9-0.4 6.1-0.7 10.3-1 0.8 0.4 1.4 1.1 1.8 1.9l9.8-3 0.4 1.1-9.5 3.7c0.1 0.2 0.2 0.4 0.2 0.6l10.3-1.3 0.2 1.1-10 2c0 0.2 0.1 0.4 0.1 0.6l10.4 0.3v1.1l-10.2 0.4c0 1.2-0.2 2.4-0.5 3.6 0.6 2.1 0.7 4.3 0.3 6.5-1.7-3.9-3-5.1-3-5.1-1.4-0.7-2.9-1-4.5-1-2.5 0-4.8 1.1-6.4 2.9-2.3 2.6-3.5 6-3.3 9.5 0.2 2.4 0.7 5.1 1.4 8.6 0.7 3.6 1.6 8.1 2.3 13.5 0.6 4.1-0.1 7.3-1.8 9.7-1.6 2.1-4 3.4-6.5 3.8h-0.1-0.2-0.1-2.2zm10.4-51.5c-2.1-0.1-4.2 0.4-6 1.3-1.5 1-2.5 2.7-2.6 4.5-0.1 0.6-0.1 1.2 0 1.8 0.8-1.5 2-2.8 3.3-3.9 2.4-1.5 5.1-2.3 7.9-2.4h0.9 0.3c0.4 0 0.7-0.1 0.8-0.2 0-0.1-0.1-0.3-0.4-0.4-1.3-0.5-2.7-0.8-4.2-0.7z">
+        </path>
+      </svg>
+    </span>
+    <span class="site-header--brand-name">Washington State University - Tri-Cities</span>
+  </a>
+  <div class="site-header--navigation">
+    <ul id="header-menu" class="site-header--header-menu">
+      <li id="menu-item-175"
+        class="menu-item menu-item-type-custom menu-item-object-custom menu-item-175 top-level-item">
+        <div class="menu-item-link">
+          <a href="{% url 'home' %}">HOME</a>
+        </div>
+      </li>
+      <li id="menu-item-176"
+        class="menu-item menu-item-type-custom menu-item-object-custom menu-item-176 top-level-item">
+          <div class="menu-item-link">
+            <a href="{% url 'new_pr' %}">NEW PURCHASE REQUEST</a>
           </div>
+      </li>
+      <li id="menu-item-177"
+        class="menu-item menu-item-type-custom menu-item-object-custom menu-item-177 top-level-item">
+        <div class="menu-item-link">
+          <a href="{% url 'add_mfg' %}">ADD MANUFACTURER</a>
         </div>
-      </header>
+      </li>
+      <li id="menu-item-178"
+        class="menu-item menu-item-type-custom menu-item-object-custom menu-item-178 top-level-item">
+        <div class="menu-item-link">
+          <a href="{% url 'add_vendor' %}">ADD VENDOR</a>
+        </div>
+      </li>
+      <li id="menu-item-179"
+        class="menu-item menu-item-type-custom menu-item-object-custom menu-item-179 top-level-item">
+        <div class="menu-item-link">
+          <a href="{% url 'add_product' %}">NEW PRODUCT</a>
+        </div>
+      </li>
+      <li id="menu-item-180"
+        class="menu-item menu-item-type-custom menu-item-object-custom menu-item-180 top-level-item">
+        <div class="menu-item-link">
+          <a href="{% url 'product_list' %}">ALL PRODUCTS</a>
+        </div>
+      </li>
+      <li id="menu-item-182"
+        class="menu-item menu-item-type-custom menu-item-object-custom menu-item-182 top-level-item">
+        <div class="menu-item-link">
+          <a href="{% url 'all_vendors' %}">ALL VENDORS</a>
+        </div>
+      </li>
+      <ul class
+      <li id="menu-item-181"
+        class="menu-item menu-item-type-custom menu-item-object-custom menu-item-181 top-level-item">
+        <div class="menu-item-link">
+          <a href="https://search.wsu.edu/">Search</a>
+        </div>
+      </li>
+    </ul>
+    <span class="site-header--navigation-mobile-button" tabindex="0">
+      <span class="open">
+        <svg viewBox="0 -192 512 512" xmlns="http://www.w3.org/2000/svg">
+          <path d="m320 64c0 35.347656-28.652344 64-64 64s-64-28.652344-64-64 28.652344-64 64-64 64 28.652344 64 64zm0 0"></path>
+          <path d="m128 64c0 35.347656-28.652344 64-64 64s-64-28.652344-64-64 28.652344-64 64-64 64 28.652344 64 64zm0 0"></path>
+          <path d="m512 64c0 35.347656-28.652344 64-64 64s-64-28.652344-64-64 28.652344-64 64-64 64 28.652344 64 64zm0 0"></path>
+        </svg>
+      </span>
+      <span class="close"><!--?xml version="1.0" encoding="iso-8859-1"?-->
+        <svg version="1.1"
+          id="Layer_1"
+          xmlns="http://www.w3.org/2000/svg"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
+          x="0px"
+          y="0px"
+          viewBox="0 0 492 492"
+          xml:space="preserve">
+          <path d="M300.188,246L484.14,62.04c5.06-5.064,7.852-11.82,7.86-19.024c0-7.208-2.792-13.972-7.86-19.028L468.02,7.872 c-5.068-5.076-11.824-7.856-19.036-7.856c-7.2,0-13.956,2.78-19.024,7.856L246.008,191.82L62.048,7.872 c-5.06-5.076-11.82-7.856-19.028-7.856c-7.2,0-13.96,2.78-19.02,7.856L7.872,23.988c-10.496,10.496-10.496,27.568,0,38.052 L191.828,246L7.872,429.952c-5.064,5.072-7.852,11.828-7.852,19.032c0,7.204,2.788,13.96,7.852,19.028l16.124,16.116 c5.06,5.072,11.824,7.856,19.02,7.856c7.208,0,13.968-2.784,19.028-7.856l183.96-183.952l183.952,183.952 c5.068,5.072,11.824,7.856,19.024,7.856h0.008c7.204,0,13.96-2.784,19.028-7.856l16.12-16.116 c5.06-5.064,7.852-11.824,7.852-19.028c0-7.204-2.792-13.96-7.852-19.028L300.188,246z">
+          </path>
+        </svg>
+      </span>
+  </div>
 
-    <body>
-        <div class="body-content">
-            {% block content %}
-            {% endblock %}
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
-            <hr/>
-            <div class="container">
-                <footer class="py-3 my-4">
-                  <ul class="nav justify-content-center border-bottom pb-3 mb-3">
-                    <li class="nav-item"><a href="{% url 'home' %}" class="nav-link px-2 text-muted">Home</a></li>
-                    <li class="nav-item"><a href="{% url 'new_pr' %}" class="nav-link px-2 text-muted">New Purchase Request</a></li>
-                    <li class="nav-item"><a href="{% url 'add_mfg' %}" class="nav-link px-2 text-muted">Add Manufacturer</a></li>
-                    <li class="nav-item"><a href="{% url 'add_vendor' %}" class="nav-link px-2 text-muted">Add Vendor</a></li>
-                    <li class="nav-item"><a href="{% url 'add_product' %}" class="nav-link px-2 text-muted">Add Product</a></li>
-                    <li class="nav-item"><a href="{% url 'product_list' %}" class="nav-link px-2 text-muted">List Products</a></li>
-                  </ul>
-                  <p class="text-center text-muted">© 2022 Washington State University - Tri-Cities</p>
-                </footer>
-              </div>
-        </div>
-    </body>
-</html>
+  {% comment %} <a class="site-header--navigation-left-menu" tabindex="0">
+      <svg id="Layer_1"
+          enable-background="new 0 0 512 512"
+          height="512"
+          viewBox="0 0 512 512"
+          width="512"
+          xmlns="http://www.w3.org/2000/svg">
+          <path d="m464.883 64.267h-417.766c-25.98 0-47.117 21.136-47.117 47.149 0 25.98 21.137 47.117 47.117 47.117h417.766c25.98 0 47.117-21.137 47.117-47.117 0-26.013-21.137-47.149-47.117-47.149z">
+          </path>
+          <path d="m464.883 208.867h-417.766c-25.98 0-47.117 21.136-47.117 47.149 0 25.98 21.137 47.117 47.117 47.117h417.766c25.98 0 47.117-21.137 47.117-47.117 0-26.013-21.137-47.149-47.117-47.149z">
+          </path>
+          <path d="m464.883 353.467h-417.766c-25.98 0-47.117 21.137-47.117 47.149 0 25.98 21.137 47.117 47.117 47.117h417.766c25.98 0 47.117-21.137 47.117-47.117 0-26.012-21.137-47.149-47.117-47.149z">
+          </path>
+      </svg>
+  </a> {% endcomment %}
+</nav>
+
+<div id="content-wrap" style="margin-right:60px">
+  {% block content %}{% endblock %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
+
+<div class="wsu-g-footer-wrapper">
+	<footer class="wsu-g-footer">
+		<div class="wsu-g-footer__copyright">
+			© Washington State University 2022
+		</div>
+		<nav class="wsu-g-footer__nav" aria-label="Global Footer Quick Links">
+			<ul class="wsu-g-footer__nav-list">
+				<li class="wsu-g-footer__nav-item">
+					<a
+						class="wsu-g-footer__nav-link"
+						href="https://access.wsu.edu/"
+					>
+						Access
+					</a>
+				</li>
+				<li class="wsu-g-footer__nav-item">
+					<a
+						class="wsu-g-footer__nav-link"
+						href="https://policies.wsu.edu/"
+					>
+						Policies
+					</a>
+				</li>
+				<li class="wsu-g-footer__nav-item">
+					<a
+						class="wsu-g-footer__nav-link"
+						href="https://portal.wsu.edu/"
+					>
+						MyWSU
+					</a>
+				</li>
+				<li class="wsu-g-footer__nav-item">
+					<a
+						class="wsu-g-footer__nav-link"
+						href="https://socialmedia.wsu.edu/"
+					>
+						Follow WSU
+					</a>
+				</li>
+			</ul>
+		</nav>
+	</footer>
+</div>

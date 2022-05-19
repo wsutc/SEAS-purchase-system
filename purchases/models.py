@@ -1,13 +1,23 @@
 from asyncio.windows_events import NULL
 from django.db import models
 from django.utils import timezone
+from django.utils.text import slugify
+from django.urls import reverse
 from phonenumber_field.modelfields import PhoneNumberField
-from pyexpat import model
+# from pyexpat import model
 
 ###------------------------------- Item Setup -----------------------------------
 
+class State(models.Model):
+    name = models.CharField(max_length=50)
+    abbreviation = models.CharField(max_length=2)
+
+    def __str__(self):
+        return self.name
+
 class Manufacturer(models.Model):
     name = models.CharField("Name of Manufacturer",max_length=50)
+    # slug = models.SlugField(max_length=255, unique=True)
     website = models.URLField("URL of Manufacturer",blank=True)
     wsu_discount = models.BooleanField("Does WSU get a discount?",default=False)
     discount_percentage = models.FloatField(default=0)
@@ -20,6 +30,7 @@ class Manufacturer(models.Model):
 
 class Vendor(models.Model):
     name = models.CharField("Name of Vendor",max_length=50)
+    slug = models.SlugField(max_length=255, unique=True, default='', editable=False)
     wsu_discount = models.BooleanField("Does WSU get a discount?",default=False)
     discount_percentage = models.FloatField(default=0)
     website = models.URLField("URL/Link to Vendor Website")
@@ -28,8 +39,21 @@ class Vendor(models.Model):
     street1 = models.CharField("Address 1",max_length=50,blank=True)
     street2 = models.CharField("Address 2 (optional)",max_length=50,blank=True)
     city = models.CharField("City",max_length=50,blank=True)
-    state = models.CharField("State",max_length=50,blank=True)
+    # state = models.CharField("State",max_length=50,blank=True)
+    state = models.ForeignKey("State",State,blank=True,null=True)
     zip = models.CharField("ZIP Code",max_length=10,blank=True)
+
+    def get_absolute_url(self):
+        kwargs = {
+            'pk': self.id,
+            'slug': self.slug
+        }
+        return reverse('vendor_detail', kwargs=kwargs)  
+
+    def save(self, *args, **kwargs):
+        value = self.name
+        self.slug = slugify(value, allow_unicode=True)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -45,7 +69,8 @@ class Product(models.Model):
     )
 
     name = models.CharField("Name of Product",max_length=50)
-    description = models.TextField("Description of product")
+    slug = models.SlugField(max_length=255, unique=True, default='', editable=False)
+    description = models.TextField("Description of product",max_length=255)
     created_date = models.DateTimeField("Date Product Created",auto_now_add=True)
     original_manufacturer = models.ForeignKey(Manufacturer,on_delete=models.PROTECT)
     specification = models.TextField("Detailed Specifications (required if no specification sheet)")
@@ -62,9 +87,27 @@ class Product(models.Model):
     last_price = models.DecimalField("Last Price",decimal_places=2,max_digits=10)
     link = models.URLField("Direct Link",blank=True)
     identifier = models.CharField("Unique Identifier (ASIN/UPC/PN/etc.)",max_length=50,blank=True)
+    tax_exempt = models.BooleanField("Tax Exempt?",default=False)
+
+    def get_absolute_url(self):
+        kwargs = {
+            'pk': self.id,
+            'slug': self.slug
+        }
+        return reverse('product_list', kwargs=kwargs)  
+
+    def save(self, *args, **kwargs):
+        value = self.name
+        self.slug = slugify(value, allow_unicode=True)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
+
+class Carrier(models.Model):
+    name = models.CharField("Name of Carrier",max_length=50)
+    tracking_link = models.URLField("URL stub for tracking")
+    website = models.URLField("Carrier Website")
 
 ###--------------------------------------- Imported Data -------------------------------------
 
@@ -90,6 +133,7 @@ class Department(models.Model):
 class Requisitioner(models.Model):
     first_name = models.CharField("First Name",max_length=50,blank=False)
     last_name = models.CharField("Last Name",max_length=50,blank=False)
+    # slug = models.SlugField(max_length=255, unique=True)
     phone = models.CharField("Phone Number",max_length=10,blank=False)
     email = models.EmailField("Email",max_length=50,blank=False)
     department = models.ForeignKey(Department,on_delete=models.PROTECT)
@@ -99,6 +143,7 @@ class Requisitioner(models.Model):
 
 class PurchaseRequest(models.Model):
     id = models.AutoField(primary_key=True,editable=False)
+    # slug = models.SlugField(max_length=255, unique=True)
     requisitioner = models.ForeignKey(Requisitioner,on_delete=models.PROTECT)
     number = models.CharField(max_length=10,unique=True)
     products = models.ManyToManyField(Product)
@@ -185,6 +230,7 @@ class PurchaseRequestItems(models.Model):
 
 class PurchaseOrder(models.Model):
     id = models.AutoField(primary_key=True,editable=False)
+    # slug = models.SlugField(max_length=255, unique=True)
     number = models.CharField(max_length=10,unique=True)
     # source_PR = models.ManyToManyField("Source Purchase Request(s)",PurchaseRequest)
     vendor = models.ForeignKey("Vendor",Vendor)
@@ -196,6 +242,7 @@ class PurchaseOrder(models.Model):
     shipping = models.DecimalField("Shipping ($)",decimal_places=2,max_digits=10)
     sales_tax = models.DecimalField("Sales Tax ($)",decimal_places=2,max_digits=10)
     grand_total = models.DecimalField("Grand Total ($)",decimal_places=2,max_digits=10)
+    carrier = models.ForeignKey("Carrier",Carrier,blank=True,null=True)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

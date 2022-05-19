@@ -1,0 +1,37 @@
+{% extends "purchases/layout.html" %}
+{% block title %}
+All Vendors
+{% endblock %}
+
+{% block content %}
+
+    <h1 class="wsu-c-heading">All Vendors</h1>
+
+    {% if object_list %}
+    <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
+        <table class="table table-striped">
+          <thead>
+          <tr>
+            <th scope="col">Vendor</th>
+            <th scope="col">Website</th>
+          </tr>
+          </thead>
+          <tbody>
+            {% for v in object_list %}
+            <tr>
+                <td><a href="{{ v.get_absolute_url }}">{{ v.name }}</td>
+                {% if v.website %}                        
+                    <td><a href="{{ v.website }}">Link</a></td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+            </tr>
+        {% endfor %}
+          </tbody>
+        </table>
+        </div>
+    </div>
+    {% else %}
+        <p>No vendors have been added. Use the <a href="{% url 'add_vendor' %}">Add Vendor</a> form</p>
+    {% endif %}
+{% endblock %}

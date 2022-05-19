@@ -1,4 +1,4 @@
-.navbar {
+/* .navbar {
     background-color: lightslategray;
     font-size: 1em;
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
@@ -38,4 +38,19 @@ input[name=message] {
 .message_list th,td {
     text-align: left;
     padding-right: 15px;
+} */
+
+h1.wsu-c-heading::after {
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    display: block;
+    width: 2.25em;
+    height: 0.075em;
+    content: "";
+    background-color: #ca1237;
+}
+
+.h1.wsu-c-heading {
+    color: #ca1237
 }

@@ -30,6 +30,10 @@ class AddVendorForm(forms.ModelForm):
 class AddProductForm(forms.ModelForm):
     class Meta:
         model = Product
+        widgets = {
+            'description': forms.Textarea(attrs={'rows':4}),
+            'specification': forms.Textarea(attrs={'rows':8})
+        }
         fields = (
             "name",
             "description",
