@@ -1,0 +1,137 @@
+{% extends 'purchases/layout.html' %}
+{% block title %}Purchase Request {{ object.number }}{% endblock %}
+{% block content %}
+
+<h1 class="wsu-c-heading">Purchase Request {{ object.number }}</h1>
+
+<div class="row mb-3">
+    <div class="col">
+        <div class="bd-example-snippet bd-code-snippet">
+            <div class="bd-example">
+                <table class="table">
+                <tbody>
+                    <tr>
+                        <td style="width: 10em" align="right">Needed By</td>
+                        <td style="width: 30em">
+                            {% if object.need_by_date %}
+                                {{ object.need_by_date }}
+                            {% else %}
+                                &nbsp;
+                            {% endif %}
+                        </td>
+                        <td style="width: 10em" align="right">Requestor</td>
+                        <td>{{ object.requisitioner }}</td>
+                    </tr>
+                    <tr>
+                        <td align="right">Vendor</td>
+                        <td>{{ object.vendor }}</td>
+                        <td align="right">Email</td>
+                        <td>{{ object.requisitioner.email }}</td>
+                    </tr>
+                </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mb-3">
+    <div class="col">
+        <div class="h4">Budget</div>
+        <div class="bd-example-snippet bd-code-snippet">
+            <div class="bd-example">
+                <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">Program</th>
+                        <th scope="col">Gift</th>
+                        <th scope="col">Grant</th>
+                        <th scope="col">Spend Category</th>
+                        <th scope="col">Dist (% or $)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in object.accounts.all %}
+                        <tr>
+                            <td>{{ b.program_workday }}</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mb-3">
+    <div>{{ object.items.count }}</div>
+    <div class="col">
+        <div class="bd-example-snippet bd-code-snippet">
+            <div class="bd-example">
+                <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th style="width: 40%;text-align:center">Description</th>
+                        <th style="width: 25%;text-align:center">Identifier</th>
+                        <th style="width:  5%;text-align:center">QTY</th>
+                        <th style="width: 10%;text-align:center">Unit</th>
+                        <th style="width: 10%;text-align:center">Unit Price</th>
+                        <th style="width: 10%;text-align:center">Extended Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in object.items.all %}
+                        <tr>
+                            <td>{{ i.description }}</td>
+                            <td>{{ i.identifier }}</td>
+                            <td align="center">{{ i.quanitity }}</td>
+                            <td align="center">{{ i.unit }}</td>
+                            <td align="right"></td>
+                            <td align="right"></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="2">&nbsp;</td>
+                        <td colspan="3" align="right">Subtotal</td>
+                        <td align="right"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"></td>
+                        <td colspan="3" align="right">Shipping</td>
+                        <td align="right">{{ object.shipping }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"></td>
+                        <td colspan="3" align="right">Sales Tax</td>
+                        <td align="right"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"></td>
+                        <td colspan="3" align="right">Grand Total</td>
+                        <td align="right"></td>
+                    </tr>
+                </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="border">
+        Why:
+        {{ object.justification|linebreaks }}
+    </div>
+    <div>
+        <br></br>
+    </div>
+    <div class="border">
+        Special Instructions:
+        {{ object.instruction|linebreaks }}
+    </div>
+
+{% endblock %}

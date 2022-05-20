@@ -3,6 +3,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
 from django.urls import reverse
+from djmoney.models.fields import MoneyField
 from phonenumber_field.modelfields import PhoneNumberField
 # from pyexpat import model
 
@@ -17,7 +18,7 @@ class State(models.Model):
 
 class Manufacturer(models.Model):
     name = models.CharField("Name of Manufacturer",max_length=50)
-    # slug = models.SlugField(max_length=255, unique=True)
+    slug = models.SlugField(max_length=255, unique=True, default='', editable=False)
     website = models.URLField("URL of Manufacturer",blank=True)
     wsu_discount = models.BooleanField("Does WSU get a discount?",default=False)
     discount_percentage = models.FloatField(default=0)
@@ -27,6 +28,18 @@ class Manufacturer(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        kwargs = {
+            'pk': self.id,
+            'slug': self.slug
+        }
+        return reverse('manufacturer_detail', kwargs=kwargs)  
+
+    def save(self, *args, **kwargs):
+        value = self.name
+        self.slug = slugify(value, allow_unicode=True)
+        super().save(*args, **kwargs)
 
 class Vendor(models.Model):
     name = models.CharField("Name of Vendor",max_length=50)
@@ -84,7 +97,8 @@ class Product(models.Model):
     )
     approved_substitutes = models.ForeignKey('self',null=True,on_delete=models.PROTECT,blank=True)
     approved_vendors = models.ForeignKey(Vendor,on_delete=models.CASCADE,null=True)
-    last_price = models.DecimalField("Last Price",decimal_places=2,max_digits=10)
+    last_price = MoneyField("Last Price",max_digits=14, decimal_places=2, default_currency='USD')
+    # last_price = models.DecimalField("Last Price",decimal_places=2,max_digits=10)
     link = models.URLField("Direct Link",blank=True)
     identifier = models.CharField("Unique Identifier (ASIN/UPC/PN/etc.)",max_length=50,blank=True)
     tax_exempt = models.BooleanField("Tax Exempt?",default=False)
@@ -94,7 +108,7 @@ class Product(models.Model):
             'pk': self.id,
             'slug': self.slug
         }
-        return reverse('product_list', kwargs=kwargs)  
+        return reverse('product_detail', kwargs=kwargs)  
 
     def save(self, *args, **kwargs):
         value = self.name
@@ -118,6 +132,9 @@ class Accounts(models.Model):
     program_workday = models.CharField("Program Workday",max_length=10)
     account_title = models.CharField("Account Title",max_length=200)
 
+    class Meta:
+        verbose_name_plural = "Accounts"
+
     def __str__(self):
         return "Title: %s" % (self.account_title)
 
@@ -128,7 +145,7 @@ class Department(models.Model):
     name = models.CharField("Full Department Name",max_length=150)
 
     def __str__(self):
-        return "%s &#8594; %s" % (self.name,self.code)
+        return self.name
 
 class Requisitioner(models.Model):
     first_name = models.CharField("First Name",max_length=50,blank=False)
@@ -139,22 +156,24 @@ class Requisitioner(models.Model):
     department = models.ForeignKey(Department,on_delete=models.PROTECT)
 
     def __str__(self):
-        return "Name: %s %s" % (self.first_name,self.last_name)
+        return "%s %s" % (self.first_name,self.last_name)
 
 class PurchaseRequest(models.Model):
     id = models.AutoField(primary_key=True,editable=False)
-    # slug = models.SlugField(max_length=255, unique=True)
+    slug = models.SlugField(max_length=255, default='', editable=False)
     requisitioner = models.ForeignKey(Requisitioner,on_delete=models.PROTECT)
-    number = models.CharField(max_length=10,unique=True)
-    products = models.ManyToManyField(Product)
+    number = models.CharField(max_length=10,blank=True)
+    vendor = models.ForeignKey(Vendor,on_delete=models.PROTECT,null=True)
+    # products = models.ManyToManyField(Product,through='PurchaseRequestItems')
+    items = models.ManyToManyField(Product,through='PurchaseRequestItems')
     created_date = models.DateTimeField("Created Date",auto_now_add=True)
-    need_by_date = models.DateField("Date Required (optional)",blank=True)
+    need_by_date = models.DateField("Date Required (optional)",blank=True,null=True)
     tax_exempt = models.BooleanField("Tax Exempt?",default=False)
     accounts = models.ManyToManyField(Accounts)
-    subtotal = models.DecimalField("Subtotal",decimal_places=2,max_digits=10)
-    shipping = models.DecimalField("Shipping ($)",decimal_places=2,max_digits=10)
-    sales_tax = models.DecimalField("Sales Tax ($)",decimal_places=2,max_digits=10)
-    grand_total = models.DecimalField("Grand Total ($)",decimal_places=2,max_digits=10)
+    # subtotal = models.DecimalField("Subtotal",decimal_places=2,max_digits=10)
+    shipping = MoneyField("Shipping ($)",decimal_places=2,max_digits=14,default_currency='USD')
+    # sales_tax = models.DecimalField("Sales Tax ($)",decimal_places=2,max_digits=10)
+    # grand_total = models.DecimalField("Grand Total ($)",decimal_places=2,max_digits=10)
     justification = models.TextField("Justification",blank=False)
     instruction = models.TextField(
         "Special Instructions",
@@ -180,7 +199,15 @@ class PurchaseRequest(models.Model):
         max_length=150
     )
 
+    def get_absolute_url(self):
+        kwargs = {
+            'slug': self.slug
+        }
+        return reverse('purchaserequest_detail', kwargs=kwargs)  
+
     def save(self, *args, **kwargs):
+        value = self.number
+        self.slug = slugify(value, allow_unicode=True)
         super().save(*args, **kwargs)
         self.set_number()
 
@@ -196,7 +223,12 @@ class PurchaseRequest(models.Model):
 
 class PurchaseRequestItems(models.Model):
     product = models.ForeignKey(Product,on_delete=models.PROTECT)
-    quantity = models.DecimalField(blank=False,decimal_places=3,max_digits=3)
+    purchase_request = models.ForeignKey(PurchaseRequest,on_delete=models.PROTECT)
+
+    class Meta:
+        verbose_name_plural = "Purchase Request Items"
+
+    quantity = models.DecimalField(blank=False,decimal_places=3,max_digits=14)
 
     EACH = 'each'
     KIT = 'kit'
@@ -226,7 +258,9 @@ class PurchaseRequestItems(models.Model):
         max_length=30
     )
 
-    pr_number = models.ForeignKey(PurchaseRequest,on_delete=models.PROTECT)
+    def __str__(self):
+        name = self.product.name
+        return name
 
 class PurchaseOrder(models.Model):
     id = models.AutoField(primary_key=True,editable=False)
@@ -260,6 +294,8 @@ class PurchaseOrder(models.Model):
 
 class PurchaseOrderItems(models.Model):
     product = models.ForeignKey(Product,on_delete=models.PROTECT)
+    purchase_order = models.ForeignKey(PurchaseOrder,on_delete=models.PROTECT)
+
     quantity = models.DecimalField(blank=False,decimal_places=3,max_digits=3)
 
     EACH = 'each'
@@ -290,4 +326,5 @@ class PurchaseOrderItems(models.Model):
         max_length=30
     )
 
-    pr_number = models.ForeignKey(PurchaseOrder,on_delete=models.PROTECT)
+    def __str__(self):
+        return self.id

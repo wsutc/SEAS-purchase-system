@@ -1,0 +1,35 @@
+{% extends "purchases/layout.html" %}
+{% block title %}
+List of Manufacturers
+{% endblock %}
+{% block content %}
+
+    {% comment %} <div> {% endcomment %}
+        <h1 class="wsu-c-heading">All Purchase Requests</h1>
+        <div style=text-align:right><a href="{% url 'new_pr' %}" class="save btn btn-primary">New</a></div>
+    {% comment %} </div> {% endcomment %}
+
+    {% if object_list %}
+    <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
+        <table class="table table-striped">
+          <thead>
+          <tr>
+            <th scope="col">Requisitioner</th>
+            <th scope="col">Number</th>
+          </tr>
+          </thead>
+          <tbody>
+            {% for o in object_list %}
+                <tr>
+                    <td>{{ o.requisitioner }}</td>
+                    <td><a href="{{ o.get_absolute_url }}">{{ o.number }}</a></td>
+                </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        </div>
+    </div>
+    {% else %}
+        <p>No manufacturers have been added. Use the <a href="{% url 'add_mfg' %}">Add Manufacturer</a> form</p>
+    {% endif %}
+{% endblock %}

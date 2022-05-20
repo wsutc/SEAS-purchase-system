@@ -1,11 +1,75 @@
 {% extends "purchases/layout.html" %}
+{% load widget_tweaks %}
 {% block title %}
-New Purchase Request
+    Create Purchase Request
 {% endblock %}
 {% block content %}
-<form method="POST" class="new-pr-form">
+
+<h1 name class="wsu-c-heading">Create Purchase Request</h1>
+
+<form method="POST" class="row g-3">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="save btn btn-default">Save</button>
-</form>
+    <div class="row g-3">
+        <div class="col-md-2 bold">
+            {{ form.number|add_class:'form-control' }}
+        </div>
+    </div>
+    <div class="col-md-4">
+        <label for="{{ form.requisitioner.id_for_label }}" class="form-label">{{ form.requisitioner.label }}</label>
+        {{ form.requisitioner|add_class:'form-select' }}
+    </div>
+    <div class="col-2">
+        <label for="{{ form.purchase_type.id_for_label}}" class="form-label">{{ form.purchase_type.label }}</label>
+        {{ form.purchase_type|add_class:'form-select' }}
+    </div>
+    <div class="col-3">
+        <label for="{{ form.need_by_date.id_for_label }}" class="form-label">{{ form.need_by_date.label }}</label>
+        {{ form.need_by_date|add_class:'form-control' }}
+    </div>
+    <div class="col-3">
+        <label for="{{ form.tax_exempt.id_for_label }}" class="form-label">{{ form.tax_exempt.label }}</label>
+        {{ form.tax_exempt|add_class:'form-check-input' }}
+    </div>
+    <div class="h4">Budget {{ accounts.count }}</div>
+    <div class="bd-example-snippet bd-code-snippet">
+        <div class="bd-example">
+            <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Program</th>
+                    <th scope="col">Gift</th>
+                    <th scope="col">Grant</th>
+                    <th scope="col">Spend Category</th>
+                    <th scope="col">Dist (% or $)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in accounts %}
+                    <tr>
+                        <td>{{ b.program_workday }}</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+        </div>
+    </div>
+    <div style=text-align:right><a href="" class="save btn btn-primary">Add Row</a></div>
+    <div class="col-12">
+        <label for="{{ form.justification.id_for_label }}" class="form-label">{{ form.justification.label }}</label>
+        {{ form.justification|add_class:'form-control'|attr:'placeholder:Please provide an explanation of why these items are required.' }}
+    </div>
+    <div class="col-12">
+        <label for="{{ form.instruction.id_for_label }}" class="form-label">{{ form.instruction.label }}</label>
+        {{ form.instruction|add_class:'form-control' }}
+    </div>
+
+    <div class="col-12">
+      <button type="submit" class="save btn btn-primary">Save</button>
+    </div>
+  </form>
 {% endblock %}
+

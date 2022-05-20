@@ -51,16 +51,20 @@ class AddProductForm(forms.ModelForm):
 class NewPRForm(forms.ModelForm):
     class Meta:
         model = PurchaseRequest
+        widgets = {
+            'justification': forms.Textarea(attrs={'rows':2}),
+            'instruction': forms.Textarea(attrs={'rows':2})
+        }
         fields = (
-            "products",
+            "requisitioner",
+            "items",
             "need_by_date",
             "tax_exempt",
             "accounts",
-            "subtotal",
             "shipping",
-            "sales_tax",
-            "grand_total",
             "justification",
             "instruction",
-            "purchase_type"
+            "purchase_type",
+            "number",
+            "vendor"
         )

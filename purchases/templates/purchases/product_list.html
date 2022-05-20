@@ -3,15 +3,16 @@
 List of Products
 {% endblock %}
 {% block content %}
-    <h2>All Products</h2>
-    <p>{{ object_list.count }}</p>
-    {% if object_list.count %}
+
+    <h1 class="wsu-c-heading">All Products</h1>
+
+    {% if object_list %}
     <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
         <table class="table table-striped">
           <thead>
           <tr>
-            <th scope="col">Manufacturer</th>
             <th scope="col">Name</th>
+            <th scope="col">Manufacturer</th>
             <th scope="col">Vendor</th>
             <th scope="col">Link</th>
             <th scope="col">ID</th>
@@ -19,25 +20,20 @@ List of Products
           </tr>
           </thead>
           <tbody>
-            {% for product in object_list %}
+            {% for o in object_list %}
             <tr>
-                <td>{{ product.original_manufacturer }}</td>
                 <td>
-                    {% comment %} <a href="{{ product.get_absolute_url }}">{{ product.name }}</a> {% endcomment %}
-                    {{ product.name }}
+                    <a href="{{ o.get_absolute_url }}">{{ o.name }}</a>
                 </td>
-                {% if product.approved_vendors %}
-                    <td><a href="{{ product.approved_vendors.get_absolute_url }}">{{ product.approved_vendors }}</a></td>
+                <td><a href="{{ o.original_manufacturer.get_absolute_url }}">{{ o.original_manufacturer }}</a></td>
+                {% if o.approved_vendors %}
+                    <td><a href="{{ o.approved_vendors.get_absolute_url }}">{{ o.approved_vendors }}</a></td>
                 {% else %}
                     <td>[none]</td>
-                {% endif %}
-                {% if product.link %}                        
-                    <td><a href="{{ product.link }}">Product Link</a></td>
-                {% else %}
-                    <td></td>
-                {% endif %}
-                <td>{{ product.identifier }}</td>
-                <td>{{ product.created_date }}</td>
+                {% endif %}                      
+                <td><a href="{{ o.link }}" target="_blank" rel="noopener noreferrer">Product Link<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a></td>
+                <td>{{ o.identifier }}</td>
+                <td>{{ o.created_date }}</td>
             </tr>
         {% endfor %}
           </tbody>

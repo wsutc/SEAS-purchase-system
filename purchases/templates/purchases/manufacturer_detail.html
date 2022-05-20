@@ -1,0 +1,20 @@
+{% extends 'purchases/layout.html' %}
+
+{% block content %}
+
+<h1 class="col 10 wsu-c-heading">{{ object.name }}</h1>
+
+<div class="row g-3">
+    <ul class="list-group list-group-flush">
+        {% if object.website %}
+            <li class="list-group-item"><a href="{{ object.website }}" target="_blank" rel="noopener noreferrer">{{ object.website }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a></li>
+        {% endif %}
+        <li class="list-group-item">Does WSU get a discount: {{ object.wsu_discount }}</li>
+        {% if object.wsu_discount %}
+            <li class="list-group-item">Discount Percentage: {{ object.discount_percentage }}%</li>
+        {% endif %}
+        <li class="list-group-item">Phone Number: {{ object.phone }}</li>
+    </ul>
+</div>
+
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "purchases/layout.html" %}
+{% block title %}
+List of Manufacturers
+{% endblock %}
+{% block content %}
+
+    {% comment %} <div> {% endcomment %}
+        <h1 class="wsu-c-heading">All Manufacturers</h1>
+        <div style=text-align:right><a href="{% url 'add_mfg' %}" class="save btn btn-primary">New</a></div>
+    {% comment %} </div> {% endcomment %}
+
+    {% if object_list %}
+    <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
+        <table class="table table-striped">
+          <thead>
+          <tr>
+            <th scope="col">Manufacturer</th>
+            <th scope="col">Website</th>
+            <th scope="col">Phone</th>
+          </tr>
+          </thead>
+          <tbody>
+            {% for o in object_list %}
+            <tr>
+                <td><a href="{{ o.get_absolute_url }}">{{ o.name }}</a></td>
+                {% if o.website %}
+                    <td><a href="{{ o.website }}" target="_blank" rel="noopener noreferrer">Link<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a></td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+                <td>{{ o.phone }}</td>
+            </tr>
+        {% endfor %}
+          </tbody>
+        </table>
+        </div>
+    </div>
+    {% else %}
+        <p>No manufacturers have been added. Use the <a href="{% url 'add_mfg' %}">Add Manufacturer</a> form</p>
+    {% endif %}
+{% endblock %}
