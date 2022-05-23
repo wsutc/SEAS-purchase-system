@@ -67,6 +67,7 @@ class ManufacturerDetailView(DetailView):
 
 class PurchaseRequestDetailView(DetailView):
     model = PurchaseRequest
+    # context_object_name: 'purchase_order_list'
     query_pk_and_slug = True
 
 # class PurchaseRequestCreateView(CreateView):

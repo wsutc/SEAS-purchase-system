@@ -1,0 +1,17 @@
+{% extends 'purchases/layout.html' %}
+{% block title %}test{% endblock %}
+{% block content %}
+
+<div class="row mb-3">
+    <h1 class="wsu-c-heading col-sm">{% block header %}{% endblock %} <span class="header-em">{% block number %}{% endblock %}</span></h1>
+
+    <div class="btn-group col-sm-2" role="group" aria-label="Basic example">
+        <button type="button" class="btn btn-primary btn-simple">Previous</button>
+        <button type="button" class="btn btn-primary btn-simple">Next</button>
+    </div>
+</div>
+
+
+{% block page %}{% endblock %}
+
+{% endblock %}

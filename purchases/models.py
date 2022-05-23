@@ -55,6 +55,7 @@ class Vendor(models.Model):
     # state = models.CharField("State",max_length=50,blank=True)
     state = models.ForeignKey("State",State,blank=True,null=True)
     zip = models.CharField("ZIP Code",max_length=10,blank=True)
+    email = models.EmailField(max_length=60,null=True)
 
     def get_absolute_url(self):
         kwargs = {
@@ -129,6 +130,8 @@ class Accounts(models.Model):
     account = models.CharField("Account",max_length=10)
     budget_code = models.CharField("Budget Code",max_length=5)
     fund = models.CharField("Fund",max_length=5)
+    grant = models.CharField(max_length=15,blank=True)
+    gift = models.CharField(max_length=15,blank=True)
     program_workday = models.CharField("Program Workday",max_length=10)
     account_title = models.CharField("Account Title",max_length=200)
 
@@ -136,7 +139,7 @@ class Accounts(models.Model):
         verbose_name_plural = "Accounts"
 
     def __str__(self):
-        return "Title: %s" % (self.account_title)
+        return self.account_title
 
 ###--------------------------------------- Request Setup -------------------------------------
 
@@ -151,7 +154,7 @@ class Requisitioner(models.Model):
     first_name = models.CharField("First Name",max_length=50,blank=False)
     last_name = models.CharField("Last Name",max_length=50,blank=False)
     # slug = models.SlugField(max_length=255, unique=True)
-    phone = models.CharField("Phone Number",max_length=10,blank=False)
+    phone = PhoneNumberField("Phone Number",max_length=10,blank=False)
     email = models.EmailField("Email",max_length=50,blank=False)
     department = models.ForeignKey(Department,on_delete=models.PROTECT)
 
@@ -169,7 +172,7 @@ class PurchaseRequest(models.Model):
     created_date = models.DateTimeField("Created Date",auto_now_add=True)
     need_by_date = models.DateField("Date Required (optional)",blank=True,null=True)
     tax_exempt = models.BooleanField("Tax Exempt?",default=False)
-    accounts = models.ManyToManyField(Accounts)
+    accounts = models.ManyToManyField(Accounts,through='PurchaseRequestAccounts')
     # subtotal = models.DecimalField("Subtotal",decimal_places=2,max_digits=10)
     shipping = MoneyField("Shipping ($)",decimal_places=2,max_digits=14,default_currency='USD')
     # sales_tax = models.DecimalField("Sales Tax ($)",decimal_places=2,max_digits=10)
@@ -221,6 +224,14 @@ class PurchaseRequest(models.Model):
     def __str__(self):
         return self.number
 
+class Unit(models.Model):
+    unit = models.CharField(max_length=25)
+    abbreviation = models.CharField(max_length=4)
+
+    def __str__(self):
+        name = self.abbreviation
+        return name
+
 class PurchaseRequestItems(models.Model):
     product = models.ForeignKey(Product,on_delete=models.PROTECT)
     purchase_request = models.ForeignKey(PurchaseRequest,on_delete=models.PROTECT)
@@ -230,33 +241,7 @@ class PurchaseRequestItems(models.Model):
 
     quantity = models.DecimalField(blank=False,decimal_places=3,max_digits=14)
 
-    EACH = 'each'
-    KIT = 'kit'
-    PACK = 'pack'
-    FT = 'ft'
-    IN = 'in'
-    M = 'meters'
-    MM = 'mm'
-    LBS = 'lbs'
-    GALLONS = 'gallons'
-    UNIT = (
-        (EACH, 'Each'),
-        (KIT, 'Kit'),
-        (PACK, 'Pack'),
-        (FT, 'ft'),
-        (IN, 'in'),
-        (M, 'meters'),
-        (MM, 'mm'),
-        (LBS, 'pounds'),
-        (GALLONS, 'gallons')
-    )
-
-    unit = models.CharField(
-        "Choose One",
-        choices=UNIT,
-        default='each',
-        max_length=30
-    )
+    unit = models.ForeignKey(Unit,on_delete=models.PROTECT,default=1)
 
     def __str__(self):
         name = self.product.name
@@ -298,33 +283,28 @@ class PurchaseOrderItems(models.Model):
 
     quantity = models.DecimalField(blank=False,decimal_places=3,max_digits=3)
 
-    EACH = 'each'
-    KIT = 'kit'
-    PACK = 'pack'
-    FT = 'ft'
-    IN = 'in'
-    M = 'meters'
-    MM = 'mm'
-    LBS = 'lbs'
-    GALLONS = 'gallons'
-    UNIT = (
-        (EACH, 'Each'),
-        (KIT, 'Kit'),
-        (PACK, 'Pack'),
-        (FT, 'ft'),
-        (IN, 'in'),
-        (M, 'meters'),
-        (MM, 'mm'),
-        (LBS, 'pounds'),
-        (GALLONS, 'gallons')
-    )
-
-    unit = models.CharField(
-        "Choose One",
-        choices=UNIT,
-        default='each',
-        max_length=30
-    )
+    unit = models.ForeignKey(Unit, on_delete=models.PROTECT,default=1)
 
     def __str__(self):
         return self.id
+
+class SpendCategory(models.Model):
+    class Meta:
+        verbose_name_plural = "Spend Categories"
+        
+    description = models.TextField("Workday Description",blank=False)
+    code = models.CharField("Workday ID",max_length=15,blank=False)
+    object = models.CharField(max_length=50)
+    subobject = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.description
+
+class PurchaseRequestAccounts(models.Model):
+    class Meta:
+        verbose_name_plural = "Purchase Request Accounts"
+    purchase_request = models.ForeignKey(PurchaseRequest,on_delete=models.PROTECT)
+    accounts = models.ForeignKey(Accounts,on_delete=models.PROTECT)
+
+    spend_category = models.ForeignKey(SpendCategory,on_delete=models.PROTECT)
+    distribution_amount = MoneyField("Distribution",max_digits=14,decimal_places=2,default_currency='USD')

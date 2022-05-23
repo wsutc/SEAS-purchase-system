@@ -40,7 +40,7 @@ input[name=message] {
     padding-right: 15px;
 } */
 
-h1.wsu-c-heading::after {
+/* .h1.wsu-c-heading::after {
     position: absolute;
     bottom: -4px;
     left: 0;
@@ -53,4 +53,8 @@ h1.wsu-c-heading::after {
 
 .h1.wsu-c-heading {
     color: #ca1237
+} */
+
+.header-em {
+    color: darkblue
 }

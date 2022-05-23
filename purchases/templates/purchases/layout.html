@@ -16,6 +16,7 @@
           href="https://repo.wsu.edu/favicon/favicon-16x16.png">
     <script type="text/javascript">var  isIE11 = !!window.MSInputMethodContext && !!document.documentMode;</script>
     {% load static %}
+    {% comment %} <link rel="stylesheet" href="{% static 'purchases/site.css' %}"> {% endcomment %}
     <script src="https://kit.fontawesome.com/353d0eb326.js" crossorigin="anonymous"></script>
     {% comment %} <link rel="stylesheet" type="text/css" href="{% static 'purchases/site.css' %}"/> {% endcomment %}
     <title>{% block title %}{% endblock %}</title>
@@ -70,6 +71,20 @@ body {
     font-weight: 600;
     display: inline;
   }
+
+  .btn-simple {
+    background-color: #ca1237;
+    border-radius: 7px;
+    --bs-btn-border-color: #ca1237;
+    --bs-btn-hover-bg: #4d4d4d;
+    transition-property: all;
+    transition-duration: 0.333s;
+    transition-timing-function: cubic-bezier(0, 0, 0.03, 1);
+    transition-delay: 0s;
+    font-weight: 600;
+    display: inline;
+  }
+
   .wsu-c-heading {
     position: relative;
   }
@@ -82,6 +97,9 @@ body {
     height: 0.075em;
     content: "";
     background-color: #ca1237;
+  }
+  .header-em {
+    color: #ca1237;
   }
 </style>
 

@@ -1,15 +1,15 @@
-{% extends 'purchases/layout.html' %}
+{% extends 'purchases/detail_page.html' %}
 
-{% block content %}
+{% block page %}
 
-<h1 class="wsu-c-heading">{{ object.name }}</h1>
+{% block header %}{{ object.name }}{% endblock %}
 
 <div class="row g-3">
     <ul class="list-group list-group-flush">
-        <li class="list-group-item"><a href="{{ object.link }}" target="_blank" rel="noopener noreferrer">{{ object.link }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a></li>
+        {% if object.link %}<li class="list-group-item"><a href="{{ object.link }}" target="_blank" rel="noopener noreferrer">{{ object.link }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a></li>{% endif %}
         <li class="list-group-item">Identifier (ASIN/PN/etc.): {{ object.identifier }}</li>
         <li class="list-group-item">Description: <p>{{ object.description|linebreaks }}</p></li>
-        <li class="list-group-item">Manufacturer: {{ object.original_manufacturer }}</li>
+        <li class="list-group-item">Manufacturer: <a href="{{ object.original_manufacturer.get_absolute_url }}">{{ object.original_manufacturer }}</a></li>
         <li class="list-group-item">Specifications: <p>{{ object.specification|linebreaks }}</p></li>
         <li class="list-group-item">Substitution: {{ object.get_substitution_display }}</li>
         <li class="list-group-item">Vendor: <a href="{{ object.approved_vendors.get_absolute_url }}">{{ object.approved_vendors }}</a></li>

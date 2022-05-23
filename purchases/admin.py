@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Accounts, Department, Manufacturer, PurchaseOrderItems, Requisitioner, Vendor, Product, PurchaseRequest, PurchaseOrder, State, PurchaseRequestItems
+from .models import Accounts, Department, Manufacturer, PurchaseOrderItems, PurchaseRequestAccounts, Requisitioner, SpendCategory, Vendor, Product, PurchaseRequest, PurchaseOrder, State, PurchaseRequestItems, Unit
 
 @admin.register(Manufacturer)
 class ManufacturerAdmin(admin.ModelAdmin):
@@ -37,3 +37,15 @@ class RequisitionerAdmin(admin.ModelAdmin):
 @admin.register(Accounts)
 class AccountsAdmin(admin.ModelAdmin):
     list_display = ['account']
+
+@admin.register(SpendCategory)
+class SpendCategoryAdmin(admin.ModelAdmin):
+    list_display = ['code','description']
+
+@admin.register(PurchaseRequestAccounts)
+class PurchaseRequestAccountsAdmin(admin.ModelAdmin):
+    list_display = ['purchase_request']
+
+@admin.register(Unit)
+class Units(admin.ModelAdmin):
+    list_display = ['unit','abbreviation']
