@@ -2,7 +2,7 @@ from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.utils.timezone import datetime,activate
 from django.shortcuts import get_object_or_404
-from .models import Manufacturer, Product, PurchaseRequest, Vendor
+from .models import Manufacturer, Product, PurchaseRequest, PurchaseRequestItems, Vendor
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView
@@ -31,6 +31,20 @@ class ProductListView(ListView):
     def get_context_data(self, **kwargs):
         context = super(ProductListView, self).get_context_data(**kwargs)
         return context
+
+class PurchaseRequestItemCreateView(CreateView):
+    model = PurchaseRequestItems
+    fields = [
+        'purchase_request',
+        'product',
+        'quantity',
+        'price'
+        ]
+
+    success_url = "/"
+
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(**kwargs)
 
 class VendorListView(ListView):
     model = Vendor

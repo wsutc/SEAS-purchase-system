@@ -55,11 +55,7 @@
                         </tr>
                         <tr>
                             <td align="right">Email</td>
-                            {% if object.vendor.email %}
-                                <td><a href="mailto:{{ object.vendor.email }}">{{ object.vendor.email }}</a></td>
-                            {% else %}
-                                <td></td>
-                            {% endif %}
+                            <td><a href="mailto:{{ object.vendor.email }}">{{ object.vendor.email|default_if_none:"" }}</a></td>
                         </tr>
                         <tr>
                             <td align="right">Website</td>
@@ -86,13 +82,13 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for b in object.accounts.all %}
+                    {% for budget in object.purchaserequestaccounts_set.all %}
                         <tr>
-                            <td>{{ b.program_workday }}</td>
-                            <td></td>
-                            <td></td>
-                            <td>{{ b.spend_category }}</td>
-                            <td>{{ b.distribution_amount }}</td>
+                            <td>{{ budget.accounts.program_workday }}</td>
+                            <td>{{ budget.accounts.gift }}</td>
+                            <td>{{ budget.accounts.grant }}</td>
+                            <td>{{ budget.spend_category.code }}</td>
+                            <td>{{ budget.distribution_amount }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -118,42 +114,40 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {{ object.items.all }}
-                    {% for i in object.items.all %}
+                    {% for item in object.purchaserequestitems_set.all %}
                         <tr>
-                            <td class="text-truncate"><a href="{{ i.get_absolute_url }}">{{ i.description }}</a></td>
-                            {% if i.link %}
-                                <td style="text-align: center;"><a href="{{ i.link }}" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-up-right-from-square" ></i></a></td>
+                            <td class="text-truncate"><a href="{{ item.product.get_absolute_url }}">{{ item.product.name }}</a></td>
+                            {% if item.product.link %}
+                                <td style="text-align: center;"><a href="{{ item.product.link }}" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-up-right-from-square" ></i></a></td>
                             {% else %}
                                 <td></td>
                             {% endif %}
-                            <td align="center">{{ i.identifier }}</td>
-                            {% for f in i.quantity.all %}<td align="center">{{ f }}</td>{% endfor %}
-                            <td align="center">{{ i.unit }}</td>
-                            <td align="right"></td>
-                            <td align="right"></td>
-                            <td align="right"></td>
+                            <td align="center">{{ item.product.identifier }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td align="center">{{ item.unit.unit }}</td>
+                            <td align="right">{{ item.price }}</td>
+                            <td align="right">{{ item.extend }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="2">&nbsp;</td>
+                        <td colspan="3">&nbsp;</td>
                         <td colspan="3" class="text-end">Subtotal</td>
-                        <td align="right"></td>
+                        <td align="right">{{ object.purchaserequestitems_set.aggregate }}</td> {% comment %}.aggregate(Sum('price')) {% endcomment %}
                     </tr>
                     <tr>
-                        <td colspan="2"></td>
+                        <td colspan="3"></td>
                         <td colspan="3" class="text-end">Shipping</td>
                         <td align="right">{{ object.shipping }}</td>
                     </tr>
                     <tr>
-                        <td colspan="2"></td>
+                        <td colspan="3"></td>
                         <td colspan="3" class="text-end">Sales Tax</td>
                         <td align="right"></td>
                     </tr>
                     <tr>
-                        <td colspan="2"></td>
+                        <td colspan="3"></td>
                         <td colspan="3" class="text-end">Grand Total</td>
                         <td align="right"></td>
                     </tr>

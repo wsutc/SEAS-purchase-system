@@ -1,0 +1,36 @@
+{% extends "purchases/layout.html" %}
+{% load widget_tweaks %}
+{% block title %}
+    Add Item
+{% endblock %}
+{% block content %}
+
+<h1 name class="wsu-c-heading">Add Item</h1>
+
+<form method="POST" class="row g-3">
+    {% csrf_token %}
+    <div class="row g-3">
+        <div class="col-sm-4">
+            <label for="{{ form.purchase_request.id_for_label }}" class="form-label">{{ form.purchase_request.label }}</label>
+            {{ form.purchase_request|add_class:'form-select' }}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6">
+            <label for="{{ form.product.id_for_label }}" class="form-label">{{ form.product.label }}</label>
+            {{ form.product|add_class:'form-select' }}
+        </div>
+    </div>
+    <div class="col-sm-2">
+        <label for="{{ form.quantity.id_for_label }}" class="form-label">{{ form.quantity.label }}</label>
+        {{ form.quantity|add_class:'form-control' }}
+    </div>
+    <div class="col-sm-2">
+        <label for="{{ form.price.id_for_label }}" class="form-label">{{ form.price.label }}</label>
+        {{ form.price|add_class:'form-control' }}
+    </div>
+    <div class="col-12">
+      <button type="submit" class="save btn btn-primary">Save</button>
+    </div>
+</form>
+{% endblock %}

@@ -1,8 +1,7 @@
 {% extends 'purchases/detail_page.html' %}
+{% block header %}{{ object.name }}{% endblock %}
 
 {% block page %}
-
-{% block header %}{{ object.name }}{% endblock %}
 
 <div class="row g-3">
     <ul class="list-group list-group-flush">

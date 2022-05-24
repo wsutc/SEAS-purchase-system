@@ -1,14 +1,14 @@
 {% extends 'purchases/detail_page.html' %}
+{% block header %}{{ object.name }}{% endblock %}
 
 {% block page %}
-
-{% block header %}{{ object.name }}{% endblock %}
 
 <div class="row g-3">
     <ul class="list-group list-group-flush">
         <li class="list-group-item"><a href="{{ object.website }}" target="_blank" rel="noopener noreferrer">{{ object.website }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a></li>
         <li class="list-group-item">Does WSU get a discount: {{ object.wsu_discount }}</li>
         <li class="list-group-item">Discount Percentage: {{ object.discount_percentage }}%</li>
+        <li class="list-group-item">Email: {{ object.email|default_if_none:"" }}
         {% if object.state %}
         <li class="list-group-item">
             {% if object.street1 %}<div>{{ object.street1 }}</div>{% endif %}

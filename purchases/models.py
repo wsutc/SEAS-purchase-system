@@ -124,6 +124,25 @@ class Carrier(models.Model):
     tracking_link = models.URLField("URL stub for tracking")
     website = models.URLField("Carrier Website")
 
+class Unit(models.Model):
+    unit = models.CharField(max_length=25)
+    abbreviation = models.CharField(max_length=4)
+
+    def __str__(self):
+        name = self.abbreviation
+        return name
+
+class Urgency(models.Model):
+    name = models.CharField(unique=True,max_length=50)
+    note = models.TextField(blank=False)
+
+    class Meta:
+        verbose_name_plural = "Urgencies"
+
+    def __str__(self):
+        name = self.name
+        return name
+
 ###--------------------------------------- Imported Data -------------------------------------
 
 class Accounts(models.Model):
@@ -168,15 +187,16 @@ class PurchaseRequest(models.Model):
     number = models.CharField(max_length=10,blank=True)
     vendor = models.ForeignKey(Vendor,on_delete=models.PROTECT,null=True)
     # products = models.ManyToManyField(Product,through='PurchaseRequestItems')
-    items = models.ManyToManyField(Product,through='PurchaseRequestItems')
+    # items = models.ManyToManyField(PurchaseRequestItems)
     created_date = models.DateTimeField("Created Date",auto_now_add=True)
     need_by_date = models.DateField("Date Required (optional)",blank=True,null=True)
     tax_exempt = models.BooleanField("Tax Exempt?",default=False)
-    accounts = models.ManyToManyField(Accounts,through='PurchaseRequestAccounts')
+    # accounts = models.ManyToManyField(Accounts,through='PurchaseRequestAccounts')
     # subtotal = models.DecimalField("Subtotal",decimal_places=2,max_digits=10)
     shipping = MoneyField("Shipping ($)",decimal_places=2,max_digits=14,default_currency='USD')
     # sales_tax = models.DecimalField("Sales Tax ($)",decimal_places=2,max_digits=10)
     # grand_total = models.DecimalField("Grand Total ($)",decimal_places=2,max_digits=10)
+    urgency = models.ForeignKey(Urgency,on_delete=models.PROTECT,default=1)
     justification = models.TextField("Justification",blank=False)
     instruction = models.TextField(
         "Special Instructions",
@@ -224,14 +244,6 @@ class PurchaseRequest(models.Model):
     def __str__(self):
         return self.number
 
-class Unit(models.Model):
-    unit = models.CharField(max_length=25)
-    abbreviation = models.CharField(max_length=4)
-
-    def __str__(self):
-        name = self.abbreviation
-        return name
-
 class PurchaseRequestItems(models.Model):
     product = models.ForeignKey(Product,on_delete=models.PROTECT)
     purchase_request = models.ForeignKey(PurchaseRequest,on_delete=models.PROTECT)
@@ -242,6 +254,16 @@ class PurchaseRequestItems(models.Model):
     quantity = models.DecimalField(blank=False,decimal_places=3,max_digits=14)
 
     unit = models.ForeignKey(Unit,on_delete=models.PROTECT,default=1)
+    price = MoneyField(max_digits=14,decimal_places=2,default_currency='USD',null=True)
+    # extended_price = MoneyField(max_digits=14, decimal_places=2, default_currency='USD',default=0)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.extended_price = self.quantity * self.price
+
+    def extend(self):
+        extended_price = self.quantity * self.price
+        return extended_price
 
     def __str__(self):
         name = self.product.name
