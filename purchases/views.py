@@ -1,8 +1,9 @@
-from django.http import HttpResponse
+from django.forms import inlineformset_factory
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.utils.timezone import datetime,activate
 from django.shortcuts import get_object_or_404
-from .models import Manufacturer, Product, PurchaseRequest, Vendor
+from .models import Manufacturer, Product, PurchaseRequest, PurchaseRequestItems, Vendor
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView
@@ -70,6 +71,15 @@ class PurchaseRequestDetailView(DetailView):
     # context_object_name: 'purchase_order_list'
     query_pk_and_slug = True
 
+class PurchaseRequestItemCreateView(CreateView):
+    model = PurchaseRequestItems
+    fields = [
+        'purchase_request',
+        'product',
+        'quantity',
+        'price'
+    ]
+
 # class PurchaseRequestCreateView(CreateView):
 #     model = PurchaseRequest
 #     widgets = {
@@ -134,3 +144,14 @@ def new_pr(request):
             return redirect("home")
     else:
         return render(request, "purchases/new_pr.html", {"form": form})
+
+def add_items(request, purchase_request_id):
+    purchase_request = PurchaseRequest.objects.get(pk=purchase_request_id)
+    PurchaseRequestInlineFormSet = inlineformset_factory(PurchaseRequest,PurchaseRequestItems,fields=('number',))
+    if request.method == "POST":
+        formset = PurchaseRequestInlineFormSet(request.POST, request.FILES, instance=purchase_request)
+        if formset.is_valid():
+            formset.save()
+            return HttpResponseRedirect(purchase_request.get_absolute_url())
+        else:
+            formset = PurchaseRequestInlineFormSet(request, 'purchaserequestitems_form.html', {'formset': formset})

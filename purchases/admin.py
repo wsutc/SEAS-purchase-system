@@ -47,5 +47,5 @@ class PurchaseRequestAccountsAdmin(admin.ModelAdmin):
     list_display = ['purchase_request']
 
 @admin.register(Unit)
-class Units(admin.ModelAdmin):
+class UnitsAdmin(admin.ModelAdmin):
     list_display = ['unit','abbreviation']

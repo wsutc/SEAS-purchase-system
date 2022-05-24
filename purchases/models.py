@@ -1,5 +1,7 @@
 from asyncio.windows_events import NULL
 from django.db import models
+from django.forms import inlineformset_factory
+from django.http import HttpResponseRedirect
 from django.utils import timezone
 from django.utils.text import slugify
 from django.urls import reverse
@@ -154,7 +156,7 @@ class Requisitioner(models.Model):
     first_name = models.CharField("First Name",max_length=50,blank=False)
     last_name = models.CharField("Last Name",max_length=50,blank=False)
     # slug = models.SlugField(max_length=255, unique=True)
-    phone = PhoneNumberField("Phone Number",max_length=10,blank=False)
+    phone = PhoneNumberField("Phone Number",max_length=20,blank=False)
     email = models.EmailField("Email",max_length=50,blank=False)
     department = models.ForeignKey(Department,on_delete=models.PROTECT)
 
@@ -242,6 +244,16 @@ class PurchaseRequestItems(models.Model):
     quantity = models.DecimalField(blank=False,decimal_places=3,max_digits=14)
 
     unit = models.ForeignKey(Unit,on_delete=models.PROTECT,default=1)
+    price = MoneyField(max_digits=14,decimal_places=2,default_currency='USD',default=0)
+
+    def set_default_price(self):
+        if not self.price:
+            default_price = self.product.last_price
+            self.price = default_price
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.set_default_price()
 
     def __str__(self):
         name = self.product.name
