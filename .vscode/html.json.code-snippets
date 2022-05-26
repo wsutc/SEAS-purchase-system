@@ -17,7 +17,7 @@
 	// }
 
 	"Django Tutorial: template extending layout.html": {
-		"scope": "html",
+		"scope": "html,django-html",
 		"prefix": "djextlayout",
 		"body": [
 			"{% extends \"purchases/layout.html\" %}",
@@ -27,7 +27,22 @@
 			"{% block content %}",
 			"{% endblock %}"
 		],
-	
 		"description": "Boilerplate template that extends layout.html"
 	},
+
+	"HTML Div": {
+		"scope": "html,django-html",
+		"prefix": "div",
+		"body": [
+			"<div class=\"${1:col}\">$0</div>"
+		],
+		"description": "Standard div template"
+	},
+
+	"bracket": {
+		"scope": "html,django-html",
+		"prefix": "brack",
+		"body": "{{ $0 }}",
+		"description": "Brackets!"
+	}
 }

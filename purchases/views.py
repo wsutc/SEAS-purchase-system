@@ -35,7 +35,6 @@ class ProductListView(ListView):
 class PurchaseRequestItemCreateView(CreateView):
     model = PurchaseRequestItems
     fields = [
-        'purchase_request',
         'product',
         'quantity',
         'price'

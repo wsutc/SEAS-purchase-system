@@ -78,7 +78,7 @@
             </table>
         </div>
     </div>
-    <div style=text-align:right><a href="" class="save btn btn-primary">Add Row</a></div>
+    <div style=text-align:right><a href="{% url 'new_pr_item' 1 %}" class="save btn btn-primary">Add Row</a></div>
     <div class="col-12">
         <label for="{{ form.justification.id_for_label }}" class="form-label">{{ form.justification.label }}</label>
         {{ form.justification|add_class:'form-control'|attr:'placeholder:Please provide an explanation of why these items are required.' }}

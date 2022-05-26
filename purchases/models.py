@@ -55,7 +55,7 @@ class Vendor(models.Model):
     # state = models.CharField("State",max_length=50,blank=True)
     state = models.ForeignKey("State",State,blank=True,null=True)
     zip = models.CharField("ZIP Code",max_length=10,blank=True)
-    email = models.EmailField(max_length=60,null=True)
+    email = models.EmailField(max_length=60,blank=True,null=True)
 
     def get_absolute_url(self):
         kwargs = {
@@ -329,4 +329,5 @@ class PurchaseRequestAccounts(models.Model):
     accounts = models.ForeignKey(Accounts,on_delete=models.PROTECT)
 
     spend_category = models.ForeignKey(SpendCategory,on_delete=models.PROTECT)
-    distribution_amount = MoneyField("Distribution",max_digits=14,decimal_places=2,default_currency='USD')
+    distribution_amount = MoneyField("Distribution",max_digits=14,decimal_places=2,default_currency='USD',blank=True,null=True)
+    distribution_percent = models.FloatField(default=0)

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Setup Sheet - {{ object.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+  </head>
+
+  <body>
+      <div class="container">
+          <div class="row text-bg-dark text-center">
+              <div class="col display-1">
+                  Setup Sheet
+              </div>
+              <div class="col display-3">
+                  {{ object.name }}
+              </div>
+          </div>
+          <br>
+          <div class="row">
+            <table class="col text-center">
+                <thead class="text-bg-secondary">
+                    <td>Part Number / Revision</td>
+                    <td>Description</td>
+                    <td>ProgramName</td>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ object.part_number }} / {{ object.part_revision }}</td>
+                        <td>{{ object.description }}</td>
+                        <td>{{ object.program_name }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="row">
+            <table class="col text-center">
+                <thead class="text-bg-secondary">
+                    <td>Operation</td>
+                    <td>Material</td>
+                    <td>Stock Size</td>
+                    <td>Created By / Date</td>
+                </thead>
+                <tbody>
+                    <td>{{ object.operation }}</td>
+                    <td>{{ object.material }}</td>
+                    <td>{{ object.size }}</td>
+                    <td>{{ object.created_by }} / {{ object.created_date|date:'Y-m-d' }}</td>
+                </tbody>
+            </table>
+        </div>
+        <p class="h1">Tools</p>
+        <div class="col-12">
+            <table class="table table-striped text-center">
+                <thead class="text-bg-secondary">
+                    <td width="10%">Position</td>
+                    <td>Tool</td>
+                    <td>Flutes</td>
+                    <td>Product Number</td>
+                </thead>
+                <tbody>
+                    {% for t in object.setupsheettool_set.all %}
+                        <tr>
+                            {% if t.tool.is_assembly %}
+                                <td rowspan=2 class="align-middle">{{ t.position }}</td>
+                                <td>{{ t.tool.tool_holder }}</td>
+                                <td rowspan=2 class="align-middle">{{ t.tool.flutes }}</td>
+                                <td>{{ t.tool.tool_holder.product_number }}</td>
+                        </tr>
+                                <tr>
+                                    <td>{{ t.tool.tool_insert }}</td>
+                                    <td>{{ t.tool.tool_insert.product_number }}</td>
+                                </tr>
+                            {% else %}
+                                <td>{{ t.position }}</td>
+                                <td>{{ t.tool.name }}</td>
+                                <td>{{ t.tool.flutes }}</td>
+                                <td>{{ t.tool.product_number }}</td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col-12 border border-1 text-bg-secondary h3">Notes</div>
+        <div class="col-12 border border-1">
+            {{ object.notes|linebreaks }}
+        </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
+  </body>
+
+</html>

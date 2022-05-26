@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'djmoney',
     'widget_tweaks',
     'purchases',
+    'setup_sheets',
+    'inventory',
 ]
 
 MIDDLEWARE = [

@@ -31,5 +31,5 @@ urlpatterns = [
     path("all-manufacturers", ManufacturerListView.as_view(), name="all_manufacturers"),
     path("manufacturer/<int:pk>-<str:slug>/", ManufacturerDetailView.as_view(), name="manufacturer_detail"),
     path("purchase-request/<slug:slug>", PurchaseRequestDetailView.as_view(), name="purchaserequest_detail"),
-    path("new-pr-item/", PurchaseRequestItemCreateView.as_view(), name="new_pr_item")
+    path("new-pr-item/<str:pk>", PurchaseRequestItemCreateView.as_view(), name="new_pr_item")
 ]

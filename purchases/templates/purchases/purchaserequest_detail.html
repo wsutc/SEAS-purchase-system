@@ -66,7 +66,7 @@
             </div>
         </div>
     </div>
-    {% if debug %}<div>debug ->count:{{ object.accounts.count }}</div>{% endif %}
+    {% if debug %}<div>debug ->count:{{ object.purchaserequestaccounts_set.count }}</div>{% endif %}
     <div class="col-12">
         <div class="h4">Budget</div>
         <div class="bd-example-snippet bd-code-snippet">
@@ -88,7 +88,11 @@
                             <td>{{ budget.accounts.gift }}</td>
                             <td>{{ budget.accounts.grant }}</td>
                             <td>{{ budget.spend_category.code }}</td>
-                            <td>{{ budget.distribution_amount }}</td>
+                            {% if budget.distribution_amount %}
+                                <td>{{ budget.distribution_amount }}</td>
+                            {% else %}
+                                <td>{{ budget.distribution_percent }}%</td>
+                            {% endif %}
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -97,7 +101,7 @@
         </div>
     </div>
 
-    {% if debug %}<div>debug ->count:{{ object.items.count }}</div>{% endif %}
+    {% if debug %}<div>debug ->count:{{ object.purchaserequestitems_set.count }}</div>{% endif %}
     <div class="col-12">
         <div class="bd-example-snippet bd-code-snippet">
             <div class="bd-example">
