@@ -1,0 +1,71 @@
+{% extends "purchases/detail_page.html" %}
+{% load widget_tweaks %}
+{% block header %}
+    {{ object.name }}
+{% endblock %}
+{% block title %}{{ object.name }}{% endblock %}
+{% block number %}{{ object.equipment_tag }}{% endblock number %}
+
+{% block page %}
+
+<ul class="list-group list-group-flush">
+    <li class="list-group-item">Name: {{ object.name }}</li>
+    <li class="list-group-item">Name: {{ object.equipment_tag }}</li>
+    <li class="list-group-item">Description: {{ object.description|linebreaks }}</li>
+    <li class="list-group-item">Room: {{ object.room }}</li>
+    <li class="list-group-item">Manufacturer: {{ object.manufacturer }}</li>
+    <li class="list-group-item">Department: {{ object.department.name }}</li>
+    {% if object.item_type == 'equipment' %}
+        <li class="list-group-item">Equipment Tag: {{ object.equipment_tag }}</li>
+        <li class="list-group-item">Serial Number: {{ object.serial_number }}</li>
+        <li class="list-group-item">Manufacture Date: {{ object.manufacture_date|date }}</li>
+        <li class="list-group-item">Purchase Date: {{ object.purchase_date|date }}</li>
+    {% endif %}
+    {% if object.product %}
+        <li class="list-group-item">Product: <a href="{{ object.product.get_absolute_url }}">{{ object.product.name }}</a></li>
+    {% endif %}
+    {% if object.purchase_order %}
+        <li class="list-group-item">Product: <a href="{{ object.purchase_order.get_absolute_url }}">{{ object.purchase_order.name }}</a></li>
+    {% endif %}
+</ul>
+<div class="row g-3">
+    <div class="col-6">
+        <p class="h2 text-center">Accessories</p>
+        <table class="table table-striped">
+            <thead class="text-center text-bg-secondary">
+                <td>Accessory</td>
+                <td>Quantity</td>
+            </thead>
+            <tbody>
+                <tr><td>count:{{ object.equipmentaccessory_set.count }}</td></tr>
+                {% for a in object.accessory_set.all %}
+                    <tr>
+                        <td>test></td>
+                        <td>{{ a.quantity }}</td>
+                        {% comment %} <td>{{ a.quantity }}</td> {% endcomment %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="col-6">
+        <p class="h2 text-center">Consumables</p>
+        <table class="table table-striped">
+            <thead class="text-center text-bg-secondary">
+                <td>Consumable</td>
+            </thead>
+            <tbody>
+                <tr><td>test</td></tr>
+                {% for a in object.equipmentaccessory_set.all %}
+                    <tr>
+                        <td>test></td>
+                        <td>{{ a.quantity }}</td>
+                        {% comment %} <td>{{ a.quantity }}</td> {% endcomment %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

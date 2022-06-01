@@ -1,13 +1,16 @@
+from itertools import product
+from django.forms import formset_factory
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
+from django.urls import reverse_lazy
 from django.utils.timezone import datetime,activate
 from django.shortcuts import get_object_or_404
-from .models import Manufacturer, Product, PurchaseRequest, PurchaseRequestItems, Vendor
+from .models import Manufacturer, Product, PurchaseOrder, PurchaseRequest, PurchaseRequestItems, Vendor
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView
 
-from .forms import AddManufacturerForm, AddVendorForm, AddProductForm, NewPRForm
+from .forms import AddManufacturerForm, AddVendorForm, AddProductForm, NewPRForm , ItemFormSet
 
 
 # Create your views here.
@@ -83,6 +86,10 @@ class PurchaseRequestDetailView(DetailView):
     # context_object_name: 'purchase_order_list'
     query_pk_and_slug = True
 
+class PurchaseOrderDetailView(DetailView):
+    model = PurchaseOrder
+    query_pk_and_slug = True
+
 # class PurchaseRequestCreateView(CreateView):
 #     model = PurchaseRequest
 #     widgets = {
@@ -137,13 +144,45 @@ def add_product(request):
     else:
         return render(request, "purchases/add_product.html", {"form": form})
 
-def new_pr(request):
-    form = NewPRForm(request.POST or None)
+# def new_pr(request):
+#     form = NewPRForm(request.POST or None)
 
-    if request.method == "POST":
-        if form.is_valid():
-            pr = form.save(commit=False)
-            pr.save()
-            return redirect("home")
+#     if request.method == "POST":
+#         if form.is_valid():
+#             pr = form.save(commit=False)
+#             pr.save()
+#             return redirect("home")
+#     else:
+#         return render(request, "purchases/new_pr.html", {"form": form})
+
+class PurchaseRequestCreateView(CreateView):
+    model = PurchaseRequest
+    form_class = NewPRForm
+    template_name = 'purchases/new_pr.html'
+    success_url = None
+    # fields = (
+    #     'requisitioner',
+    #     'vendor',
+    #     'items'
+    # )
+
+    # def get_context_data(self, **kwargs):
+    #     context = super(PurchaseRequestCreateView, self).get_context_data(**kwargs)
+    #     if self.request.POST:
+    #         context['items'] = ItemFormSet(self.request.POST)
+    #     else:
+    #         context['items'] = ItemFormSet()
+    #     return context
+
+    def get_success_url(self):
+            return reverse_lazy('purchaserequest_detail', kwargs={'id': self.object.id}) 
+
+def manage_products(request):
+    ProductFormSet = formset_factory(AddProductForm, extra=3)
+    if request.method == 'POST':
+        formset = ProductFormSet(request.POST, request.FILES)
+        if formset.is_valid():
+            pass
     else:
-        return render(request, "purchases/new_pr.html", {"form": form})
+        formset = ProductFormSet()
+    return render(request, 'purchases/manage_products.html', {'formset': formset})

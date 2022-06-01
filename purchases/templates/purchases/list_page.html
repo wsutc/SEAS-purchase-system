@@ -1,0 +1,13 @@
+{% extends 'purchases/layout.html' %}
+{% block title %}List{% endblock %}
+{% block content %}
+
+<div class="row mb-3">
+    <h1 class="wsu-c-heading col-sm">{% block header %}{% endblock %}</span></h1>
+
+    <div style=text-align:right><a href="{% block new_url %}{% endblock %}" class="save btn btn-primary">New</a></div>
+</div>
+
+
+{% block page %}{% endblock %}
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "purchases/layout.html" %}
+{% load widget_tweaks %}
+{% block title %}
+    Create New Item
+{% endblock %}
+
+{% block content %}
+
+<h1 name class="wsu-c-heading">Create New Item</h1>
+
+<form method="POST" class="row g-3">
+    {% csrf_token %}
+    <table class="table table-striped">
+        {{ form.as_table }}
+    </table>
+    <div class="col-12">
+        <button type="submit" class="save btn btn-primary">Save</button>
+    </div>
+</form>
+
+{% endblock %}

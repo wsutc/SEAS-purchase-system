@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Accounts, Department, Manufacturer, PurchaseOrderItems, PurchaseRequestAccounts, Requisitioner, SpendCategory, Urgency, Vendor, Product, PurchaseRequest, PurchaseOrder, State, PurchaseRequestItems, Unit
+from .models import Accounts, Carrier, Department, Manufacturer, PurchaseOrderItems, PurchaseRequestAccounts, Requisitioner, SpendCategory, Urgency, Vendor, Product, PurchaseRequest, PurchaseOrder, State, PurchaseRequestItems, Unit
 from import_export.admin import ImportExportModelAdmin
 
 @admin.register(Manufacturer)
@@ -19,13 +19,25 @@ class ProductAdmin(admin.ModelAdmin):
 class StateAdmin(admin.ModelAdmin):
     list_display = ['name', 'abbreviation']
 
+class PurchaseRequestItemInline(admin.TabularInline):
+    model = PurchaseRequestItems
+
 @admin.register(PurchaseRequest)
 class PurchaseRequestAdmin(admin.ModelAdmin):
     list_display = ['requisitioner', 'number']
+    inlines = [PurchaseRequestItemInline]
 
 @admin.register(PurchaseRequestItems)
 class PurchaseRequestItemsAdmin(admin.ModelAdmin):
     list_display = ['product','price']
+
+class PurchaseOrderItemInline(admin.TabularInline):
+    model = PurchaseOrderItems
+
+@admin.register(PurchaseOrder)
+class PurchaseOrderAdmin(admin.ModelAdmin):
+    list_display = ['number','source_purchase_request','vendor']
+    inlines = [PurchaseOrderItemInline]
 
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
@@ -54,3 +66,7 @@ class UnitsAdmin(admin.ModelAdmin):
 @admin.register(Urgency)
 class UrgencyAdmin(admin.ModelAdmin):
     list_display = ['name','note']
+
+@admin.register(Carrier)
+class CarrierAdmin(admin.ModelAdmin):
+    list_display = ['name']

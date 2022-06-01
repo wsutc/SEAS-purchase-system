@@ -23,13 +23,15 @@
                 <thead class="text-bg-secondary">
                     <td>Part Number / Revision</td>
                     <td>Description</td>
-                    <td>ProgramName</td>
+                    <td>Program Name</td>
+                    <td width="20%">Fixture</td>
                 </thead>
                 <tbody>
                     <tr>
                         <td>{{ object.part_number }} / {{ object.part_revision }}</td>
                         <td>{{ object.description }}</td>
                         <td>{{ object.program_name }}</td>
+                        <td>{{ object.fixture }} - {{ object.fixture.part_number }}</td>
                     </tr>
                 </tbody>
             </table>

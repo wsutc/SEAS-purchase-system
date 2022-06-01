@@ -1,0 +1,38 @@
+{% extends 'purchases/list_page.html' %}
+{% block header %}Inventory List{% endblock %}
+{% block new_url %}{% url 'create_new_item' %}{% endblock %}
+
+{% block page %}
+
+    {% if object_list %}
+    <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
+        <table class="table table-striped">
+          <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Room</th>
+            <th scope="col">Equipment Tag</th>
+          </tr>
+          </thead>
+          <tbody>
+            {% for o in object_list %}
+            <tr>
+                <td>
+                    <a href="{{ o.get_absolute_url }}">{{ o.name }}</a>
+                </td>
+                <td>
+                    {{ o.room.name }}
+                </td>
+                <td>
+                    {{ o.equipment_tag }}
+                </td>
+            </tr>
+        {% endfor %}
+          </tbody>
+        </table>
+        </div>
+    </div>
+    {% else %}
+        <p>No products have been added. Use the <a href="{% url 'add_product' %}">Add Product</a> form</p>
+    {% endif %}
+{% endblock %}

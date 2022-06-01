@@ -124,6 +124,9 @@ class Carrier(models.Model):
     tracking_link = models.URLField("URL stub for tracking")
     website = models.URLField("Carrier Website")
 
+    def __str__(self):
+        return self.name
+
 class Unit(models.Model):
     unit = models.CharField(max_length=25)
     abbreviation = models.CharField(max_length=4)
@@ -160,6 +163,23 @@ class Accounts(models.Model):
     def __str__(self):
         return self.account_title
 
+###--------------------------------------- Helper Tables -------------------------------------
+
+# class Status(models.Model):
+#     name = models.CharField(max_length=30)
+#     PR = 'purchase_request'
+#     PO = 'purchase_order'
+#     VALID_FOR = (
+#         (PO, 'PURCHASE ORDER'),
+#         (PR, 'PURCHASE REQUEST')
+#     )
+#     purchase_type = models.CharField(
+#         "Choose One",
+#         choices=VALID_FOR,
+#         default='pcard',
+#         max_length=150
+#     )
+
 ###--------------------------------------- Request Setup -------------------------------------
 
 class Department(models.Model):
@@ -187,11 +207,11 @@ class PurchaseRequest(models.Model):
     number = models.CharField(max_length=10,blank=True)
     vendor = models.ForeignKey(Vendor,on_delete=models.PROTECT,null=True)
     # products = models.ManyToManyField(Product,through='PurchaseRequestItems')
-    # items = models.ManyToManyField(PurchaseRequestItems)
+    items = models.ManyToManyField(Product,through='PurchaseRequestItems')
     created_date = models.DateTimeField("Created Date",auto_now_add=True)
     need_by_date = models.DateField("Date Required (optional)",blank=True,null=True)
     tax_exempt = models.BooleanField("Tax Exempt?",default=False)
-    # accounts = models.ManyToManyField(Accounts,through='PurchaseRequestAccounts')
+    accounts = models.ManyToManyField(Accounts,through='PurchaseRequestAccounts')
     # subtotal = models.DecimalField("Subtotal",decimal_places=2,max_digits=10)
     shipping = MoneyField("Shipping ($)",decimal_places=2,max_digits=14,default_currency='USD')
     # sales_tax = models.DecimalField("Sales Tax ($)",decimal_places=2,max_digits=10)
@@ -219,6 +239,26 @@ class PurchaseRequest(models.Model):
         "Choose One",
         choices=PURCHASE_TYPE,
         default='pcard',
+        max_length=150
+    )
+
+    WL = '0'
+    AA = '1'
+    AP = '2'
+    CM = '3'
+    DN = '4'
+    RT = '5'
+    STATUSES = (
+        (WL, 'Wish List/Created'),
+        (AA, 'Awaiting Approval'),
+        (AP, 'Approved, Awaiting PO Creation'),
+        (CM, 'Complete'),
+        (DN, 'Denied (no resubmission)'),
+        (RT, 'Returned (please resubmit)')
+    )
+    status = models.CharField(
+        choices=STATUSES,
+        default='wish_list',
         max_length=150
     )
 
@@ -271,21 +311,73 @@ class PurchaseRequestItems(models.Model):
 
 class PurchaseOrder(models.Model):
     id = models.AutoField(primary_key=True,editable=False)
-    # slug = models.SlugField(max_length=255, unique=True)
-    number = models.CharField(max_length=10,unique=True)
-    # source_PR = models.ManyToManyField("Source Purchase Request(s)",PurchaseRequest)
+    slug = models.SlugField(max_length=255, default='', editable=False)
+    number = models.CharField(max_length=10,unique=True,blank=True)
+    requisitioner = models.ForeignKey(Requisitioner,on_delete=models.PROTECT)
+    source_purchase_request = models.ForeignKey(PurchaseRequest,on_delete=models.PROTECT)
     vendor = models.ForeignKey("Vendor",Vendor)
+    items = models.ManyToManyField(Product,through='PurchaseOrderItems')
     # products = models.ManyToManyField(Product)
     created_date = models.DateTimeField("Created Date",auto_now_add=True)
     tax_exempt = models.BooleanField("Tax Exempt?",default=False)
+    accounts = models.ManyToManyField(Accounts,through='PurchaseOrderAccounts')
     # accounts = models.ManyToManyField(Accounts)
-    subtotal = models.DecimalField("Subtotal",decimal_places=2,max_digits=10)
-    shipping = models.DecimalField("Shipping ($)",decimal_places=2,max_digits=10)
+    # subtotal = models.DecimalField("Subtotal",decimal_places=2,max_digits=10)
+    shipping = MoneyField("Shipping ($)",decimal_places=2,max_digits=14,default_currency='USD')
     sales_tax = models.DecimalField("Sales Tax ($)",decimal_places=2,max_digits=10)
     grand_total = models.DecimalField("Grand Total ($)",decimal_places=2,max_digits=10)
     carrier = models.ForeignKey("Carrier",Carrier,blank=True,null=True)
+    tracking_number = models.CharField(max_length=55,blank=True,null=True)
+
+    PO = 'po'
+    PCARD = 'pcard'
+    IRI = 'iri'
+    INV_VOUCHER = 'invoice voucher'
+    CONTRACT = 'contract'
+    PURCHASE_TYPE = (
+        (PO, 'PURCHASE ORDER'),
+        (PCARD, 'PCARD'),
+        (IRI, 'IRI'),
+        (INV_VOUCHER, 'INVOICE VOUCHER'),
+        (CONTRACT, 'CONTRACT')
+    )
+    purchase_type = models.CharField(
+        "Choose One",
+        choices=PURCHASE_TYPE,
+        default='pcard',
+        max_length=150
+    )
+
+    CR = '0'
+    OR = '1'
+    SH = '2'
+    RC = '3'
+    CH = '4'
+    STATUSES = (
+        (CR, 'Created'),
+        (OR, 'Ordered'),
+        (SH, 'Shipped'),
+        (RC, 'Recieved'),
+        (CH, 'Changed Required')
+    )
+    status = models.CharField(
+        choices=STATUSES,
+        default='created',
+        max_length=150
+    )
+
+    def get_absolute_url(self):
+        kwargs = {
+            'slug': self.slug
+        }
+        return reverse('purchaseorder_detail', kwargs=kwargs)  
+
+    def get_tracking_link(self):
+        return self.carrier.tracking_link + self.tracking_number
 
     def save(self, *args, **kwargs):
+        value = self.number
+        self.slug = slugify(value, allow_unicode=True)
         super().save(*args, **kwargs)
         self.set_number()
 
@@ -303,12 +395,26 @@ class PurchaseOrderItems(models.Model):
     product = models.ForeignKey(Product,on_delete=models.PROTECT)
     purchase_order = models.ForeignKey(PurchaseOrder,on_delete=models.PROTECT)
 
-    quantity = models.DecimalField(blank=False,decimal_places=3,max_digits=3)
+    class Meta:
+        verbose_name_plural = "Purchase Order Items"
 
-    unit = models.ForeignKey(Unit, on_delete=models.PROTECT,default=1)
+    quantity = models.DecimalField(blank=False,decimal_places=3,max_digits=14)
+
+    unit = models.ForeignKey(Unit,on_delete=models.PROTECT,default=1)
+    price = MoneyField(max_digits=14,decimal_places=2,default_currency='USD',null=True)
+    # extended_price = MoneyField(max_digits=14, decimal_places=2, default_currency='USD',default=0)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.extended_price = self.quantity * self.price
+
+    def extend(self):
+        extended_price = self.quantity * self.price
+        return extended_price
 
     def __str__(self):
-        return self.id
+        name = self.product.name
+        return name
 
 class SpendCategory(models.Model):
     class Meta:
@@ -331,3 +437,19 @@ class PurchaseRequestAccounts(models.Model):
     spend_category = models.ForeignKey(SpendCategory,on_delete=models.PROTECT)
     distribution_amount = MoneyField("Distribution",max_digits=14,decimal_places=2,default_currency='USD',blank=True,null=True)
     distribution_percent = models.FloatField(default=0)
+
+    def __str__(self):
+        return self.spend_category
+
+class PurchaseOrderAccounts(models.Model):
+    class Meta:
+        verbose_name_plural = "Purchase Order Accounts"
+    purchase_order = models.ForeignKey(PurchaseOrder,on_delete=models.PROTECT)
+    accounts = models.ForeignKey(Accounts,on_delete=models.PROTECT)
+
+    spend_category = models.ForeignKey(SpendCategory,on_delete=models.PROTECT)
+    distribution_amount = MoneyField("Distribution",max_digits=14,decimal_places=2,default_currency='USD',blank=True,null=True)
+    distribution_percent = models.FloatField(default=0)
+
+    def __str__(self):
+        return self.spend_category

@@ -48,6 +48,13 @@ class Tool(models.Model):
     def __str__(self):
         return self.name
 
+class Fixture(models.Model):
+    name = models.CharField("Fixture Name", max_length=55)
+    part_number = models.CharField(max_length=30)
+
+    def __str__(self):
+        return self.name
+
 class Material(models.Model):
     name = models.CharField("Material Name",max_length=30)
     abbreviation = models.CharField("Short Name",max_length=10,blank=True)
@@ -70,6 +77,7 @@ class SetupSheet(models.Model):
     revision_date = models.DateField(auto_now=False, auto_now_add=False)
     tools = models.ManyToManyField(Tool,through='SetupSheetTool')
     notes = models.TextField()
+    fixture = models.ForeignKey(Fixture, on_delete=models.SET_NULL, null=True)
 
     def get_absolute_url(self):
         kwargs = {

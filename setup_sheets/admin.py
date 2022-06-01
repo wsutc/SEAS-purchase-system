@@ -1,12 +1,20 @@
 from django.contrib import admin
 from purchases.models import Manufacturer
 
-from setup_sheets.models import Material, SetupSheet, SetupSheetTool, Tool, ToolComponents
+from setup_sheets.models import Material, SetupSheet, SetupSheetTool, Tool, ToolComponents, Fixture
 
 # Register your models here.
+class SetupSheetToolInline(admin.TabularInline):
+    model = SetupSheetTool
+
+# class FixtureInline(admin.TabularInline):
+#     model = Fixture
+
 @admin.register(SetupSheet)
 class SetupSheetAdmin(admin.ModelAdmin):
     list_display = ['name']
+    inlines = [SetupSheetToolInline]
+    # inlines = [FixtureInline]
 
 # @admin.register(Manufacturer)
 # class ManufacturerAdmin(admin.ModelAdmin):
@@ -27,3 +35,7 @@ class MaterialAdmin(admin.ModelAdmin):
 @admin.register(SetupSheetTool)
 class SetupSheetToolAdmin(admin.ModelAdmin):
     list_display = ['setup_sheet','position']
+
+@admin.register(Fixture)
+class FixtureAdmin(admin.ModelAdmin):
+    list_display = ['name']
