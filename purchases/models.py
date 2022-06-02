@@ -1,10 +1,14 @@
 from asyncio.windows_events import NULL
 from django.db import models
+from django.db.models import Avg,Sum
+from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.text import slugify
 from django.urls import reverse
 from djmoney.models.fields import MoneyField
 from phonenumber_field.modelfields import PhoneNumberField
+from django.db.models.signals import pre_save, post_save
+from django.dispatch import receiver
 # from pyexpat import model
 
 ###------------------------------- Item Setup -----------------------------------
@@ -117,7 +121,7 @@ class Product(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.name
+        return "%s [%s] (%s)" % (self.name,self.original_manufacturer,self.identifier)
 
 class Carrier(models.Model):
     name = models.CharField("Name of Carrier",max_length=50)
@@ -212,7 +216,7 @@ class PurchaseRequest(models.Model):
     need_by_date = models.DateField("Date Required (optional)",blank=True,null=True)
     tax_exempt = models.BooleanField("Tax Exempt?",default=False)
     accounts = models.ManyToManyField(Accounts,through='PurchaseRequestAccounts')
-    # subtotal = models.DecimalField("Subtotal",decimal_places=2,max_digits=10)
+    subtotal = MoneyField("Subtotal",decimal_places=2,max_digits=14,default_currency='USD',blank=True,null=True)
     shipping = MoneyField("Shipping ($)",decimal_places=2,max_digits=14,default_currency='USD')
     # sales_tax = models.DecimalField("Sales Tax ($)",decimal_places=2,max_digits=10)
     # grand_total = models.DecimalField("Grand Total ($)",decimal_places=2,max_digits=10)
@@ -258,7 +262,7 @@ class PurchaseRequest(models.Model):
     )
     status = models.CharField(
         choices=STATUSES,
-        default='wish_list',
+        default='0',
         max_length=150
     )
 
@@ -272,7 +276,32 @@ class PurchaseRequest(models.Model):
         value = self.number
         self.slug = slugify(value, allow_unicode=True)
         super().save(*args, **kwargs)
+        # self.save_related()
+        # self.set_subtotal()
         self.set_number()
+
+    # def save_model(self, *args, **kwargs):
+    #     value = self.number
+    #     self.slug = slugify(value, allow_unicode=True)
+    #     pass
+
+    # def save_related(self, request, *args, **kwargs):
+    #     super().save_related(request, *args, **kwargs)
+    #     # request.save()
+    #     print("save_related loop")
+
+    # def save_formset(self, *args, **kwargs):
+    #     formset.save()
+    #     form.instance.save()
+
+    def get_subtotal(self):
+        return PurchaseRequestItems.objects.filter(purchase_request_id=self.id).aggregate(Sum('extended_price'))
+
+    # def set_subtotal(self):
+    #     subtotal = self.get_subtotal()['extended_price__sum']
+    #     if (self.subtotal == None) or (self.subtotal.amount != subtotal):
+    #         self.subtotal = subtotal
+    #         self.save()
 
     def set_number(self):
         if not self.number:
@@ -284,6 +313,31 @@ class PurchaseRequest(models.Model):
     def __str__(self):
         return self.number
 
+################## This is the "good" one ######################
+@receiver(post_save, sender=PurchaseRequest)
+def set_subtotal(sender, instance, *args, **kwargs):
+    subtotal = instance.get_subtotal()['extended_price__sum']
+    if subtotal == None:
+        pass
+    elif subtotal != instance.subtotal.amount:
+        instance.subtotal = subtotal
+        instance.save()
+
+# @receiver(pre_save, sender=PurchaseRequest)
+# def save_items(sender, instance, *args, **kwargs):
+#     items = PurchaseRequestItems.objects.filter(purchase_request_id=instance.id)
+#     for i in items:
+#         PurchaseRequestItems.save(i)
+
+# @receiver(pre_save, sender=PurchaseRequest)
+# def create_slug(sender, instance, *args, **kwargs):
+#     number = instance.number
+#     instance.slug = slugify(number, allow_unicode=True)
+
+# @receiver(pre_save, sender=PurchaseRequest)
+# def set_number(sender, instance, *args, **kwargs):
+
+
 class PurchaseRequestItems(models.Model):
     product = models.ForeignKey(Product,on_delete=models.PROTECT)
     purchase_request = models.ForeignKey(PurchaseRequest,on_delete=models.PROTECT)
@@ -294,16 +348,25 @@ class PurchaseRequestItems(models.Model):
     quantity = models.DecimalField(blank=False,decimal_places=3,max_digits=14)
 
     unit = models.ForeignKey(Unit,on_delete=models.PROTECT,default=1)
-    price = MoneyField(max_digits=14,decimal_places=2,default_currency='USD',null=True)
-    # extended_price = MoneyField(max_digits=14, decimal_places=2, default_currency='USD',default=0)
+    price = MoneyField(max_digits=14,decimal_places=2,default_currency='USD',null=True,blank=True)
+    extended_price = MoneyField(max_digits=14, decimal_places=2, default_currency='USD',default=0)
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        self.extended_price = self.quantity * self.price
+    # def save(self, *args, **kwargs):
+    #     self.extended_price = self.extend()
+    #     super().save(*args, **kwargs)
 
     def extend(self):
         extended_price = self.quantity * self.price
         return extended_price
+
+    def save(self, *args, **kwargs):
+        if not self.price:
+            self.price = self.product.last_price
+        self.extended_price = self.extend()
+        super().save(*args, **kwargs)
+
+    # def get_initial_price(self):
+    #     return PurchaseRequestItems.objects.get(id=self.id).last_price
 
     def __str__(self):
         name = self.product.name

@@ -156,26 +156,42 @@ def add_product(request):
 #         return render(request, "purchases/new_pr.html", {"form": form})
 
 class PurchaseRequestCreateView(CreateView):
-    model = PurchaseRequest
+    # model = PurchaseRequest
     form_class = NewPRForm
     template_name = 'purchases/new_pr.html'
-    success_url = None
-    # fields = (
-    #     'requisitioner',
-    #     'vendor',
-    #     'items'
-    # )
 
-    # def get_context_data(self, **kwargs):
-    #     context = super(PurchaseRequestCreateView, self).get_context_data(**kwargs)
-    #     if self.request.POST:
-    #         context['items'] = ItemFormSet(self.request.POST)
-    #     else:
-    #         context['items'] = ItemFormSet()
-    #     return context
+    def get_context_data(self, **kwargs):
+        context = super(PurchaseRequestCreateView, self).get_context_data(**kwargs)
 
-    def get_success_url(self):
-            return reverse_lazy('purchaserequest_detail', kwargs={'id': self.object.id}) 
+        context['purchase_request_items_formset'] = ItemFormSet()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = None
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        purchase_request_items_formset = ItemFormSet(self.request.POST)
+        if form.is_valid() and purchase_request_items_formset.is_valid():
+            return self.form_valid(form, purchase_request_items_formset)
+        else:
+            return self.form_invalid(form, purchase_request_items_formset)
+
+    def form_valid(self, form, purchase_request_items_formset):
+        self.object = form.save(commit=False)
+        self.object.save()
+        purchase_request_items = purchase_request_items_formset.save(commit=False)
+        for item in purchase_request_items:
+            item.purchase_request = self.object
+            item.save()
+        return redirect(reverse_lazy("home"))
+
+    def form_invalid(self, form, purchase_request_items_formset):
+        return self.render_to_response(
+            self.get_context_data(
+                form=form,
+                purchase_request_items_formset=purchase_request_items_formset
+            )
+        )
 
 def manage_products(request):
     ProductFormSet = formset_factory(AddProductForm, extra=3)
