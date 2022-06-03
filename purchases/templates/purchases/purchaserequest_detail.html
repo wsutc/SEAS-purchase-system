@@ -134,13 +134,15 @@
                             <td align="right">{{ item.price }}</td>
                             <td align="right">{{ item.extend }}</td>
                         </tr>
+                    {% empty %}
+                        <tr>Please edit Purchase Request to add items.</tr>
                     {% endfor %}
                 </tbody>
                 <tfoot>
                     <tr>
                         <td colspan="4">&nbsp;</td>
                         <td colspan="3" class="text-end">Subtotal</td>
-                        <td align="right">{{ view_subtotal.purchaserequestitems__extended_price__sum|currency }}</td>
+                        <td align="right">${{ view_subtotal.purchaserequestitems__extended_price__sum|floatformat:"2g" }}</td>
                     </tr>
                     <tr>
                         <td colspan="4"></td>
