@@ -102,6 +102,7 @@ class Product(models.Model):
     )
     approved_substitutes = models.ForeignKey('self',null=True,on_delete=models.PROTECT,blank=True)
     approved_vendors = models.ForeignKey(Vendor,on_delete=models.CASCADE,null=True)
+    vendor_number = models.CharField("Vendor ID Number",max_length=30,blank=True,null=True)
     last_price = MoneyField("Last Price",max_digits=14, decimal_places=2, default_currency='USD')
     # last_price = models.DecimalField("Last Price",decimal_places=2,max_digits=10)
     link = models.URLField("Direct Link",blank=True)
@@ -197,7 +198,7 @@ class Requisitioner(models.Model):
     first_name = models.CharField("First Name",max_length=50,blank=False)
     last_name = models.CharField("Last Name",max_length=50,blank=False)
     # slug = models.SlugField(max_length=255, unique=True)
-    phone = PhoneNumberField("Phone Number",max_length=10,blank=False)
+    phone = PhoneNumberField("Phone Number",max_length=25,blank=False)
     email = models.EmailField("Email",max_length=50,blank=False)
     department = models.ForeignKey(Department,on_delete=models.PROTECT)
 

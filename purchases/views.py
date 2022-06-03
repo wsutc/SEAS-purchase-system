@@ -9,6 +9,7 @@ from .models import Manufacturer, Product, PurchaseOrder, PurchaseRequest, Purch
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView
+from django.db.models import Sum, Count
 
 from .forms import AddManufacturerForm, AddVendorForm, AddProductForm, NewPRForm , ItemFormSet
 
@@ -17,9 +18,9 @@ from .forms import AddManufacturerForm, AddVendorForm, AddProductForm, NewPRForm
 class HomeListView(ListView):
     model = PurchaseRequest
 
-    def get_context_data(self, **kwargs):
-        context = super(HomeListView, self).get_context_data(**kwargs)
-        return context
+    # def get_context_data(self, **kwargs):
+    #     context = super(HomeListView, self).get_context_data(**kwargs)
+    #     return context
 
 class ManufacturerListView(ListView):
     model = Manufacturer
@@ -57,6 +58,7 @@ class VendorListView(ListView):
 
 class PurchaseRequestListView(ListView):
     model = PurchaseRequest
+    context_object_name = 'purchaserequests'
 
     def get_context_data(self, **kwargs):
         return super().get_context_data(**kwargs)
@@ -83,8 +85,17 @@ class ManufacturerDetailView(DetailView):
 
 class PurchaseRequestDetailView(DetailView):
     model = PurchaseRequest
-    # context_object_name: 'purchase_order_list'
+    template_name = "purchases/purchaserequest_detail.html"
+    context_object_name = 'purchaserequest'
     query_pk_and_slug = True
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['view_subtotal'] = PurchaseRequest.objects.filter(slug=self.kwargs.get('slug')).aggregate(Sum('purchaserequestitems__extended_price'))
+        # print(self.kwargs.get('pk',-1))
+        # print(context['view_subtotal'])
+        print(context)
+        return context
 
 class PurchaseOrderDetailView(DetailView):
     model = PurchaseOrder

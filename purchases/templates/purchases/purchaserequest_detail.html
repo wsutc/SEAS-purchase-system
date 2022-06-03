@@ -110,7 +110,8 @@
                     <tr>
                         <th class="text-center" style="width: 40%;">Description</th>
                         <th class="text-center" style="width:  5%;">Link</th>
-                        <th class="text-center" style="width: 20%;">Identifier</th>
+                        <th class="text-center" style="width: 10%;">Identifier</th>
+                        <th class="text-center" style="width: 10%;">Vendor ID</th>
                         <th class="text-center" style="width:  5%;">QTY</th>
                         <th class="text-center" style="width: 10%;">Unit</th>
                         <th class="text-center" style="width: 10%;">Unit Price</th>
@@ -127,7 +128,8 @@
                                 <td></td>
                             {% endif %}
                             <td align="center">{{ item.product.identifier }}</td>
-                            <td>{{ item.quantity }}</td>
+                            <td align="center">{{ item.product.vendor_number|default_if_none:"" }}</td>
+                            <td align="right">{{ item.quantity }}</td>
                             <td align="center">{{ item.unit.unit }}</td>
                             <td align="right">{{ item.price }}</td>
                             <td align="right">{{ item.extend }}</td>
@@ -136,22 +138,22 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="3">&nbsp;</td>
+                        <td colspan="4">&nbsp;</td>
                         <td colspan="3" class="text-end">Subtotal</td>
-                        <td align="right">{{ object.purchaserequestitems_set.aggregate }}</td> {% comment %}.aggregate(Sum('price')) {% endcomment %}
+                        <td align="right">{{ view_subtotal.purchaserequestitems__extended_price__sum|currency }}</td>
                     </tr>
                     <tr>
-                        <td colspan="3"></td>
+                        <td colspan="4"></td>
                         <td colspan="3" class="text-end">Shipping</td>
                         <td align="right">{{ object.shipping }}</td>
                     </tr>
                     <tr>
-                        <td colspan="3"></td>
+                        <td colspan="4"></td>
                         <td colspan="3" class="text-end">Sales Tax</td>
                         <td align="right"></td>
                     </tr>
                     <tr>
-                        <td colspan="3"></td>
+                        <td colspan="4"></td>
                         <td colspan="3" class="text-end">Grand Total</td>
                         <td align="right"></td>
                     </tr>
@@ -170,5 +172,8 @@
         {{ object.instruction|linebreaks }}
     </div>
 </div>
+
+
+{% comment %} <pre> {% filter force_escape %} {% debug %} {% endfilter %} </pre> {% endcomment %}
 
 {% endblock %}

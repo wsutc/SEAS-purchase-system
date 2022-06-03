@@ -4,6 +4,8 @@
 {% block number %}{{ object.number }}{% endblock %}
 {% block page %}
 
+{% comment %} {% debug %} {% endcomment %}
+
 <div class="row mb-3">
     <div class="col-4">
         Created {{ object.created_date }}
@@ -113,10 +115,11 @@
                         <th class="text-center" style="width: 40%;">Description</th>
                         <th class="text-center" style="width:  5%;">Link</th>
                         <th class="text-center" style="width: 20%;">Identifier</th>
-                        <th class="text-center" style="width:  5%;">QTY</th>
-                        <th class="text-center" style="width: 10%;">Unit</th>
-                        <th class="text-center" style="width: 10%;">Unit Price</th>
-                        <th class="text-center" style="width: 10%;">Extended Price</th>
+                        <th class="text-center" style="width: 20%;">Vendor ID</th>
+                        <th class="text-center" style="width:  3%;">QTY</th>
+                        <th class="text-center" style="width: 8%;">Unit</th>
+                        <th class="text-center" style="width: 8%;">Unit Price</th>
+                        <th class="text-center" style="width: 8%;">Extended Price</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -129,6 +132,7 @@
                                 <td></td>
                             {% endif %}
                             <td align="center">{{ item.product.identifier }}</td>
+                            <td align="center">{{ item.product.vendor_number }}</td>
                             <td>{{ item.quantity }}</td>
                             <td align="center">{{ item.unit.unit }}</td>
                             <td align="right">{{ item.price }}</td>
