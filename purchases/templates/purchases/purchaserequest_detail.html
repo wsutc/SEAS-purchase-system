@@ -6,6 +6,8 @@
 {% block next %}{{ object.get_next_by_created_date.get_absolute_url }}{% endblock %}
 {% block page %}
 
+<a href="{% url 'update_pr' slug=object.slug %}">Edit</a>
+
 <div class="row mb-3">
     <div class="col-4">
         Created {{ object.created_date }}

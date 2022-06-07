@@ -1,7 +1,7 @@
 from unicodedata import name
 from django.urls import path
 from purchases import views
-from purchases.views import ManufacturerDetailView, ManufacturerListView, PurchaseOrderDetailView, PurchaseRequestItemCreateView, PurchaseRequestListView, VendorDetailView, VendorListView, ProductListView, ProductDetailView, PurchaseRequestDetailView, PurchaseRequestCreateView
+from purchases.views import ManufacturerDetailView, ManufacturerListView, PurchaseOrderDetailView, PurchaseRequestItemCreateView, PurchaseRequestListView, PurchaseRequestUpdateView, VendorDetailView, VendorListView, ProductListView, ProductDetailView, PurchaseRequestDetailView, PurchaseRequestCreateView
 from purchases.models import Manufacturer, Product
 
 home_list_view = views.HomeListView.as_view(
@@ -33,5 +33,6 @@ urlpatterns = [
     path("purchase-request/<slug:slug>", PurchaseRequestDetailView.as_view(), name="purchaserequest_detail"),
     path("purchase-order/<slug:slug>", PurchaseOrderDetailView.as_view(), name="purchaseorder_detail"),
     path("new-pr-item/<str:pk>", PurchaseRequestItemCreateView.as_view(), name="new_pr_item"),
-    path("manage-products", views.manage_products, name="manage_products")
+    path("manage-products", views.manage_products, name="manage_products"),
+    path("update-purchase-request/<slug:slug>", PurchaseRequestUpdateView.as_view(), name="update_pr")
 ]

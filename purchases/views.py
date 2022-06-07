@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404
 from .models import Manufacturer, Product, PurchaseOrder, PurchaseRequest, PurchaseRequestItems, Requisitioner, Vendor
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
-from django.views.generic.edit import CreateView
+from django.views.generic.edit import CreateView, UpdateView
 from django.db.models import Sum, Count
 from django.contrib.auth.mixins import PermissionRequiredMixin
 
@@ -211,6 +211,49 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
             self.get_context_data(
                 form=form,
                 purchase_request_items_formset=purchase_request_items_formset
+            )
+        )
+
+class PurchaseRequestUpdateView(UpdateView):
+    # permission_required = 'purchases.change_purchaserequest'
+    model = PurchaseRequest
+    form_class = NewPRForm
+    template_name = 'purchases/new_pr.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(PurchaseRequestUpdateView, self).get_context_data(**kwargs)
+        context['purchase_request_items_formset'] = ItemFormSet()
+        context['requisitioner'] = PurchaseRequest.objects.get(pk=1).requisitioner
+    #     context['requisitioner'] = self.
+    #     # context['requisitioner'] = Requisitioner.objects.get(user=self.request.user)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = None
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        purchase_request_items_formset = ItemFormSet(self.request.POST)
+        if form.is_valid() and purchase_request_items_formset.is_valid():
+            return self.form_valid(form, purchase_request_items_formset)
+        else:
+            return self.form_invalid(form, purchase_request_items_formset)
+
+    def form_valid(self, form, purchase_request_items_formset):
+        # form.instance.requisitioner = Requisitioner.objects.get(user = self.request.user)
+        self.object = form.save(commit=False)
+        self.object.save()
+        purchase_request_items = purchase_request_items_formset.save(commit=False)
+        for item in purchase_request_items:
+            item.purchase_request = self.object
+            item.save()
+        self.object.update_totals()
+        return redirect(reverse_lazy("purchaserequest_detail/<slug:self.object.slug>"))
+
+    def form_invalid(self, form, purchase_request_items_formset):
+        return self.render_to_response(
+            self.get_context_data(
+                form=form,
+                purchase_request_items_formset=purchase_request_items_formset,
             )
         )
 
