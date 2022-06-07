@@ -3,7 +3,7 @@ from purchases.models import Manufacturer, Product, PurchaseRequest, PurchaseReq
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Field, Fieldset, Div, HTML, ButtonHolder, Submit
 from django.forms.models import inlineformset_factory
-from .widgets import NoCurrencyMoneyWidget
+# from .widgets import NoCurrencyMoneyWidget
 
 class AddManufacturerForm(forms.ModelForm):
     class Meta:
@@ -73,7 +73,7 @@ class NewPRForm(forms.ModelForm):
             'justification': forms.Textarea(attrs={'rows':2}),
             'instruction': forms.Textarea(attrs={'rows':2})
         }
-        exclude = ['created_date','number','items','subtotal','sales_tax']
+        exclude = ['created_date','number','items','subtotal','sales_tax','requisitioner']
 
     # def save(self, *args, **kwargs):
     #     print("NewPRForm save")
@@ -88,8 +88,6 @@ class NewPRIForm(forms.ModelForm):
             'price'
         )
         widgets = {
-            # "product": forms.TextInput,
-            #"price":  NoCurrencyMoneyWidget
             }
 
 ItemFormSet = inlineformset_factory(

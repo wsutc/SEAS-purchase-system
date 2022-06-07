@@ -5,7 +5,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils.timezone import datetime,activate
 from django.shortcuts import get_object_or_404
-from .models import Manufacturer, Product, PurchaseOrder, PurchaseRequest, PurchaseRequestItems, Vendor
+from .models import Manufacturer, Product, PurchaseOrder, PurchaseRequest, PurchaseRequestItems, Requisitioner, Vendor
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView
@@ -94,7 +94,8 @@ class PurchaseRequestDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # context['requisitioner_full_name'] = self.requisitioner_django.get_full_name()
-        context['requisitioner_full_name'] = PurchaseRequest.objects.filter(slug=self.kwargs.get('slug'))[0].requisitioner_django.get_full_name()
+        # context['requisitioner_full_name'] = PurchaseRequest.objects.filter(slug=self.kwargs.get('slug'))[0].requisitioner_django.get_full_name()
+        # context['requisition_full_name'] = PurchaseRequest.objects.filter(slug=self.kwargs.get('slug'))[0].requisitioner.user.get_full_name()
     #     context['view_subtotal'] = PurchaseRequest.objects.filter(slug=self.kwargs.get('slug')).aggregate(Sum('purchaserequestitems__extended_price'))
     #     # context['requisitioner_full_name'] = PurchaseRequest.requisitioner.get_object(self)
     #     # print(self.kwargs.get('pk',-1))
@@ -178,8 +179,8 @@ class PurchaseRequestCreateView(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super(PurchaseRequestCreateView, self).get_context_data(**kwargs)
-
         context['purchase_request_items_formset'] = ItemFormSet()
+        # context['requisitioner'] = Requisitioner.objects.get(user=self.request.user)
         return context
 
     def post(self, request, *args, **kwargs):
@@ -193,6 +194,7 @@ class PurchaseRequestCreateView(CreateView):
             return self.form_invalid(form, purchase_request_items_formset)
 
     def form_valid(self, form, purchase_request_items_formset):
+        form.instance.requisitioner = Requisitioner.objects.get(user = self.request.user)
         self.object = form.save(commit=False)
         self.object.save()
         purchase_request_items = purchase_request_items_formset.save(commit=False)

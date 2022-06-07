@@ -25,13 +25,13 @@
                                 {% endif %}
                             </td>
                             <td style="width: 10em" align="right">Requestor</td>
-                            <td>{{ requisitioner_full_name }}</td>
+                            <td>{{ object.requisitioner.user.get_full_name }}</td>
                         </tr>
                         <tr>
                             <td align="right">Vendor</td>
                             <td><a href="{{ object.vendor.get_absolute_url }}">{{ object.vendor }}</a></td>
                             <td align="right">Email</td>
-                            <td><a href="mailto:{{ object.requisitioner.email }}">{{ object.requisitioner.email }}</a></td>
+                            <td><a href="mailto:{{ object.requisitioner.user.email }}">{{ object.requisitioner.user.email }}</a></td>
                         </tr>
                         <tr>
                             <td align="right" rowspan=2>Address</td>

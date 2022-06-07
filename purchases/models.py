@@ -202,21 +202,22 @@ class Department(models.Model):
         return self.name
 
 class Requisitioner(models.Model):
-    first_name = models.CharField("First Name",max_length=50,blank=False)
-    last_name = models.CharField("Last Name",max_length=50,blank=False)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    # first_name = models.CharField("First Name",max_length=50,blank=False)
+    # last_name = models.CharField("Last Name",max_length=50,blank=False)
     # slug = models.SlugField(max_length=255, unique=True)
     phone = PhoneNumberField("Phone Number",max_length=25,blank=False)
-    email = models.EmailField("Email",max_length=50,blank=False)
+    # email = models.EmailField("Email",max_length=50,blank=False)
     department = models.ForeignKey(Department,on_delete=models.PROTECT)
 
     def __str__(self):
-        return "%s %s" % (self.first_name,self.last_name)
+        return self.user.get_full_name()
 
 class PurchaseRequest(models.Model):
     id = models.AutoField(primary_key=True,editable=False)
     slug = models.SlugField(max_length=255, default='', editable=False)
     requisitioner = models.ForeignKey(Requisitioner,on_delete=models.PROTECT)
-    requisitioner_django = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
+    # requisitioner_django = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
     number = models.CharField(max_length=10,blank=True)
     vendor = models.ForeignKey(Vendor,on_delete=models.PROTECT,null=True)
     # products = models.ManyToManyField(Product,through='PurchaseRequestItems')

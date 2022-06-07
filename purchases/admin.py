@@ -2,6 +2,7 @@ from django.contrib import admin
 
 from .models import Accounts, Carrier, Department, Manufacturer, PurchaseOrderItems, PurchaseRequestAccounts, Requisitioner, SpendCategory, Urgency, Vendor, Product, PurchaseRequest, PurchaseOrder, State, PurchaseRequestItems, Unit
 from import_export.admin import ImportExportModelAdmin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 @admin.register(Manufacturer)
 class ManufacturerAdmin(admin.ModelAdmin):
@@ -24,7 +25,7 @@ class PurchaseRequestItemInline(admin.TabularInline):
 
 @admin.register(PurchaseRequest)
 class PurchaseRequestAdmin(admin.ModelAdmin):
-    list_display = ['requisitioner', 'requisitioner_django', 'number', 'slug']
+    list_display = ['requisitioner', 'number', 'slug']
     inlines = [PurchaseRequestItemInline]
 
     def save_model(self, request, obj, form, change):
@@ -50,9 +51,15 @@ class PurchaseOrderAdmin(admin.ModelAdmin):
 class DepartmentAdmin(admin.ModelAdmin):
     list_display = ['name']
 
+class RequisitionerInline(admin.StackedInline):
+    model = Requisitioner
+
+class UserAdmin(BaseUserAdmin):
+    inlines = (RequisitionerInline,)
+
 @admin.register(Requisitioner)
 class RequisitionerAdmin(admin.ModelAdmin):
-    list_display = ['first_name','last_name','email','department']
+    list_display = ['user','department']
 
 @admin.register(Accounts)
 class AccountsAdmin(admin.ModelAdmin):

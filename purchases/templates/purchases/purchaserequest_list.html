@@ -27,25 +27,20 @@ List of Manufacturers
             {% endfor %}
           </tbody>
         </table>
-        </div>
     </div>
     
-    <div class="pagination">
-      <span class="step-links">
+    <div class="pagination container">
+      <div class="step-links row">
           {% if page_obj.has_previous %}
               <a href="?page=1">&laquo; first</a>
               <a href="?page={{ page_obj.previous_page_number }}">previous</a>
           {% endif %}
-  
-          <span class="current">
-              {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-          </span>
-  
+            {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
           {% if page_obj.has_next %}
               <a href="?page={{ page_obj.next_page_number }}">next</a>
               <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
           {% endif %}
-      </span>
+        </div>
   </div>
     {% else %}
         <p>No manufacturers have been added. Use the <a href="{% url 'add_mfg' %}">Add Manufacturer</a> form</p>
