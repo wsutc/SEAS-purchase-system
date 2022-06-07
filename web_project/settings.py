@@ -140,3 +140,8 @@ INTERNAL_IPS = (
 PHONENUMBER_DEFAULT_REGION = 'US'
 
 PHONENUMBER_DEFAULT_FORMAT = 'NATIONAL'
+
+# Custom settings
+
+DEFAULT_TAX_RATE = '.086'
+DEFAULT_INSTRUCTIONS = 'Because grand total amount does not include shipping/handling and tax costs, Dr. Mo approves if total costs exceeds grand total amount.'

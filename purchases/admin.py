@@ -24,7 +24,7 @@ class PurchaseRequestItemInline(admin.TabularInline):
 
 @admin.register(PurchaseRequest)
 class PurchaseRequestAdmin(admin.ModelAdmin):
-    list_display = ['requisitioner', 'number']
+    list_display = ['requisitioner', 'requisitioner_django', 'number', 'slug']
     inlines = [PurchaseRequestItemInline]
 
     def save_model(self, request, obj, form, change):
@@ -32,7 +32,7 @@ class PurchaseRequestAdmin(admin.ModelAdmin):
 
     def save_related(self, request, form, formsets, change):
         super().save_related(request, form, formsets, change)
-    
+        form.instance.update_totals()
 
 @admin.register(PurchaseRequestItems)
 class PurchaseRequestItemsAdmin(admin.ModelAdmin):

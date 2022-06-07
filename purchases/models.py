@@ -1,4 +1,7 @@
 from asyncio.windows_events import NULL
+import decimal
+from re import sub
+from django.conf import settings
 from django.db import models
 from django.db.models import Avg,Sum
 from django.dispatch import receiver
@@ -6,9 +9,13 @@ from django.utils import timezone
 from django.utils.text import slugify
 from django.urls import reverse
 from djmoney.models.fields import MoneyField
+# from easypost import User
+from django.contrib.auth.models import User
 from phonenumber_field.modelfields import PhoneNumberField
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
+
+# from purchases.forms import  
 # from pyexpat import model
 
 ###------------------------------- Item Setup -----------------------------------
@@ -209,6 +216,7 @@ class PurchaseRequest(models.Model):
     id = models.AutoField(primary_key=True,editable=False)
     slug = models.SlugField(max_length=255, default='', editable=False)
     requisitioner = models.ForeignKey(Requisitioner,on_delete=models.PROTECT)
+    requisitioner_django = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
     number = models.CharField(max_length=10,blank=True)
     vendor = models.ForeignKey(Vendor,on_delete=models.PROTECT,null=True)
     # products = models.ManyToManyField(Product,through='PurchaseRequestItems')
@@ -217,15 +225,15 @@ class PurchaseRequest(models.Model):
     need_by_date = models.DateField("Date Required (optional)",blank=True,null=True)
     tax_exempt = models.BooleanField("Tax Exempt?",default=False)
     accounts = models.ManyToManyField(Accounts,through='PurchaseRequestAccounts')
-    subtotal = MoneyField("Subtotal",decimal_places=2,max_digits=14,default_currency='USD',blank=True,null=True)
-    shipping = MoneyField("Shipping ($)",decimal_places=2,max_digits=14,default_currency='USD')
-    # sales_tax = models.DecimalField("Sales Tax ($)",decimal_places=2,max_digits=10)
-    # grand_total = models.DecimalField("Grand Total ($)",decimal_places=2,max_digits=10)
+    subtotal = MoneyField("Subtotal",decimal_places=2,max_digits=14,default_currency='USD',default=0)
+    shipping = MoneyField("Shipping ($)",decimal_places=2,max_digits=14,default_currency='USD',default=0)
+    sales_tax = MoneyField("Sales Tax ($)",decimal_places=2,max_digits=14,default_currency='USD',default=0)
+    grand_total = MoneyField("Grand Total ($)",decimal_places=2,max_digits=14,default_currency='USD',default=0)
     urgency = models.ForeignKey(Urgency,on_delete=models.PROTECT,default=1)
     justification = models.TextField("Justification",blank=False)
     instruction = models.TextField(
         "Special Instructions",
-        default='Because grand total amount does not include shipping/handling and tax costs, Dr. Mo approves if total costs exceeds grand total amount.',
+        default=settings.DEFAULT_INSTRUCTIONS,
     )
 
     PO = 'po'
@@ -276,33 +284,25 @@ class PurchaseRequest(models.Model):
     def save(self, *args, **kwargs):
         value = self.number
         self.slug = slugify(value, allow_unicode=True)
+        
         super().save(*args, **kwargs)
-        # self.save_related()
-        # self.set_subtotal()
         self.set_number()
-
-    # def save_model(self, *args, **kwargs):
-    #     value = self.number
-    #     self.slug = slugify(value, allow_unicode=True)
-    #     pass
-
-    # def save_related(self, request, *args, **kwargs):
-    #     super().save_related(request, *args, **kwargs)
-    #     # request.save()
-    #     print("save_related loop")
-
-    # def save_formset(self, *args, **kwargs):
-    #     formset.save()
-    #     form.instance.save()
 
     def get_subtotal(self):
         return PurchaseRequestItems.objects.filter(purchase_request_id=self.id).aggregate(Sum('extended_price'))
 
-    # def set_subtotal(self):
-    #     subtotal = self.get_subtotal()['extended_price__sum']
-    #     if (self.subtotal == None) or (self.subtotal.amount != subtotal):
-    #         self.subtotal = subtotal
-    #         self.save()
+    def update_totals(self):
+        subtotal = self.get_subtotal()['extended_price__sum']
+        shipping = self.shipping
+        tax = round((subtotal + shipping.amount) * decimal.Decimal(settings.DEFAULT_TAX_RATE),2)
+        total = subtotal + shipping.amount + tax
+
+        self.subtotal = subtotal
+        self.sales_tax = tax
+        self.grand_total = total
+
+        self.save()
+        return
 
     def set_number(self):
         if not self.number:
@@ -315,14 +315,26 @@ class PurchaseRequest(models.Model):
         return self.number
 
 ################## This is the "good" one ######################
-@receiver(post_save, sender=PurchaseRequest)
-def set_subtotal(sender, instance, *args, **kwargs):
-    subtotal = instance.get_subtotal()['extended_price__sum']
-    if subtotal == None:
-        pass
-    elif subtotal != instance.subtotal.amount:
-        instance.subtotal = subtotal
-        instance.save()
+# @receiver(post_save, sender=PurchaseRequest)
+# def save_formset(sender, instance, *args, **kwargs):
+
+# @receiver(post_save, sender=PurchaseRequest)
+# def set_subtotal(sender, instance, *args, **kwargs):
+#     subtotal = instance.get_subtotal()['extended_price__sum']
+#     if subtotal == None:
+#         pass
+#     elif subtotal != instance.subtotal.amount:
+#         instance.subtotal = subtotal
+#         instance.save()
+
+# @receiver(post_save, sender=PurchaseRequest)
+# def set_totals(sender, instance, *args, **kwargs):
+#     subtotal = instance.update_totals()
+    # if subtotal == None:
+    #     pass
+    # elif subtotal != instance.subtotal.amount:
+    #     instance.subtotal = subtotal
+    #     instance.save()
 
 # @receiver(pre_save, sender=PurchaseRequest)
 # def save_items(sender, instance, *args, **kwargs):
@@ -341,7 +353,7 @@ def set_subtotal(sender, instance, *args, **kwargs):
 
 class PurchaseRequestItems(models.Model):
     product = models.ForeignKey(Product,on_delete=models.PROTECT)
-    purchase_request = models.ForeignKey(PurchaseRequest,on_delete=models.PROTECT)
+    purchase_request = models.ForeignKey(PurchaseRequest,on_delete=models.CASCADE)
 
     class Meta:
         verbose_name_plural = "Purchase Request Items"

@@ -57,11 +57,13 @@ class VendorListView(ListView):
         return context
 
 class PurchaseRequestListView(ListView):
-    model = PurchaseRequest
+    # model = PurchaseRequest
     context_object_name = 'purchaserequests'
+    paginate_by = '10'
+    queryset = PurchaseRequest.objects.order_by('-created_date')
 
-    def get_context_data(self, **kwargs):
-        return super().get_context_data(**kwargs)
+    # def get_context_data(self, **kwargs):
+    #     return super().get_context_data(**kwargs)
 
 # def all_vendors(request):
 #     vendors = Vendor.objects.all()
@@ -91,9 +93,12 @@ class PurchaseRequestDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['view_subtotal'] = PurchaseRequest.objects.filter(slug=self.kwargs.get('slug')).aggregate(Sum('purchaserequestitems__extended_price'))
-        # print(self.kwargs.get('pk',-1))
-        # print(context['view_subtotal'])
+        # context['requisitioner_full_name'] = self.requisitioner_django.get_full_name()
+        context['requisitioner_full_name'] = PurchaseRequest.objects.filter(slug=self.kwargs.get('slug'))[0].requisitioner_django.get_full_name()
+    #     context['view_subtotal'] = PurchaseRequest.objects.filter(slug=self.kwargs.get('slug')).aggregate(Sum('purchaserequestitems__extended_price'))
+    #     # context['requisitioner_full_name'] = PurchaseRequest.requisitioner.get_object(self)
+    #     # print(self.kwargs.get('pk',-1))
+    #     # print(context['view_subtotal'])
         print(context)
         return context
 
@@ -194,6 +199,7 @@ class PurchaseRequestCreateView(CreateView):
         for item in purchase_request_items:
             item.purchase_request = self.object
             item.save()
+        self.object.update_totals()
         return redirect(reverse_lazy("home"))
 
     def form_invalid(self, form, purchase_request_items_formset):

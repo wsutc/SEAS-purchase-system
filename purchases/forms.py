@@ -73,56 +73,11 @@ class NewPRForm(forms.ModelForm):
             'justification': forms.Textarea(attrs={'rows':2}),
             'instruction': forms.Textarea(attrs={'rows':2})
         }
-        exclude = ['created_date','number','items']
-        # fields = (
-        #     "requisitioner",
-        #     "need_by_date",
-        #     "tax_exempt",
-        #     "shipping",
-        #     "justification",
-        #     "instruction",
-        #     "purchase_type",
-        #     "number",
-        #     "vendor"
-        # )
+        exclude = ['created_date','number','items','subtotal','sales_tax']
 
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-    #     self.helper = FormHelper()
-    #     # self.helper.form_class = 'row g-3'
-    #     self.helper.form_method = 'post'
-    #     self.helper.help_text_inline = True
-    #     self.helper.layout = Layout(
-    #         Div(
-    #             Div('vendor',css_class='col-4'),
-    #             Div('need_by_date',css_class='col-4'),
-    #             Div('urgency',css_class='col-4'),
-    #             css_class='row'
-    #         ),
-    #         Div('justification',css_class='form-group col-12'),
-    #         Div('instruction', css_class='form-group col-12')
-    #     )
-    #     self.helper.add_input(Submit('submit', 'Save', css_class='btn btn-primary save'))
-
-    
-    # itemformset = ItemFormSet()
-
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-    #     self.helper = FormHelper()
-    #     self.helper.form_tag = True
-    #     self.helper.form_class = 'form-horizontal'
-    #     self.helper.label_class = 'col-md-3 create-label'
-    #     self.helper.field_class = 'col-md-9'
-    #     self.helper.form_method = 'post'
-    #     # self.helper.layout = Layout(
-    #     #     Div(
-    #     #         Fieldset('Add Items',
-    #     #             ItemFormSet('items')),
-    #     #         Field('note')
-    #     #     )
-    #     # )
-    #     self.helper.add_input(Submit('submit', 'test'))
+    # def save(self, *args, **kwargs):
+    #     print("NewPRForm save")
+    #     super().save(*args, **kwargs)
 
 class NewPRIForm(forms.ModelForm):
     class Meta:
