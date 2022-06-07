@@ -10,6 +10,7 @@ from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView
 from django.db.models import Sum, Count
+from django.contrib.auth.mixins import PermissionRequiredMixin
 
 from .forms import AddManufacturerForm, AddVendorForm, AddProductForm, NewPRForm , ItemFormSet
 
@@ -172,7 +173,8 @@ def add_product(request):
 #     else:
 #         return render(request, "purchases/new_pr.html", {"form": form})
 
-class PurchaseRequestCreateView(CreateView):
+class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
+    permission_required = 'purchases.add_purchaserequest'
     # model = PurchaseRequest
     form_class = NewPRForm
     template_name = 'purchases/new_pr.html'

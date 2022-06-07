@@ -6,3 +6,8 @@ django-money>=2.1.1
 django-import-export>=2.8.0
 django-crispy-forms>=1.14.0
 django-constance>=2.9.0
+django-environ>=0.8.1
+coverage>=6.4.1
+# django-mysql==4.7.0
+model-bakery>=1.5.0
+# mysqlclient==2.1.0

@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'purchases',
     'setup_sheets',
     'inventory',
+    'django_mysql',
 ]
 
 MIDDLEWARE = [
