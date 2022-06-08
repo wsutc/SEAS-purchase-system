@@ -12,7 +12,7 @@ from django.views.generic.edit import CreateView, UpdateView
 from django.db.models import Sum, Count
 from django.contrib.auth.mixins import PermissionRequiredMixin
 
-from .forms import AddManufacturerForm, AddVendorForm, AddProductForm, NewPRForm , ItemFormSet
+from .forms import AddManufacturerForm, AddVendorForm, AddProductForm, NewPRForm , ItemFormSet, UpdateProductForm
 
 
 # Create your views here.
@@ -150,17 +150,17 @@ def add_vendor(request):
     else:
         return render(request, "purchases/add_vendor.html", {"form": form})
 
-def add_product(request):
-    form = AddProductForm(request.POST or None)
+# def add_product(request):
+#     form = AddProductForm(request.POST or None)
 
-    if request.method == "POST":
-        if form.is_valid():
-            product = form.save(commit=False)
-            # product.created_date = datetime.now()
-            product.save()
-            return redirect("home")
-    else:
-        return render(request, "purchases/add_product.html", {"form": form})
+#     if request.method == "POST":
+#         if form.is_valid():
+#             product = form.save(commit=False)
+#             # product.created_date = datetime.now()
+#             product.save()
+#             return # redirect("home")
+#     else:
+#         return render(request, "purchases/add_product.html", {"form": form})
 
 # def new_pr(request):
 #     form = NewPRForm(request.POST or None)
@@ -172,6 +172,15 @@ def add_product(request):
 #             return redirect("home")
 #     else:
 #         return render(request, "purchases/new_pr.html", {"form": form})
+
+class ProductUpdateView(UpdateView):
+    model = Product
+    form_class = UpdateProductForm
+    template_name = 'purchases/add_product.html'
+
+class ProductCreateView(CreateView):
+    form_class = AddProductForm
+    template_name = 'purchases/add_product.html'
 
 class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
     permission_required = 'purchases.add_purchaserequest'
@@ -223,7 +232,7 @@ class PurchaseRequestUpdateView(UpdateView):
     def get_context_data(self, **kwargs):
         context = super(PurchaseRequestUpdateView, self).get_context_data(**kwargs)
         context['purchase_request_items_formset'] = ItemFormSet()
-        context['requisitioner'] = PurchaseRequest.objects.get(pk=1).requisitioner
+        context['requisitioner'] = PurchaseRequest.objects.get(slug=self.kwargs['slug']).requisitioner
     #     context['requisitioner'] = self.
     #     # context['requisitioner'] = Requisitioner.objects.get(user=self.request.user)
         return context

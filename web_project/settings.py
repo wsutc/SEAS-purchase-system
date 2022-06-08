@@ -92,6 +92,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'web_project.wsgi.application'
 
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
@@ -175,3 +178,6 @@ DEFAULT_INSTRUCTIONS = 'Because grand total amount does not include shipping/han
 # }
 
 LOGIN_REDIRECT_URL = '/'
+
+
+EASYPOST_KEY = env('EASYPOST_KEY')

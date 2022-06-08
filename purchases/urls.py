@@ -1,8 +1,16 @@
 from unicodedata import name
 from django.urls import path
 from purchases import views
-from purchases.views import ManufacturerDetailView, ManufacturerListView, PurchaseOrderDetailView, PurchaseRequestItemCreateView, PurchaseRequestListView, PurchaseRequestUpdateView, VendorDetailView, VendorListView, ProductListView, ProductDetailView, PurchaseRequestDetailView, PurchaseRequestCreateView
+from purchases.views import (
+    ManufacturerDetailView, ManufacturerListView, PurchaseOrderDetailView,
+    PurchaseRequestItemCreateView, PurchaseRequestListView,
+    PurchaseRequestUpdateView, VendorDetailView, VendorListView, ProductListView,
+    ProductDetailView, PurchaseRequestDetailView, PurchaseRequestCreateView,
+    ProductUpdateView
+)
 from purchases.models import Manufacturer, Product
+from django.conf.urls.static import static
+from django.conf import settings
 
 home_list_view = views.HomeListView.as_view(
     queryset=Manufacturer.objects.order_by()[:5],
@@ -20,7 +28,8 @@ urlpatterns = [
     path("", PurchaseRequestListView.as_view(), name="home"),
     path("add-mfg/", views.add_mfg, name="add_mfg"),
     path("add-vendor/", views.add_vendor, name="add_vendor"),
-    path("add-product/", views.add_product, name="add_product"),
+    # path("add-product/", views.productcreateview.)
+    # path("add-product/", views.add_product, name="add_product"),
     # path("product-list/", product_list_view, name="product_list"),
     # path("new-purchase-request/", PurchaseRequestCreateView.as_view(), name="create_purchase_request"),
     path("new-purchase-request/", PurchaseRequestCreateView.as_view(), name="new_pr"),
@@ -34,5 +43,6 @@ urlpatterns = [
     path("purchase-order/<slug:slug>", PurchaseOrderDetailView.as_view(), name="purchaseorder_detail"),
     path("new-pr-item/<str:pk>", PurchaseRequestItemCreateView.as_view(), name="new_pr_item"),
     path("manage-products", views.manage_products, name="manage_products"),
-    path("update-purchase-request/<slug:slug>", PurchaseRequestUpdateView.as_view(), name="update_pr")
-]
+    path("update-purchase-request/<slug:slug>", PurchaseRequestUpdateView.as_view(), name="update_pr"),
+    path("update-product/<int:pk>-<str:slug>", ProductUpdateView.as_view(), name="update_product")
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

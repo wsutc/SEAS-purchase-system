@@ -40,20 +40,29 @@ class AddProductForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'rows':4}),
             'specification': forms.Textarea(attrs={'rows':8})
         }
-        fields = (
-            "name",
-            "description",
-            "original_manufacturer",
-            "specification",
-            "spec_sheet",
-            "substitution",
-            "approved_substitutes",
-            "approved_vendors",
-            "last_price",
-            "link",
-            "identifier"
-        )
+        fields = "__all__"
+        # (
+        #     "name",
+        #     "description",
+        #     "original_manufacturer",
+        #     "specification",
+        #     "spec_sheet",
+        #     "substitution",
+        #     "approved_substitutes",
+        #     "approved_vendors",
+        #     "last_price",
+        #     "link",
+        #     "identifier"
+        # )
 
+class UpdateProductForm(forms.ModelForm):
+    class Meta:
+        model = Product
+        widgets = {
+            'description': forms.Textarea(attrs={'rows':4}),
+            'specification': forms.Textarea(attrs={'rows':8})
+        }
+        fields = "__all__"
 
 
 # class ItemFormSetHelper(FormHelper):

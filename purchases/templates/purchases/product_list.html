@@ -4,7 +4,8 @@ List of Products
 {% endblock %}
 {% block content %}
 
-    <h1 class="wsu-c-heading">All Products</h1>
+    <h1 class="wsu-c-heading">All <span class="header-em">Products</span></h1>
+    <div style=text-align:right><a href="{% url 'add_product' %}" class="save btn btn-primary">New</a></div>
 
     {% if object_list %}
     <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">

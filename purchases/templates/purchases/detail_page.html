@@ -5,9 +5,10 @@
 <div class="row mb-3">
     <h1 class="wsu-c-heading col-sm">{% block header %}{% endblock %} <span class="header-em">{% block number %}{% endblock %}</span></h1>
 
-    <div class="btn-group col-sm-2" role="group" aria-label="Basic example">
-        <a href="{% block previous %}{% endblock %}" class="btn btn-primary save">Previous</a>
-        <a href="{% block next %}{% endblock %}" class="btn btn-primary save">Next</a>
+    <div class="btn-group col-3" role="group" aria-label="Basic example">
+        <a href="{% block previous %}{% endblock %}" class="btn btn-primary">Previous</a>
+        <a href="{% block edit %}{% url 'update_product' pk=object.id slug=object.slug %}{% endblock %}" class="btn btn-primary">Edit</a>
+        <a href="{% block next %}{% endblock %}" class="btn btn-primary">Next</a>
     </div>
 </div>
 

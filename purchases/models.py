@@ -1,3 +1,4 @@
+from ast import If
 from asyncio.windows_events import NULL
 import decimal
 from re import sub
@@ -14,6 +15,7 @@ from django.contrib.auth.models import User
 from phonenumber_field.modelfields import PhoneNumberField
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
+from .tracking import create_tracker,update_tracker
 
 # from purchases.forms import  
 # from pyexpat import model
@@ -99,8 +101,8 @@ class Product(models.Model):
     created_date = models.DateTimeField("Date Product Created",auto_now_add=True)
     original_manufacturer = models.ForeignKey(Manufacturer,on_delete=models.PROTECT)
     specification = models.TextField("Detailed Specifications (required if no specification sheet)")
-    spec_sheet = models.FileField("Specifications",upload_to='products',blank=True)
-    # picture = models.ImageField("Product Image (options)",upload_to='products',blank=True)
+    spec_sheet = models.FileField("Specification Sheet",upload_to='products',blank=True)
+    picture = models.ImageField("Product Image (optional)",upload_to='products',blank=True)
     substitution = models.CharField(
         "Product Replacement",
         choices=SUBSTITUTIONS,
@@ -135,6 +137,7 @@ class Carrier(models.Model):
     name = models.CharField("Name of Carrier",max_length=50)
     tracking_link = models.URLField("URL stub for tracking")
     website = models.URLField("Carrier Website")
+    slug = models.CharField("Carrier Slug",max_length=10)
 
     def __str__(self):
         return self.name
@@ -290,7 +293,12 @@ class PurchaseRequest(models.Model):
         self.set_number()
 
     def get_subtotal(self):
-        return PurchaseRequestItems.objects.filter(purchase_request_id=self.id).aggregate(Sum('extended_price'))
+        extended_price = PurchaseRequestItems.objects.filter(purchase_request_id=self.id).aggregate(Sum('extended_price'))
+        if extended_price['extended_price__sum'] != None:
+            pass
+        else:
+            extended_price['extended_price__sum'] = 0
+        return extended_price
 
     def update_totals(self):
         subtotal = self.get_subtotal()['extended_price__sum']
@@ -316,7 +324,6 @@ class PurchaseRequest(models.Model):
         return self.number
 
 ################## This is the "good" one ######################
-# @receiver(post_save, sender=PurchaseRequest)
 # def save_formset(sender, instance, *args, **kwargs):
 
 # @receiver(post_save, sender=PurchaseRequest)
@@ -327,30 +334,6 @@ class PurchaseRequest(models.Model):
 #     elif subtotal != instance.subtotal.amount:
 #         instance.subtotal = subtotal
 #         instance.save()
-
-# @receiver(post_save, sender=PurchaseRequest)
-# def set_totals(sender, instance, *args, **kwargs):
-#     subtotal = instance.update_totals()
-    # if subtotal == None:
-    #     pass
-    # elif subtotal != instance.subtotal.amount:
-    #     instance.subtotal = subtotal
-    #     instance.save()
-
-# @receiver(pre_save, sender=PurchaseRequest)
-# def save_items(sender, instance, *args, **kwargs):
-#     items = PurchaseRequestItems.objects.filter(purchase_request_id=instance.id)
-#     for i in items:
-#         PurchaseRequestItems.save(i)
-
-# @receiver(pre_save, sender=PurchaseRequest)
-# def create_slug(sender, instance, *args, **kwargs):
-#     number = instance.number
-#     instance.slug = slugify(number, allow_unicode=True)
-
-# @receiver(pre_save, sender=PurchaseRequest)
-# def set_number(sender, instance, *args, **kwargs):
-
 
 class PurchaseRequestItems(models.Model):
     product = models.ForeignKey(Product,on_delete=models.PROTECT)
@@ -405,6 +388,8 @@ class PurchaseOrder(models.Model):
     grand_total = models.DecimalField("Grand Total ($)",decimal_places=2,max_digits=10)
     carrier = models.ForeignKey("Carrier",Carrier,blank=True,null=True)
     tracking_number = models.CharField(max_length=55,blank=True,null=True)
+    tracking_link = models.URLField(blank=True, null=True)
+    tracker_created = models.BooleanField(default=False)
 
     PO = 'po'
     PCARD = 'pcard'
@@ -458,6 +443,11 @@ class PurchaseOrder(models.Model):
         super().save(*args, **kwargs)
         self.set_number()
 
+    # def get_tracking(self, *args, **kwargs):
+    #     carrier = self.carrier
+    #     tracking_number = self.tracking_number
+
+
     def set_number(self):
         if not self.number:
             number = "PO" + str(self.id + (10 ** 4))            # Creates a number starting with 'PO' and ending with a 5 character (10^4) unique ID
@@ -467,6 +457,20 @@ class PurchaseOrder(models.Model):
 
     def __str__(self):
         return self.number
+
+@receiver(pre_save, sender=PurchaseOrder)
+def get_tracking(sender, instance, *args, **kwargs):
+    if instance.carrier and instance.tracking_number:
+        carrier = instance.carrier
+        tracking_number = instance.tracking_number
+
+        if not instance.tracker_created:
+            tracking = create_tracker(carrier.slug,tracking_number)
+            instance.tracker_created = True
+        else:
+            tracking = update_tracker(carrier.slug, tracking_number)
+
+        instance.tracking_link = tracking['link']
 
 class PurchaseOrderItems(models.Model):
     product = models.ForeignKey(Product,on_delete=models.PROTECT)
