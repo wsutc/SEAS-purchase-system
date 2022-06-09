@@ -1,7 +1,8 @@
+from ast import If
 import http.client
 import json
 
-def create_tracker(slug, tracking_number):
+def create_tracker(slug, tracking_number, api_key):
 
     conn = http.client.HTTPSConnection("api.aftership.com")
 
@@ -10,15 +11,13 @@ def create_tracker(slug, tracking_number):
         'slug':slug
         }
 
-    payload_dict = {'tracking':json.dumps(tracking_dict)}
+    payload_dict = {'tracking':tracking_dict}
 
-    payload_dump = json.dumps(payload_dict)
-
-    payload = "{\n  \"tracking\": {\n    \"tracking_number\": \"" + tracking_number + " \",\n    \"slug\": \"" + slug + "\",\n    \"title\": \"Title Name\",\n    \"smses\": [\n      \"+18555072509\",\n      \"+18555072501\"\n    ],\n    \"emails\": [\n      \"karl.wooster@wsu.edu\",\n      \"another_email@yourdomain.com\"\n    ],\n    \"order_id\": \"ID 1234\",\n    \"order_number\": \"1234\",\n    \"order_id_path\": \"http://www.aftership.com/order_id=1234\",\n    \"custom_fields\": {\n      \"product_name\": \"iPhone Case\",\n      \"product_price\": \"USD19.99\"\n    },\n    \"language\": \"en\",\n    \"order_promised_delivery_date\": \"2019-05-20\",\n    \"delivery_type\": \"pickup_at_store\",\n    \"pickup_location\": \"Flagship Store\",\n    \"pickup_note\": \"Reach out to our staffs when you arrive our stores for shipment pickup\"\n  }\n}"
+    payload = json.dumps(payload_dict,indent=2)
 
     headers = {
         'Content-Type': "application/json",
-        'aftership-api-key': "dcbad674-9232-4bd1-b3fb-eceac9cad026"
+        'aftership-api-key': api_key
         }
 
     conn.request("POST", "/v4/trackings", payload, headers)
@@ -29,22 +28,39 @@ def create_tracker(slug, tracking_number):
 
     tracking = dataJson['data']['tracking']
 
+    meta_code = dataJson['meta']['code']
+
+    if meta_code == 201:
+        active = tracking['active'],
+        expected_delivery = tracking['expected_delivery'],
+        new_slug = tracking['slug'],
+        link = tracking['courier_tracking_link']
+        status = tracking['tag']
+    else:
+        active = None
+        expected_delivery = None
+        new_slug = None
+        link = None
+        status = None
+    
+
     tracker = {
-        "meta-code":dataJson['meta']['code'],
-        "active":tracking['active'],
-        "expected_delivery":tracking['expected_delivery'],
-        "slug":tracking['slug'],
-        "link":tracking['courier_tracking_link']
+        "meta-code":meta_code,
+        "active":active,
+        "expected_delivery":expected_delivery,
+        "slug":new_slug,
+        "link":link,
+        "status":status
     }
 
     return tracker
 
-def update_tracker(slug, tracking_number):
+def update_tracker(slug, tracking_number, api_key):
     conn = http.client.HTTPSConnection("api.aftership.com")
 
     headers = {
         'Content-Type': "application/json",
-        'aftership-api-key': "dcbad674-9232-4bd1-b3fb-eceac9cad026"
+        'aftership-api-key': api_key
         }
 
     request_str = "/v4/trackings/%s/%s" % (slug,tracking_number)
@@ -62,7 +78,8 @@ def update_tracker(slug, tracking_number):
         "active":tracking['active'],
         "expected_delivery":tracking['expected_delivery'],
         "slug":tracking['slug'],
-        "link":tracking['courier_tracking_link']
+        "link":tracking['courier_tracking_link'],
+        "status":tracking['tag']
     }
 
     return tracker

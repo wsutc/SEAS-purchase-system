@@ -111,6 +111,12 @@ DATABASES = {
         'PASSWORD': env('DB_PASSWORD'),
         'HOST': env('DB_HOST'),
         'PORT': env('DB_PORT'),
+        'CHARSET': 'utf8mb4',
+        'COLLATION': 'utf8mb4_unicode_ci'
+    },
+    "TEST": {
+        "CHARSET": "utf8mb4",
+        "COLLATION": 'utf8mb4_unicode_ci'
     }
 }
 
@@ -181,3 +187,4 @@ LOGIN_REDIRECT_URL = '/'
 
 
 EASYPOST_KEY = env('EASYPOST_KEY')
+AFTERSHIP_KEY = env('AFTERSHIP_KEY')

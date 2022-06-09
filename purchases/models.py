@@ -390,6 +390,8 @@ class PurchaseOrder(models.Model):
     tracking_number = models.CharField(max_length=55,blank=True,null=True)
     tracking_link = models.URLField(blank=True, null=True)
     tracker_created = models.BooleanField(default=False)
+    shipping_status = models.CharField(max_length=55,blank=True,null=True)
+    tracker_active = models.BooleanField(default=True)
 
     PO = 'po'
     PCARD = 'pcard'
@@ -460,18 +462,21 @@ class PurchaseOrder(models.Model):
 
 @receiver(pre_save, sender=PurchaseOrder)
 def get_tracking(sender, instance, *args, **kwargs):
-    if instance.carrier and instance.tracking_number:
+    if instance.carrier and instance.tracking_number and instance.tracker_active:
         carrier = instance.carrier
         tracking_number = instance.tracking_number
+        api_key = settings.AFTERSHIP_KEY
 
         if not instance.tracker_created:
-            tracking = create_tracker(carrier.slug,tracking_number)
+            tracking = create_tracker(carrier.slug,tracking_number,api_key)
             instance.tracker_created = True
         else:
-            tracking = update_tracker(carrier.slug, tracking_number)
+            tracking = update_tracker(carrier.slug, tracking_number,api_key)
 
         instance.tracking_link = tracking['link']
-
+        instance.shipping_status = tracking['status']
+        instance.tracker_active = tracking['active']
+        
 class PurchaseOrderItems(models.Model):
     product = models.ForeignKey(Product,on_delete=models.PROTECT)
     purchase_order = models.ForeignKey(PurchaseOrder,on_delete=models.PROTECT)
