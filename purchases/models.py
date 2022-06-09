@@ -15,7 +15,7 @@ from django.contrib.auth.models import User
 from phonenumber_field.modelfields import PhoneNumberField
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
-from .tracking import create_tracker,update_tracker
+from .tracking import Tracker
 
 # from purchases.forms import  
 # from pyexpat import model
@@ -460,6 +460,8 @@ class PurchaseOrder(models.Model):
     def __str__(self):
         return self.number
 
+
+# TODO - fix tracking!
 @receiver(pre_save, sender=PurchaseOrder)
 def get_tracking(sender, instance, *args, **kwargs):
     if instance.carrier and instance.tracking_number and instance.tracker_active:
@@ -468,15 +470,15 @@ def get_tracking(sender, instance, *args, **kwargs):
         api_key = settings.AFTERSHIP_KEY
 
         if not instance.tracker_created:
-            tracking = create_tracker(carrier.slug,tracking_number,api_key)
+            tracker = Tracker.create(carrier.slug,tracking_number,api_key)
             instance.tracker_created = True
         else:
-            tracking = update_tracker(carrier.slug, tracking_number,api_key)
+            tracker = Tracker.update(carrier.slug, tracking_number,api_key)
 
-        instance.tracking_link = tracking['link']
-        instance.shipping_status = tracking['status']
-        instance.tracker_active = tracking['active']
-        
+        instance.tracking_link = tracker.link
+        instance.shipping_status = tracker['status']
+        instance.tracker_active = tracker['active']
+
 class PurchaseOrderItems(models.Model):
     product = models.ForeignKey(Product,on_delete=models.PROTECT)
     purchase_order = models.ForeignKey(PurchaseOrder,on_delete=models.PROTECT)
@@ -539,3 +541,12 @@ class PurchaseOrderAccounts(models.Model):
 
     def __str__(self):
         return self.spend_category
+
+class TrackingWebhookMessage(models.Model):
+    received_at = models.DateTimeField(help_text="DateTime that message was recieved.")
+    payload = models.JSONField(default=None, null=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['received_at'])
+        ]

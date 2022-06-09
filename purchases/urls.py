@@ -6,7 +6,7 @@ from purchases.views import (
     PurchaseRequestItemCreateView, PurchaseRequestListView,
     PurchaseRequestUpdateView, VendorDetailView, VendorListView, ProductListView,
     ProductDetailView, PurchaseRequestDetailView, PurchaseRequestCreateView,
-    ProductUpdateView
+    ProductUpdateView, tracking_webhook
 )
 from purchases.models import Manufacturer, Product
 from django.conf.urls.static import static
@@ -44,5 +44,6 @@ urlpatterns = [
     path("new-pr-item/<str:pk>", PurchaseRequestItemCreateView.as_view(), name="new_pr_item"),
     path("manage-products", views.manage_products, name="manage_products"),
     path("update-purchase-request/<slug:slug>", PurchaseRequestUpdateView.as_view(), name="update_pr"),
-    path("update-product/<int:pk>-<str:slug>", ProductUpdateView.as_view(), name="update_product")
+    path("update-product/<int:pk>-<str:slug>", ProductUpdateView.as_view(), name="update_product"),
+    path("webhooks/tracking/&@0k6sCB8M40NNWydUwn%j$egfzlPgqG/",tracking_webhook)
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

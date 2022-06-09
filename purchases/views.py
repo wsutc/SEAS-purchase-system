@@ -1,16 +1,27 @@
 from itertools import product
+from django.conf import settings
 from django.forms import formset_factory
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils.timezone import datetime,activate
 from django.shortcuts import get_object_or_404
-from .models import Manufacturer, Product, PurchaseOrder, PurchaseRequest, PurchaseRequestItems, Requisitioner, Vendor
+from .models import Manufacturer, Product, PurchaseOrder, PurchaseRequest, PurchaseRequestItems, Requisitioner, Vendor, TrackingWebhookMessage
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView
 from django.db.models import Sum, Count
 from django.contrib.auth.mixins import PermissionRequiredMixin
+
+import datetime as dt
+import json
+from secrets import compare_digest
+from django.utils import timezone
+
+from django.db.transaction import atomic, non_atomic_requests
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+
 
 from .forms import AddManufacturerForm, AddVendorForm, AddProductForm, NewPRForm , ItemFormSet, UpdateProductForm
 
@@ -275,3 +286,33 @@ def manage_products(request):
     else:
         formset = ProductFormSet()
     return render(request, 'purchases/manage_products.html', {'formset': formset})
+
+@csrf_exempt
+@require_POST
+@non_atomic_requests
+def tracking_webhook(request):
+    given_token = request.headers.get("aftership-hmac-sha256", "")
+    if not compare_digest(given_token, settings.AFTERSHIP_WEBHOOK_SECRET):
+        return HttpResponseForbidden(
+            "Incorrect token in Aftership-Hmac-Sha256 header.",
+            content_type="text/plain"
+        )
+
+    TrackingWebhookMessage.objects.filter(
+        received_at__lte = timezone.now() - dt.timedelta(days=7)
+    ).delete()
+
+    payload = json.loads(request.body)
+    TrackingWebhookMessage.objects.create(
+        received_at=timezone.now(),
+        payload=payload
+    )
+
+    process_webhook_payload(payload)
+
+    return HttpResponse("Message successfully received.", content_type="text/plain")
+
+@atomic
+def process_webhook_payload(payload):
+    # TODO: stuff
+    pass
