@@ -35,7 +35,7 @@ SECRET_KEY = 'django-insecure-=575&#l3pkg&6i%bmymmf+o@7$)tj8oxd=tvsn(n^0!3d8n013
 DEBUG = True
 TEMPLATE_DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1','d4e0-69-166-40-1.ngrok.io']
 
 
 # Application definition
@@ -189,3 +189,4 @@ LOGIN_REDIRECT_URL = '/'
 EASYPOST_KEY = env('EASYPOST_KEY')
 AFTERSHIP_KEY = env('AFTERSHIP_KEY')
 AFTERSHIP_WEBHOOK_SECRET = env('AFTERSHIP_WEBHOOK_SECRET')
+SHIP24_KEY = env('SHIP24_KEY')

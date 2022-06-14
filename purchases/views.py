@@ -1,3 +1,6 @@
+import base64
+import hashlib
+import hmac
 from itertools import product
 from django.conf import settings
 from django.forms import formset_factory
@@ -287,12 +290,19 @@ def manage_products(request):
         formset = ProductFormSet()
     return render(request, 'purchases/manage_products.html', {'formset': formset})
 
+
+
 @csrf_exempt
 @require_POST
 @non_atomic_requests
 def tracking_webhook(request):
+    secret = settings.AFTERSHIP_WEBHOOK_SECRET
     given_token = request.headers.get("aftership-hmac-sha256", "")
-    if not compare_digest(given_token, settings.AFTERSHIP_WEBHOOK_SECRET):
+    # token_byte = bytes(settings.AFTERSHIP_WEBHOOK_SECRET, 'UTF-8')
+    # hmac_raw = hmac.new(token_byte, digestmod=hashlib.sha256)
+    # hash = base64.b64encode(hmac_raw.digest()).decode()
+    signature = generate_signature(secret,request.body)
+    if not compare_digest(given_token, signature):
         return HttpResponseForbidden(
             "Incorrect token in Aftership-Hmac-Sha256 header.",
             content_type="text/plain"
@@ -315,4 +325,16 @@ def tracking_webhook(request):
 @atomic
 def process_webhook_payload(payload):
     # TODO: stuff
+    # purchase_order = PurchaseOrder.objects.get(tracker_id=payload['msg']['id'])
+    # print(purchase_order.number)
+
     pass
+
+def generate_signature(secret,payload):
+    # given_token = request.headers.get("aftership-hmac-sha256", "")
+    # body = request.body
+    token_byte = bytes(secret, 'UTF-8')
+    hashBytes = hmac.new(token_byte, payload, digestmod=hashlib.sha256)
+    hash = base64.b64encode(hashBytes.digest()).decode()
+
+    return hash

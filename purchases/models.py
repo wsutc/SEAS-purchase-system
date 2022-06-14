@@ -14,7 +14,7 @@ from djmoney.models.fields import MoneyField
 from django.contrib.auth.models import User
 from phonenumber_field.modelfields import PhoneNumberField
 from django.db.models.signals import pre_save, post_save
-from django.dispatch import receiver
+# from django.dispatch import receiver
 from .tracking import Tracker
 
 # from purchases.forms import  
@@ -35,7 +35,7 @@ class Manufacturer(models.Model):
     website = models.URLField("URL of Manufacturer",blank=True)
     wsu_discount = models.BooleanField("Does WSU get a discount?",default=False)
     discount_percentage = models.FloatField(default=0)
-    # mfg_logo = models.ImageField("Manufacturer Logo (optional)",blank=True)
+    mfg_logo = models.ImageField("Manufacturer Logo (optional)",upload_to='manufacturers',blank=True)
     created_date = models.DateTimeField("Date manufacturer added",auto_now_add=True)
     phone = PhoneNumberField("Manufacturer Phone Number (optional)",blank=True)
 
@@ -209,7 +209,7 @@ class Requisitioner(models.Model):
     # first_name = models.CharField("First Name",max_length=50,blank=False)
     # last_name = models.CharField("Last Name",max_length=50,blank=False)
     # slug = models.SlugField(max_length=255, unique=True)
-    phone = PhoneNumberField("Phone Number",max_length=25,blank=False)
+    phone = PhoneNumberField("Phone Number",max_length=25,blank=True,null=True)
     # email = models.EmailField("Email",max_length=50,blank=False)
     department = models.ForeignKey(Department,on_delete=models.PROTECT)
 
@@ -383,7 +383,7 @@ class PurchaseOrder(models.Model):
     accounts = models.ManyToManyField(Accounts,through='PurchaseOrderAccounts')
     # accounts = models.ManyToManyField(Accounts)
     # subtotal = models.DecimalField("Subtotal",decimal_places=2,max_digits=10)
-    shipping = MoneyField("Shipping ($)",decimal_places=2,max_digits=14,default_currency='USD')
+    shipping = MoneyField("Shipping ($)",decimal_places=2,max_digits=14,default_currency='USD',default=0)
     sales_tax = models.DecimalField("Sales Tax ($)",decimal_places=2,max_digits=10)
     grand_total = models.DecimalField("Grand Total ($)",decimal_places=2,max_digits=10)
     carrier = models.ForeignKey("Carrier",Carrier,blank=True,null=True)
@@ -392,6 +392,7 @@ class PurchaseOrder(models.Model):
     tracker_created = models.BooleanField(default=False)
     shipping_status = models.CharField(max_length=55,blank=True,null=True)
     tracker_active = models.BooleanField(default=True)
+    tracker_id = models.CharField(max_length=100,blank=True,null=True)
 
     PO = 'po'
     PCARD = 'pcard'
@@ -464,20 +465,19 @@ class PurchaseOrder(models.Model):
 # TODO - fix tracking!
 @receiver(pre_save, sender=PurchaseOrder)
 def get_tracking(sender, instance, *args, **kwargs):
-    if instance.carrier and instance.tracking_number and instance.tracker_active:
+    if instance.carrier and instance.tracking_number:       # and not instance.tracker_id:
         carrier = instance.carrier
         tracking_number = instance.tracking_number
+        tracker_created = instance.tracker_created
         api_key = settings.AFTERSHIP_KEY
 
-        if not instance.tracker_created:
-            tracker = Tracker.create(carrier.slug,tracking_number,api_key)
-            instance.tracker_created = True
-        else:
-            tracker = Tracker.update(carrier.slug, tracking_number,api_key)
+        tracker = Tracker.get(carrier.slug,tracking_number,tracker_created,api_key)
+        instance.tracker_created = True
 
-        instance.tracking_link = tracker.link
-        instance.shipping_status = tracker['status']
-        instance.tracker_active = tracker['active']
+        instance.tracking_link = tracker.courier_tracking_link
+        instance.shipping_status = tracker.tag
+        instance.tracker_active = tracker.active
+        instance.tracker_id = tracker.id
 
 class PurchaseOrderItems(models.Model):
     product = models.ForeignKey(Product,on_delete=models.PROTECT)
