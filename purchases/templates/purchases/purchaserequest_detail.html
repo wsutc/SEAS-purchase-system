@@ -8,6 +8,8 @@
 
 <a href="{% url 'update_pr' slug=object.slug %}">Edit</a>
 
+<a href="{% url 'generate_pdf' slug=object.slug %}">PDF</a>
+
 <div class="row mb-3">
     <div class="col-4">
         Created {{ object.created_date }}

@@ -45,5 +45,6 @@ urlpatterns = [
     path("manage-products", views.manage_products, name="manage_products"),
     path("update-purchase-request/<slug:slug>", PurchaseRequestUpdateView.as_view(), name="update_pr"),
     path("update-product/<int:pk>-<str:slug>", ProductUpdateView.as_view(), name="update_product"),
-    path("webhooks/tracking/BJD3ZX4b1gNvcIAOhGeTiE6kcC0ugjp/",tracking_webhook)
+    path("webhooks/tracking/BJD3ZX4b1gNvcIAOhGeTiE6kcC0ugjp/",tracking_webhook),
+    path("purchase-request/<slug:slug>/pdf", views.generate_pr_pdf, name="generate_pdf")
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

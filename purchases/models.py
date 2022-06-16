@@ -2,6 +2,7 @@ from ast import If
 from asyncio.windows_events import NULL
 import decimal
 from re import sub
+import http.client, json
 from django.conf import settings
 from django.db import models
 from django.db.models import Avg,Sum
@@ -15,7 +16,7 @@ from django.contrib.auth.models import User
 from phonenumber_field.modelfields import PhoneNumberField
 from django.db.models.signals import pre_save, post_save
 # from django.dispatch import receiver
-from .tracking import Tracker
+from .tracking import TrackerOld, build_payload
 
 # from purchases.forms import  
 # from pyexpat import model
@@ -95,7 +96,7 @@ class Product(models.Model):
         (ASK, 'Ask before substituting'),
     )
 
-    name = models.CharField("Name of Product",max_length=50)
+    name = models.CharField("Name of Product",max_length=40)
     slug = models.SlugField(max_length=255, unique=True, default='', editable=False)
     description = models.TextField("Description of product",max_length=255)
     created_date = models.DateTimeField("Date Product Created",auto_now_add=True)
@@ -135,9 +136,9 @@ class Product(models.Model):
 
 class Carrier(models.Model):
     name = models.CharField("Name of Carrier",max_length=50)
-    tracking_link = models.URLField("URL stub for tracking")
-    website = models.URLField("Carrier Website")
-    slug = models.CharField("Carrier Slug",max_length=10)
+    tracking_link = models.URLField("URL stub for tracking",blank=True)
+    website = models.URLField("Carrier Website",blank=True)
+    slug = models.CharField("Carrier Slug",max_length=10,blank=True,null=True)
 
     def __str__(self):
         return self.name
@@ -206,6 +207,7 @@ class Department(models.Model):
 
 class Requisitioner(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    wsu_id = models.CharField("WSU ID",max_length=50,blank=True,null=True)
     # first_name = models.CharField("First Name",max_length=50,blank=False)
     # last_name = models.CharField("Last Name",max_length=50,blank=False)
     # slug = models.SlugField(max_length=255, unique=True)
@@ -215,6 +217,97 @@ class Requisitioner(models.Model):
 
     def __str__(self):
         return self.user.get_full_name()
+
+class Tracker(models.Model):
+    id = models.CharField(max_length=100, primary_key=True, editable=False)
+    carrier = models.ForeignKey(Carrier,on_delete=models.PROTECT,blank=True,null=True)
+    tracking_number = models.CharField(max_length=100)
+    events = models.JSONField(default=None,blank=True,null=True)
+    shipment_id = models.CharField(max_length=100,blank=True,null=True)
+    status = models.CharField(max_length=50,editable=False,blank=True,null=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['id'])
+        ]
+
+    def update(self):
+        api_key = settings.SHIP24_KEY
+        id = self.id
+        tracking_number = self.tracking_number
+        conn = http.client.HTTPSConnection("api.ship24.com")
+        headers = {
+            'Content-Type': "application/json",
+            'Authorization': "Bearer " + api_key
+        }
+
+        get_path = "/public/v1/trackers/search/%s" % (tracking_number)
+
+        conn.request("GET", get_path, headers=headers)
+        response = conn.getresponse()
+        data = response.read()
+        dataJson = json.loads(data.decode("utf-8"))
+        # print(dataJson)
+        dataDict = dataJson.get('data')
+        trackings = dataDict.get('trackings')
+        # tracker = trackings[0].get('tracker')
+        shipment = trackings[0].get('shipment')
+        events = trackings[0].get('events')
+        event_data = get_event_data(events[0])
+
+        carrier = Carrier.objects.get(slug = event_data.get('courier_code'))
+        if carrier:
+            self.carrier = carrier
+        self.shipment_id = shipment.get('shipmentId')
+        self.status = shipment.get('statusCode')
+        self.events = events
+        self.save()
+
+
+
+    def __str__(self):
+        return str(self.id)
+
+def get_event_data(event):
+    event_data = {
+        'event_id': event.get('eventId'),
+        'event_status': event.get('status'),
+        'event_datetime': event.get('datetime'),
+        'courier_code': event.get('courierCode')
+    }
+
+    return event_data
+
+@receiver(pre_save, sender=Tracker)
+def get_tracker(sender, instance, *args, **kwargs):
+    api_key = settings.SHIP24_KEY
+
+    conn = http.client.HTTPSConnection("api.ship24.com")
+    headers = {
+        'Content-Type': "application/json",
+        'Authorization': "Bearer " + api_key
+    }
+
+    if instance.carrier:
+        carrier_slug = instance.carrier.slug
+    else:
+        carrier_slug = None
+    tracking_number = instance.tracking_number
+
+    payload = build_payload(tracking_number, carrier_slug)
+
+    conn.request("POST", "/public/v1/trackers", payload, headers)
+
+    response = conn.getresponse()
+    data = response.read()
+    dataJson = json.loads(data.decode("utf-8"))
+
+    tracking = dataJson['data']['tracker']
+
+    if str(response.status).startswith('2'):
+        instance.id = tracking['trackerId']
+        instance.tracking_number = tracking['trackingNumber']
+        # instance.events = dataJson.get('events')
 
 class PurchaseRequest(models.Model):
     id = models.AutoField(primary_key=True,editable=False)
@@ -239,6 +332,15 @@ class PurchaseRequest(models.Model):
         "Special Instructions",
         default=settings.DEFAULT_INSTRUCTIONS,
     )
+    carrier = models.ForeignKey("Carrier",Carrier,blank=True,null=True)
+    tracking_number = models.CharField(max_length=55,blank=True,null=True)
+    # tracking_link = models.URLField(blank=True, null=True)
+    # tracker_created = models.BooleanField(default=False)
+    # shipping_status = models.CharField(max_length=55,blank=True,null=True)
+    # shipping_status_datetime = models.DateTimeField(blank=True,null=True)
+    # tracker_active = models.BooleanField(default=True)
+    # tracker_id = models.CharField(max_length=100,blank=True,null=True)
+    tracker = models.ForeignKey(Tracker,on_delete=models.SET_NULL,blank=True,null=True)
 
     PO = 'po'
     PCARD = 'pcard'
@@ -313,6 +415,12 @@ class PurchaseRequest(models.Model):
         self.save()
         return
 
+    def update_tracking(self, events):
+        last_event = events[0]
+        self.shipping_status = last_event.get('status')
+        self.shipping_status_datetime = last_event.get('datetime')
+        self.save()
+
     def set_number(self):
         if not self.number:
             number = "PR" + str(self.id + (10 ** 4))            # Creates a number starting with 'PR' and ending with a 5 character (10^4) unique ID
@@ -324,6 +432,35 @@ class PurchaseRequest(models.Model):
         return self.number
 
 ################## This is the "good" one ######################
+# @receiver(pre_save, sender=PurchaseRequest)
+# def get_tracking(sender, instance, *args, **kwargs):
+#     if not instance.tracker_id and instance.tracking_number:
+#         # carrier = instance.carrier
+#         tracking_number = instance.tracking_number
+#         # tracker_created = instance.tracker_created
+#         api_key = settings.SHIP24_KEY
+
+#         tracker = TrackerOld.get('slug',tracking_number,api_key)
+#         # instance.tracker_created = True
+
+#         # instance.tracking_link = tracker.courier_tracking_link
+#         # instance.shipping_status = tracker.tag
+#         # instance.tracker_active = tracker.active
+#         instance.tracker_id = tracker.id
+
+# def update_tracking(instance)
+
+@receiver(pre_save, sender=PurchaseRequest)
+def create_tracker(sender, instance, *args, **kwargs):
+    if not instance.tracker and instance.tracking_number:
+        carrier = instance.carrier
+        tracking_number = instance.tracking_number
+
+        tracker = Tracker.objects.get_or_create(carrier=carrier,tracking_number=tracking_number)
+        # tracker = Tracker.objects.get(id=tracker.id)
+        instance.tracker = tracker[0]
+        Tracker.update(tracker[0])
+
 # def save_formset(sender, instance, *args, **kwargs):
 
 # @receiver(post_save, sender=PurchaseRequest)
@@ -450,6 +587,9 @@ class PurchaseOrder(models.Model):
     #     carrier = self.carrier
     #     tracking_number = self.tracking_number
 
+    def update_tracking(self, events):
+        self.shipping_status = events[0].get('status')
+        self.save()
 
     def set_number(self):
         if not self.number:
@@ -462,22 +602,24 @@ class PurchaseOrder(models.Model):
         return self.number
 
 
-# TODO - fix tracking!
+# TODO - invert commented lines!
 @receiver(pre_save, sender=PurchaseOrder)
 def get_tracking(sender, instance, *args, **kwargs):
-    if instance.carrier and instance.tracking_number:       # and not instance.tracker_id:
-        carrier = instance.carrier
+    if instance.tracking_number:       # and not instance.tracker_id:
+        # carrier = instance.carrier
         tracking_number = instance.tracking_number
         tracker_created = instance.tracker_created
-        api_key = settings.AFTERSHIP_KEY
+        api_key = settings.SHIP24_KEY
 
-        tracker = Tracker.get(carrier.slug,tracking_number,tracker_created,api_key)
+        tracker = TrackerOld.get('slug',tracking_number,tracker_created,api_key)
         instance.tracker_created = True
 
-        instance.tracking_link = tracker.courier_tracking_link
-        instance.shipping_status = tracker.tag
-        instance.tracker_active = tracker.active
-        instance.tracker_id = tracker.id
+        # instance.tracking_link = tracker.courier_tracking_link
+        # instance.shipping_status = tracker.tag
+        # instance.tracker_active = tracker.active
+        if not instance.tracker_id:
+            instance.tracker_id = tracker.id
+    # pass
 
 class PurchaseOrderItems(models.Model):
     product = models.ForeignKey(Product,on_delete=models.PROTECT)

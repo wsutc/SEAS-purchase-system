@@ -1,0 +1,106 @@
+{'data':
+     {'trackings': [
+            {
+                'tracker':{
+                     'trackerId': '424c06ec-1acd-4dce-82e5-91fbe4561a22',
+                     'trackingNumber': 'YW003512235NPG', 
+                     'shipmentReference': None, 
+                     'isSubscribed': True, 
+                     'createdAt': '2022-04-04T20: 08: 15.458Z'
+                    }, 
+                'shipment': {
+                    'shipmentId': '8af28a66-06e4-4cea-8c44-1c59c8e9392b', 
+                    'statusCode': 'delivery_delivered', 
+                    'statusCategory': 'delivery', 
+                    'originCountryCode': 'CN', 
+                    'destinationCountryCode': 'UA', 
+                    'delivery': {
+                        'estimatedDeliveryDate': None, 
+                        'service': None
+                    }, 
+                    'trackingNumbers': [
+                        {'tn': 'PR219304295YP'
+                        },
+                        {'tn': 'LP00483406196643'
+                        },
+                        {'tn': 'YW003512235NPG'
+                        }
+                    ]
+                }, 
+                'events': [
+                    {'eventId': '81d415ad-2ece-43a0-bf7f-ae159c197704', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'Delivered', 'datetime': '2021-12-18T00: 22: 02.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': 'cainiao-tracking', 'courierCode': 'cainiao', 'statusCode': 'delivery_delivered', 'statusCategory': 'delivery'
+                    },
+                    {'eventId': 'd183a6e6-cd2e-4f8c-ab32-35fe0330cdec', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'LP00483406196643', 'status': 'Delivered', 'datetime': '2021-12-18T00: 22: 02.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': 'cainiao-tracking', 'courierCode': 'cainiao', 'statusCode': 'delivery_delivered', 'statusCategory': 'delivery'
+                    },
+                    {'eventId': 'dc0a60e2-39ad-4f05-86bb-deb7947a3dcf', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'Delivered', 'datetime': '2021-12-17T18: 22: 02.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': 'UA', 'sourceCode': 'yanwen-api-tracking', 'courierCode': 'yanwen', 'statusCode': 'delivery_delivered', 'statusCategory': 'delivery'
+                    },
+                    {'eventId': 'a3feda2f-202a-403a-b188-d34c4c4c0465', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'At Nova Poshta point', 'datetime': '2021-12-17T17: 57: 07.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': 'UA', 'sourceCode': 'yanwen-api-tracking', 'courierCode': 'yanwen', 'statusCode': None, 'statusCategory': None
+                    },
+                    {'eventId': 'ecfe6fb7-1941-4568-9e14-4d552a902cff', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'Sent to the destination city', 'datetime': '2021-12-16T17: 50: 15.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': 'UA', 'sourceCode': 'yanwen-api-tracking', 'courierCode': 'yanwen', 'statusCode': None, 'statusCategory': 'transit'
+                    },
+                    {'eventId': '7dbb32ea-cf7e-4d8f-9c6b-d46fa67d237b', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'Customs declaration finished', 'datetime': '2021-12-16T14: 51: 06.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': 'yanwen-api-tracking', 'courierCode': 'yanwen', 'statusCode': None, 'statusCategory': None
+                    },
+                    {'eventId': '303e6377-2cda-4351-a2b6-b8866aa3db66', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'In the process of customs declaration', 'datetime': '2021-12-16T14: 50: 06.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': 'yanwen-api-tracking', 'courierCode': 'yanwen', 'statusCode': None, 'statusCategory': None
+                    },
+                    {'eventId': '439bcec4-6782-42c3-b118-6986b0e2c8a9', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'Delivered to the customs terminal', 'datetime': 
+'2021-12-16T14: 49: 56.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': 'yanwen-api-tracking', 'courierCode': 'yanwen', 'statusCode': None, 'statusCategory': None
+                    },
+                    {'eventId': 'c9e2a63a-bfaf-4ff1-a4a0-8cd9f2c8700c', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'Batch arrived to destination country', 'datetime': '2021-12-15T13: 00: 00.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': 'UA', 'sourceCode': 'yanwen-api-tracking', 'courierCode': 'yanwen', 'statusCode': 'destination_arrival', 'statusCategory': 'destination'
+                    },
+                    {'eventId': 'f2ed3cd7-1c8b-4fac-b5c9-b76cb465d57e', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'Batch arrived to destination country', 'datetime': '2021-12-15T13: 00: 00.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': 'cainiao-tracking', 'courierCode': 'cainiao', 'statusCode': 'destination_arrival', 'statusCategory': 'destination'
+                    },
+                    {'eventId': 'cdff9ba8-7c62-4316-940f-be5ad123eca0', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'LP00483406196643', 'status': 'Batch arrived to destination country', 'datetime': '2021-12-15T13: 00: 00.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': 'cainiao-tracking', 'courierCode': 'cainiao', 'statusCode': 'destination_arrival', 'statusCategory': 'destination'
+                    },
+                    {'eventId': 'bdce9492-89a4-4244-b79f-89942c937cfa', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'IWB was added to the manifest', 'datetime': '2021-12-11T14: 28: 24.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': 'yanwen-api-tracking', 'courierCode': 'yanwen', 'statusCode': None, 'statusCategory': None
+                    },
+                    {'eventId': 'c1d049f8-3fad-4a0a-8555-f018b05cf7c4', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'Port of destination - Arrival', 'datetime': '2021-12-10T00: 00: 00.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': 'yanwen-api-tracking', 'courierCode': 'yanwen', 'statusCode': 'destination_arrival', 'statusCategory': 'destination'
+                    },
+                    {'eventId': '183ae9d6-f087-4ecd-8cf4-ac5262add4e3', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'Hand over to airline', 'datetime': '2021-12-09T00: 00: 00.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': 'China', 'sourceCode': '4px-tracking', 'courierCode': '4px', 'statusCode': None, 'statusCategory': 'transit'
+                    },
+                    {'eventId': 
+'89715600-a3b3-4b64-96d3-17db43075787', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'Port of departure - Departure', 'datetime': '2021-12-09T00: 00: 00.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': 'yanwen-api-tracking', 'courierCode': 'yanwen', 'statusCode': None, 'statusCategory': None
+                    },
+                    {'eventId': '6a07ea9e-82be-4f34-b56f-18365e443533', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'Hand over to airline', 'datetime': '2021-12-09T00: 00: 00.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': 'cainiao-tracking', 'courierCode': 'cainiao', 'statusCode': None, 'statusCategory': 'transit'
+                    },
+                    {'eventId': 'd9f6f3ee-2c18-4608-8439-e980efd94095', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'LP00483406196643', 'status': 'Hand over to airline', 'datetime': '2021-12-09T00: 00: 00.000Z', 'hasNoTime': False, 'order': None, 
+'utcOffset': None, 'location': None, 'sourceCode': 'cainiao-tracking', 'courierCode': 'cainiao', 'statusCode': None, 'statusCategory': 'transit'
+                    },
+                    {'eventId': '43b677e0-a858-42ec-8555-cd202a6e7cb9', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'Yanwen facility - Outbound', 'datetime': '2021-12-05T04: 37: 39.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': 'yanwen-api-tracking', 'courierCode': 'yanwen', 'statusCode': None, 'statusCategory': 'transit'
+                    },
+                    {'eventId': '6e1c0235-4be7-4919-a2ca-d41e8f37a1b5', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'Order is processed for delivery to the country of destination', 'datetime': '2021-12-05T01: 39: 45.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': 'yanwen-api-tracking', 'courierCode': 'yanwen', 'statusCode': None, 'statusCategory': 'transit'
+                    },
+                    {'eventId': '47aff271-ecd9-40eb-ae69-62f233a32001', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'Processing information input', 'datetime': '2021-12-02T03: 11: 46.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': 'yanwen-api-tracking', 'courierCode': 'yanwen', 'statusCode': None, 'statusCategory': 'data'
+                    },
+                    {'eventId': '0102fb32-775f-4e79-96ba-483253170a0b', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'Received by line-haul', 'datetime': '2021-12-02T03: 11: 46.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': 'cainiao-tracking', 'courierCode': 'cainiao', 'statusCode': None, 'statusCategory': None
+                    },
+                    {'eventId': 'a4b8d720-e916-400c-b333-09f5147b484f', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'LP00483406196643', 'status': 'Received by line-haul', 'datetime': '2021-12-02T03: 11: 46.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': 'cainiao-tracking', 'courierCode': 'cainiao', 'statusCode': None, 'statusCategory': None
+                    },
+                    {'eventId': 'a830cd36-c23e-4f0f-a065-84f3323bec0e', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'Yanwen Pickup scan', 'datetime': '2021-12-01T15: 11: 46.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': 'yanwen-api-tracking', 'courierCode': 'yanwen', 'statusCode': None, 'statusCategory': None
+                    },
+                    {'eventId': '360fb9b1-26c0-4375-a9ae-7310e23de8d4', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'Depart from facility to service provider.', 'datetime': '2021-12-01T08: 31: 38.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': 'FengGang WHS', 'sourceCode': '4px-tracking', 'courierCode': '4px', 'statusCode': None, 'statusCategory': None
+                    },
+                    {'eventId': 'f858cdf3-869a-4e14-997a-f4e732504d88', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'Outbound in sorting center', 'datetime': '2021-11-30T19: 21: 36.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': 'cainiao-tracking', 'courierCode': 'cainiao', 'statusCode': None, 'statusCategory': 'transit'
+                    },
+                    {'eventId': '1654c6aa-be5e-4088-a32b-8e01ebae5737', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'LP00483406196643', 'status': 'Outbound in sorting center', 'datetime': '2021-11-30T19: 21: 36.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': 'cainiao-tracking', 'courierCode': 'cainiao', 'statusCode': None, 'statusCategory': 'transit'
+                    },
+                    {'eventId': '320f890c-b698-4d14-a4e1-4cf4ec8d2d55', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': '4px picked up shipment.', 'datetime': '2021-11-30T17: 38: 34.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': 'FengGang WHS', 'sourceCode': '4px-tracking', 'courierCode': '4px', 'statusCode': None, 'statusCategory': None
+                    },
+                    {'eventId': 'c04a5cad-ca5f-4b2e-b07a-5eee92889a78', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'Shipment arrived at facility and measured.', 'datetime': '2021-11-30T17: 38: 34.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': 'FengGang WHS', 'sourceCode': '4px-tracking', 'courierCode': '4px', 'statusCode': None, 'statusCategory': None
+                    },
+                    {'eventId': 'bb4ddb03-3b62-42fc-8f11-dabfa6bfe315', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'Inbound in sorting center', 'datetime': '2021-11-30T17: 38: 34.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': 'cainiao-tracking', 'courierCode': 'cainiao', 'statusCode': None, 'statusCategory': 'transit'
+                    },
+                    {'eventId': 'eadcf0fa-9627-447e-ac54-8e23e7fce408', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'LP00483406196643', 'status': 'Inbound 
+in sorting center', 'datetime': '2021-11-30T17: 38: 34.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': 'cainiao-tracking', 'courierCode': 'cainiao', 'statusCode': None, 'statusCategory': 'transit'
+                    },
+                    {'eventId': '7dd92be0-cb27-41b9-9bae-0502fac48755', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'Accepted by carrier', 'datetime': '2021-11-30T17: 08: 34.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': 'cainiao-tracking', 'courierCode': 'cainiao', 'statusCode': None, 'statusCategory': None
+                    },
+                    {'eventId': '7b4e1d52-7cdf-4811-b3e5-70b2479f1b9f', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'LP00483406196643', 'status': 'Accepted by carrier', 'datetime': '2021-11-30T17: 08: 34.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': 'cainiao-tracking', 'courierCode': 'cainiao', 'statusCode': None, 'statusCategory': None
+                    },
+                    {'eventId': 'db763959-ec4e-4f6a-b9c8-9388eb114ff5', 'trackingNumber': 'YW003512235NPG', 'eventTrackingNumber': 'PR219304295YP', 'status': 'Shipment information received', 'datetime': '2021-11-28T05: 20: 54.000Z', 'hasNoTime': False, 'order': None, 'utcOffset': None, 'location': None, 'sourceCode': '4px-tracking', 'courierCode': '4px', 
+'statusCode': None, 'statusCategory': 'data'
+                    }
+                ]
+            }
+        ]
+    }
+}

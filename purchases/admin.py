@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Accounts, Carrier, Department, Manufacturer, PurchaseOrderItems, PurchaseRequestAccounts, Requisitioner, SpendCategory, Urgency, Vendor, Product, PurchaseRequest, PurchaseOrder, State, PurchaseRequestItems, Unit
+from .models import Accounts, Carrier, Department, Manufacturer, PurchaseOrderItems, PurchaseRequestAccounts, Requisitioner, SpendCategory, Tracker, Urgency, Vendor, Product, PurchaseRequest, PurchaseOrder, State, PurchaseRequestItems, Unit
 from import_export.admin import ImportExportModelAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
@@ -84,3 +84,7 @@ class UrgencyAdmin(admin.ModelAdmin):
 @admin.register(Carrier)
 class CarrierAdmin(admin.ModelAdmin):
     list_display = ['name']
+
+@admin.register(Tracker)
+class TrackerAdmin(admin.ModelAdmin):
+    list_display = ['id','shipment_id','status']
