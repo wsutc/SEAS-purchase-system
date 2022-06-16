@@ -596,4 +596,4 @@ def item_rows(purchase_request:PurchaseRequest):
     return rows
 
 def fill_pr_pdf(request,purchase_request:PurchaseRequest):
-    
+    pass
