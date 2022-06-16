@@ -1,15 +1,19 @@
 import base64
 import hashlib
 import hmac
+import os
+import urllib3
+from http.client import HTTPResponse
+import io
 from itertools import product
 from django.conf import settings
 from django.forms import formset_factory
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import FileResponse, HttpResponse, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils.timezone import datetime,activate
 from django.shortcuts import get_object_or_404
-from .models import Manufacturer, Product, PurchaseOrder, PurchaseRequest, PurchaseRequestItems, Requisitioner, Vendor, TrackingWebhookMessage
+from .models import Carrier, Manufacturer, Product, PurchaseOrder, PurchaseRequest, PurchaseRequestItems, Requisitioner, Tracker, Vendor, TrackingWebhookMessage, get_event_data
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView
@@ -25,6 +29,17 @@ from django.db.transaction import atomic, non_atomic_requests
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import cm, inch
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors, pagesizes
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, PageTemplate, Image
+from reportlab.platypus.paragraph import Paragraph
+from reportlab.platypus.frames import Frame
+from functools import partial
+
+from fdfgen import forge_fdf
 
 from .forms import AddManufacturerForm, AddVendorForm, AddProductForm, NewPRForm , ItemFormSet, UpdateProductForm
 
@@ -293,48 +308,292 @@ def manage_products(request):
 
 
 @csrf_exempt
-@require_POST
+# @require_POST
 @non_atomic_requests
 def tracking_webhook(request):
-    secret = settings.AFTERSHIP_WEBHOOK_SECRET
-    given_token = request.headers.get("aftership-hmac-sha256", "")
-    # token_byte = bytes(settings.AFTERSHIP_WEBHOOK_SECRET, 'UTF-8')
-    # hmac_raw = hmac.new(token_byte, digestmod=hashlib.sha256)
-    # hash = base64.b64encode(hmac_raw.digest()).decode()
-    signature = generate_signature(secret,request.body)
-    if not compare_digest(given_token, signature):
-        return HttpResponseForbidden(
-            "Incorrect token in Aftership-Hmac-Sha256 header.",
-            content_type="text/plain"
+
+    if request.method == 'HEAD':
+        response = HttpResponse("Message successfully received.", content_type="text/plain")
+        return response
+    else:
+        secret = settings.SHIP24_WEBHOOK_SECRET
+        given_token = request.headers.get("Authorization","")
+        signature = generate_signature(secret,None)
+        # if not compare_digest(given_token,signature):
+        #     return HttpResponseForbidden(
+        #         "Incorrect token in header.",
+        #         content_type="text/plain"
+        #     )
+
+        TrackingWebhookMessage.objects.filter(
+            received_at__lte = timezone.now() - dt.timedelta(days=7)
+        ).delete()
+
+        payload = json.loads(request.body)
+        TrackingWebhookMessage.objects.create(
+            received_at=timezone.now(),
+            payload=payload
         )
 
-    TrackingWebhookMessage.objects.filter(
-        received_at__lte = timezone.now() - dt.timedelta(days=7)
-    ).delete()
+        process_webhook_payload(payload)
 
-    payload = json.loads(request.body)
-    TrackingWebhookMessage.objects.create(
-        received_at=timezone.now(),
-        payload=payload
-    )
-
-    process_webhook_payload(payload)
-
-    return HttpResponse("Message successfully received.", content_type="text/plain")
+        return HttpResponse("Message successfully received.", content_type="text/plain")
 
 @atomic
 def process_webhook_payload(payload):
-    # TODO: stuff
-    # purchase_order = PurchaseOrder.objects.get(tracker_id=payload['msg']['id'])
-    # print(purchase_order.number)
+    trackings = payload.get('trackings')
+    for t in trackings:
+        shipment = t.get('shipment')
+        tNumber = shipment.get('trackingNumbers')[0]['tn']
+        events = t.get('events')
 
-    pass
+        shipment_id = shipment.get('shipmentId')
+        print("Tracking Number: " + tNumber)
+        print("Shipment ID: " + shipment_id)
+        # purchase_request = PurchaseRequest .objects.filter(tracker_id=tracker_id).first()
+        tracker = Tracker.objects.filter(shipment_id=shipment_id)[0]
+        if tracker:
+            print("Tracker ID: " + tracker.id)
+            tracker.events = events
+            tracker.tracking_number = tNumber
+            event_data = get_event_data(events[0])
+            tracker.status = event_data.get('event_status')
+            carrier = Carrier.objects.filter(slug=event_data.get('courier_code'))
+            if carrier:
+                tracker.carrier = carrier
+            else:
+                tracker.carrier = None
+            tracker.save()
 
 def generate_signature(secret,payload):
-    # given_token = request.headers.get("aftership-hmac-sha256", "")
-    # body = request.body
-    token_byte = bytes(secret, 'UTF-8')
-    hashBytes = hmac.new(token_byte, payload, digestmod=hashlib.sha256)
-    hash = base64.b64encode(hashBytes.digest()).decode()
+    # # given_token = request.headers.get("aftership-hmac-sha256", "")
+    # # body = request.body
+    # token_byte = bytes(secret, 'UTF-8')
+    # hashBytes = hmac.new(token_byte, payload, digestmod=hashlib.sha256)
+    # hash = base64.b64encode(hashBytes.digest()).decode()
+
+    hash = "Bearer " + secret
 
     return hash
+
+def get_tracker(request,instance):
+    # tracker_id = instance.tracker_id
+    pass
+
+def generate_pr_pdf(request,slug):
+    purchase_request = PurchaseRequest.objects.get(slug=slug)
+    buffer = io.BytesIO()
+
+    def header(canvas:canvas, doc, content):
+        """Creates header from flowable?"""
+        canvas.saveState()
+        w, h = content.wrap(doc.width, doc.topMargin)
+        content.drawOn(canvas, doc.leftMargin, doc.height + doc.bottomMargin + doc.topMargin - h)
+        canvas.restoreState()
+
+    def footer(canvas:canvas, doc, content):
+        """Creates footer from flowable?"""
+        canvas.saveState()
+        w, h = content.wrap(doc.width, doc.bottomMargin)
+        content.drawOn(canvas, doc.leftMargin, h)
+        canvas.restoreState()
+
+    def header_and_footer(canvas:canvas, doc, header_content, footer_content):
+        """Need to build both header AND footer in same function"""
+        header(canvas, doc, header_content)
+        footer(canvas, doc, footer_content)
+
+    styles = getSampleStyleSheet()
+
+    styles_title = styles['Title']
+    styles_title.name = 'Header-Title'
+    styles_title.fontSize = 40
+    styles_title.textColor = colors.HexColor("#CA1237")
+    
+    ## Set header styles
+    styles.add(styles_title)
+
+    # style_header_normal = styles['Normal']
+    # style_header_title = styles['Title']
+    # style_header_title.fontSize = 40
+
+    ## Set footer styles
+    # style_footer_normal = styles['Normal']
+
+    filename = purchase_request.number + ".pdf"
+
+    doc = SimpleDocTemplate(buffer, pagesize=letter, title=purchase_request.number)
+
+    doc.leftMargin = doc.rightMargin = 1*cm
+    # doc.rightMargin = 42
+    doc.width = doc.pagesize[0] - doc.leftMargin - doc.rightMargin
+
+    frame = Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height, id='normal')  #, showBoundary=1)
+
+    header_content = Paragraph(purchase_request.number, styles['Header-Title'])
+    footer_content = Paragraph("This is a footer", styles['Normal'])
+
+    template = PageTemplate(id='test', frames=frame, onPage=partial(header_and_footer, header_content=header_content, footer_content=footer_content))
+
+    doc.addPageTemplates([template])
+
+    elements = []
+
+    # Define purchase request information table
+    info_column_widths = [.9*inch,2.4*inch,.9*inch,2.4*inch]
+
+    # link = '<link href="' + purchase_request.vendor.website + '">' + purchase_request.vendor.website + '</link>'
+
+    info_data = [
+        [
+            'Needed By', purchase_request.need_by_date,
+            'Requestor', purchase_request.requisitioner.user.get_full_name()
+        ],
+        [
+            'Vendor', purchase_request.vendor.name,
+            'Email', purchase_request.requisitioner.user.email
+        ],
+        [
+            'Address', purchase_request.vendor.street1 + "\n" + str(purchase_request.vendor.city) + ", " + str(purchase_request.vendor.state) + " " + str(purchase_request.vendor.zip),
+            'Phone', purchase_request.requisitioner.phone
+        ],
+        [
+            '', '',
+            'Department', purchase_request.requisitioner.department.code
+        ],
+        ['Phone', purchase_request.vendor.phone],
+        ['Email', purchase_request.vendor.email],
+        ['Website', purchase_request.vendor.website]
+    ]
+
+    info_table = Table(info_data, info_column_widths)
+
+    info_table.setStyle(
+        TableStyle(
+            [
+                # ('FONTNAME',(0,0),(-1,0),'Helvetica-Bold'),
+                # ('ALIGN',(0,0),(-1,0),'CENTER'),
+                # ('LINEBELOW',(0,0),(-1,-1),0.5,colors.black),
+                # ('FONTNAME',(0,1),(-1,0),'Helvetica'),
+                # ('ALIGN',(1,1),(-3,-1),'CENTER'),
+                ('ALIGN',(0,0),(0,-1),'RIGHT'),
+                ('VALIGN',(0,2),(1,2),'TOP'),
+                ('FONTNAME',(0,0),(0,-1),'Helvetica-Bold'),
+                ('ALIGN',(2,0),(2,-1),'RIGHT'),
+                ('FONTNAME',(2,0),(2,-1),'Helvetica-Bold'),
+                ('SPAN',(0,2),(0,3)),
+                ('SPAN',(1,2),(1,3)),
+                # ('ROWBACKGROUNDS',(0,1),(-1,-5),[colors.aliceblue,colors.white]),
+                # ('BOX',(0,0),(-1,-1),0.5,colors.black),
+                ('SPAN',(2,4),(-1,-1)),
+                # ('INNERGRID',(0,0),(-1,-5),0.1,colors.darkgray),
+                # ('BOX',(-3,-4),(-1,-1),0.5,colors.black),
+                # ('ALIGN',(-3,-4),(-1,-1),'RIGHT'),
+                # ('LINEABOVE',(-3,-1),(-1,-1),0.1,colors.darkgray),
+                # ('SPAN',(0,-4),(3,-1)),
+                # ('SPAN',(-3,-4),(-2,-4))
+            ]
+        )
+    )
+
+    elements.append(info_table)
+
+    # Define Table
+    data = [
+            [
+            'Description',
+            'Identifier',
+            'Vendor ID',
+            'QTY',
+            'Unit',
+            'Price',
+            'Ext. Price'
+            ]
+        ]
+
+    ## Create rows for each item
+    data = appendAsList(data, item_rows(purchase_request))
+
+    ## Create rows showing subtotal, shipping, tax, and grand total
+    total_rows = [
+        ['','','','','',   'Subtotal',purchase_request.subtotal],
+        ['','','','','',   'Shipping',purchase_request.shipping],
+        ['','','','','',        'Tax',purchase_request.sales_tax],
+        ['','','','','','Grand Total',purchase_request.grand_total]
+    ]
+
+    data = appendAsList(data, total_rows)
+
+    ## Create a 'standardized width' [sw] that is 1% of the doc.width
+    sw = doc.width / 100
+
+    ## Use the sw to generate a table that is exactly the same width as doc.width
+    column_widths = [38*sw,14*sw,14*sw,7*sw,7*sw,8*sw,12*sw]
+
+    items_table = Table(data,colWidths=column_widths)           # Create table
+
+    ## Set style for table and rows
+    items_table.setStyle(
+        TableStyle(
+            [
+                ('FONTNAME',(0,0),(-1,0),'Helvetica-Bold'),
+                ('ALIGN',(0,0),(-1,0),'CENTER'),
+                ('LINEBELOW',(0,0),(-1,0),0.5,colors.black),
+                ('FONTNAME',(0,1),(-1,0),'Helvetica'),
+                ('ALIGN',(1,1),(-3,-1),'CENTER'),
+                ('ALIGN',(-2,1),(-1,-5),'RIGHT'),
+                ('ROWBACKGROUNDS',(0,1),(-1,-5),[colors.aliceblue,colors.white]),
+                ('BOX',(0,0),(-1,-5),0.5,colors.black),
+                ('INNERGRID',(0,0),(-1,-5),0.1,colors.darkgray),
+                # ('BOX',(-3,-4),(-1,-1),0.5,colors.black),
+                ('ALIGN',(-3,-4),(-1,-1),'RIGHT'),
+                ('LINEABOVE',(-3,-1),(-1,-1),0.1,colors.darkgray),
+                # ('SPAN',(0,-4),(3,-1)),
+                # ('SPAN',(-3,-4),(-2,-4))
+            ]
+        )
+    )
+
+    ## Add items_table to 'elements' list
+    elements.append(items_table)
+
+    doc.build(elements)
+
+    # doc.showPage()
+    # doc.save()
+
+    buffer.seek(0)
+
+    return FileResponse(buffer, as_attachment=True, filename=filename)
+
+def get_image(filename:str,url:str):
+    """ Get an image for the PDF """
+    if not os.path.exists(filename):
+        response = HttpResponse()
+
+def appendAsList(data:list[list:str], list:list[list:str]):
+    for i in list:
+        data.append(i)
+
+    return data
+
+def item_rows(purchase_request:PurchaseRequest):
+    """ Create nested list of items to be used in a table """
+    items = purchase_request.purchaserequestitems_set.all()
+    rows = []
+    for i in items:
+        row = [
+            i.product.name,
+            i.product.identifier,
+            i.product.vendor_number,
+            i.quantity,
+            i.unit,
+            i.price,
+            i.extended_price
+        ]
+        rows.append(row)
+
+    return rows
+
+def fill_pr_pdf(request,purchase_request:PurchaseRequest):
+    
