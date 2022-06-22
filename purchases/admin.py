@@ -1,32 +1,49 @@
 from django.contrib import admin
 
-from .models import Accounts, Carrier, Department, Manufacturer, PurchaseOrderItems, PurchaseRequestAccounts, Requisitioner, SpendCategory, Tracker, Urgency, Vendor, Product, PurchaseRequest, PurchaseOrder, State, PurchaseRequestItems, Unit
+from .models import Accounts, Balance, Carrier, Department, Transaction, Manufacturer, PurchaseRequestAccounts, Requisitioner, SimpleProduct, SpendCategory, Tracker, Urgency, Vendor, Product, PurchaseRequest, State, Unit
 from import_export.admin import ImportExportModelAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-@admin.register(Manufacturer)
-class ManufacturerAdmin(admin.ModelAdmin):
-    list_display = ['name', 'website']
+# @admin.register(Manufacturer)
+# class ManufacturerAdmin(admin.ModelAdmin):
+#     list_display = ['name', 'website']
 
 @admin.register(Vendor)
 class VendorAdmin(admin.ModelAdmin):
     list_display = ['name', 'website', 'state']
 
-@admin.register(Product)
-class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'identifier', 'approved_vendors']
+# @admin.register(Product)
+# class ProductAdmin(admin.ModelAdmin):
+#     list_display = ['name', 'identifier', 'approved_vendors']
 
 @admin.register(State)
 class StateAdmin(admin.ModelAdmin):
     list_display = ['name', 'abbreviation']
 
-class PurchaseRequestItemInline(admin.TabularInline):
-    model = PurchaseRequestItems
+class SimpleProductInline(admin.TabularInline):
+    model = SimpleProduct
+
+class PurchaseRequestAccountsInline(admin.TabularInline):
+    model = PurchaseRequestAccounts
+    extra = 1
+
+# class PurchaseRequestItemInline(admin.TabularInline):
+#     model = PurchaseRequestItems
+
+@admin.action(description="Change Selected to \'Awaiting Approval\'")
+def make_awaiting_approval(modeladmin, request, queryset):
+    queryset.update(status='1')
+
+@admin.action(description="Update Totals")
+def save_requests(modeladmin, request, queryset):
+    for r in queryset:
+        r.update_totals()
 
 @admin.register(PurchaseRequest)
 class PurchaseRequestAdmin(admin.ModelAdmin):
-    list_display = ['requisitioner', 'number', 'slug']
-    inlines = [PurchaseRequestItemInline]
+    list_display = ['requisitioner', 'number', 'grand_total', 'status', 'slug']
+    inlines = [SimpleProductInline,PurchaseRequestAccountsInline]
+    actions = [make_awaiting_approval,save_requests]
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
@@ -35,17 +52,17 @@ class PurchaseRequestAdmin(admin.ModelAdmin):
         super().save_related(request, form, formsets, change)
         form.instance.update_totals()
 
-@admin.register(PurchaseRequestItems)
-class PurchaseRequestItemsAdmin(admin.ModelAdmin):
-    list_display = ['product','price']
+# @admin.register(PurchaseRequestItems)
+# class PurchaseRequestItemsAdmin(admin.ModelAdmin):
+#     list_display = ['product','price']
 
-class PurchaseOrderItemInline(admin.TabularInline):
-    model = PurchaseOrderItems
+# class PurchaseOrderItemInline(admin.TabularInline):
+#     model = PurchaseOrderItems
 
-@admin.register(PurchaseOrder)
-class PurchaseOrderAdmin(admin.ModelAdmin):
-    list_display = ['number','source_purchase_request','vendor']
-    inlines = [PurchaseOrderItemInline]
+# @admin.register(PurchaseOrder)
+# class PurchaseOrderAdmin(admin.ModelAdmin):
+#     list_display = ['number','source_purchase_request','vendor']
+#     inlines = [PurchaseOrderItemInline]
 
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
@@ -71,7 +88,7 @@ class SpendCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(PurchaseRequestAccounts)
 class PurchaseRequestAccountsAdmin(admin.ModelAdmin):
-    list_display = ['purchase_request']
+    list_display = ['accounts','purchase_request']
 
 @admin.register(Unit)
 class UnitsAdmin(admin.ModelAdmin):
@@ -88,3 +105,15 @@ class CarrierAdmin(admin.ModelAdmin):
 @admin.register(Tracker)
 class TrackerAdmin(admin.ModelAdmin):
     list_display = ['id','shipment_id','status']
+
+@admin.register(SimpleProduct)
+class SimpleProductAdmin(admin.ModelAdmin):
+    list_display = ['name','link']
+
+@admin.register(Balance)
+class BalancesAdmin(admin.ModelAdmin):
+    list_display = ['account','balance','updated_datetime']
+
+@admin.register(Transaction)
+class TransactionAdmin(admin.ModelAdmin):
+    list_display = ['balance','processed_datetime','purchase_request','total_value']

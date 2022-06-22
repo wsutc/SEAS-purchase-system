@@ -4,7 +4,7 @@ from django.utils.text import slugify
 
 from django.core.validators import MinValueValidator #, MaxValueValidator
 
-from purchases.models import Manufacturer, Product, PurchaseOrder
+from purchases.models import Manufacturer, Product, PurchaseRequest#, PurchaseOrder
 
 # Create your models here.
 class Department(models.Model):
@@ -67,7 +67,8 @@ class Item(models.Model):
     manufacture_date = models.DateField(blank=True,null=True)
     purchase_date = models.DateField(blank=True,null=True)
     product = models.ForeignKey(Product,on_delete=models.SET_NULL,blank=True,null=True)
-    purchase_order = models.ForeignKey(PurchaseOrder,on_delete=models.SET_NULL,blank=True,null=True)
+    # purchase_order = models.ForeignKey(PurchaseOrder,on_delete=models.SET_NULL,blank=True,null=True)
+    purchase_request = models.ForeignKey(PurchaseRequest,on_delete=models.SET_NULL,blank=True,null=True)
 
     ACCESSORY = 'accessory'
     CONSUMABLE = 'consumable'

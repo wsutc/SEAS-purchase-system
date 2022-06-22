@@ -386,7 +386,7 @@
         <li><a href="{% url 'home' %}" class="nav-link px-2 link-secondary">Overview</a></li>
         <li><a href="{% url 'inventory_list' %}" class="nav-link px-2 link-dark">Inventory</a></li>
         <li><a href="{% url 'home' %}" class="nav-link px-2 link-dark">Purchase Requests</a></li>
-        <li><a href="{% url 'product_list' %}" class="nav-link px-2 link-dark">Products</a></li>
+        {% comment %} <li><a href="{% url 'product_list' %}" class="nav-link px-2 link-dark">Products</a></li> {% endcomment %}
       </ul>
 
       <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">

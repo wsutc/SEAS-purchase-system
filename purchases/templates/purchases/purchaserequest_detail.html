@@ -67,6 +67,10 @@
                             <td align="right">Website</td>
                             <td><a href="{{ object.vendor.website }}" target="_blank" rel="noopener noreferrer">{{ object.vendor.website }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a></td>
                         </tr>
+                        <tr>
+                            <td align="right">Shipping</td>
+                            <td>{% if object.tracker %}<a href="{{ object.get_tracking_link }}" target="_blank" rel="noopener noreferrer">{{ object.tracker.carrier }} {{ object.tracker.tracking_number }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a>{% endif %}</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -94,10 +98,10 @@
                             <td>{{ budget.accounts.gift }}</td>
                             <td>{{ budget.accounts.grant }}</td>
                             <td>{{ budget.spend_category.code }}</td>
-                            {% if budget.distribution_amount %}
-                                <td>{{ budget.distribution_amount }}</td>
-                            {% else %}
-                                <td>{{ budget.distribution_percent }}%</td>
+                            {% if budget.distribution_type == 'percent' %}
+                                <td>{{ budget.distribution_input }}%</td>
+                            {% elif budget.distribution_type == 'amount' %}
+                                <td>${{ budget.distribution_input|floatformat:2 }}</td>
                             {% endif %}
                         </tr>
                     {% endfor %}
@@ -107,7 +111,7 @@
         </div>
     </div>
 
-    {% if debug %}<div>debug ->count:{{ object.purchaserequestitems_set.count }}</div>{% endif %}
+    {% if debug %}<div>debug ->count:{{ object.simpleproduct_set.count }}</div>{% endif %}
     <div class="col-12">
         <div class="bd-example-snippet bd-code-snippet">
             <div class="bd-example">
@@ -125,20 +129,24 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in object.purchaserequestitems_set.all %}
+                    {% for item in object.simpleproduct_set.all %}
                         <tr>
-                            <td class="text-truncate"><a href="{{ item.product.get_absolute_url }}">{{ item.product.name }}</a></td>
-                            {% if item.product.link %}
-                                <td style="text-align: center;"><a href="{{ item.product.link }}" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-up-right-from-square" ></i></a></td>
+                            <td class="text-truncate">{{ item.name }}</td>
+                            {% if item.link %}
+                                <td style="text-align: center;">
+                                    <a href="{{ item.link }}" target="_blank" rel="noopener noreferrer">
+                                        <i class="fa-solid fa-up-right-from-square" ></i>
+                                    </a>
+                                </td>
                             {% else %}
                                 <td></td>
                             {% endif %}
-                            <td align="center">{{ item.product.identifier }}</td>
-                            <td align="center">{{ item.product.vendor_number|default_if_none:"" }}</td>
+                            <td align="center">{{ item.identifier }}</td>
+                            <td align="center">{{ item.vendor_number|default_if_none:"" }}</td>
                             <td align="right">{{ item.quantity }}</td>
                             <td align="center">{{ item.unit.unit }}</td>
-                            <td align="right">{{ item.price }}</td>
-                            <td align="right">{{ item.extend }}</td>
+                            <td align="right">{{ item.unit_price }}</td>
+                            <td align="right">{{ item.extended_price }}</td>
                         </tr>
                     {% empty %}
                         <tr>Please edit Purchase Request to add items.</tr>

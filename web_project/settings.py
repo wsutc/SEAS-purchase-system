@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'setup_sheets',
     'inventory',
     'django_mysql',
+    'bootstrap_modal_forms',
 ]
 
 MIDDLEWARE = [

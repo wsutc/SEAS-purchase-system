@@ -16,6 +16,8 @@ List of Manufacturers
           <tr>
             <th scope="col">Requisitioner</th>
             <th scope="col">Number</th>
+            <th>Status</th>
+            <th>Total</th>
           </tr>
           </thead>
           <tbody>
@@ -23,6 +25,8 @@ List of Manufacturers
                 <tr>
                     <td>{{ o.requisitioner }}</td>
                     <td><a href="{{ o.get_absolute_url }}">{{ o.number }}</a></td>
+                    <td>{{ o.get_status_display }}</td>
+                    <td>{{ o.grand_total }}</td>
                 </tr>
             {% endfor %}
           </tbody>

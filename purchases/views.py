@@ -1,3 +1,4 @@
+from ast import If
 import base64
 import hashlib
 import hmac
@@ -13,12 +14,13 @@ from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils.timezone import datetime,activate
 from django.shortcuts import get_object_or_404
-from .models import Carrier, Manufacturer, Product, PurchaseOrder, PurchaseRequest, PurchaseRequestItems, Requisitioner, Tracker, Vendor, TrackingWebhookMessage, get_event_data
+from .models import Accounts, Balance, Carrier, Transaction, Manufacturer, Product, PurchaseRequest, Requisitioner, Tracker, Vendor, TrackingWebhookMessage, get_event_data
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView
 from django.db.models import Sum, Count
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from .forms import LedgersForm, PurchaseRequestAccountsFormset, SimpleProductForm, SimpleProductFormset
 
 import datetime as dt
 import json
@@ -41,7 +43,9 @@ from functools import partial
 
 from fdfgen import forge_fdf
 
-from .forms import AddManufacturerForm, AddVendorForm, AddProductForm, NewPRForm , ItemFormSet, UpdateProductForm
+from bootstrap_modal_forms.generic import BSModalCreateView
+
+from .forms import AddVendorForm, NewPRForm
 
 
 # Create your views here.
@@ -52,32 +56,32 @@ class HomeListView(ListView):
     #     context = super(HomeListView, self).get_context_data(**kwargs)
     #     return context
 
-class ManufacturerListView(ListView):
-    model = Manufacturer
+# class ManufacturerListView(ListView):
+#     model = Manufacturer
 
-    def get_context_data(self, **kwargs):
-        context = super(ManufacturerListView, self).get_context_data(**kwargs)
-        return context
+#     def get_context_data(self, **kwargs):
+#         context = super(ManufacturerListView, self).get_context_data(**kwargs)
+#         return context
 
-class ProductListView(ListView):
-    model = Product
+# class ProductListView(ListView):
+#     model = Product
 
-    def get_context_data(self, **kwargs):
-        context = super(ProductListView, self).get_context_data(**kwargs)
-        return context
+#     def get_context_data(self, **kwargs):
+#         context = super(ProductListView, self).get_context_data(**kwargs)
+#         return context
 
-class PurchaseRequestItemCreateView(CreateView):
-    model = PurchaseRequestItems
-    fields = [
-        'product',
-        'quantity',
-        'price'
-        ]
+# class PurchaseRequestItemCreateView(CreateView):
+#     model = PurchaseRequestItems
+#     fields = [
+#         'product',
+#         'quantity',
+#         'price'
+#         ]
 
-    success_url = "/"
+#     success_url = "/"
 
-    def get_context_data(self, **kwargs):
-        return super().get_context_data(**kwargs)
+#     def get_context_data(self, **kwargs):
+#         return super().get_context_data(**kwargs)
 
 class VendorListView(ListView):
     model = Vendor
@@ -107,13 +111,13 @@ class VendorDetailView(DetailView):
     model = Vendor
     query_pk_and_slug = True
 
-class ProductDetailView(DetailView):
-    model = Product
-    query_pk_and_slug = True
+# class ProductDetailView(DetailView):
+#     model = Product
+#     query_pk_and_slug = True
 
-class ManufacturerDetailView(DetailView):
-    model = Manufacturer
-    query_pk_and_slug = True
+# class ManufacturerDetailView(DetailView):
+#     model = Manufacturer
+#     query_pk_and_slug = True
 
 class PurchaseRequestDetailView(DetailView):
     model = PurchaseRequest
@@ -133,9 +137,9 @@ class PurchaseRequestDetailView(DetailView):
         print(context)
         return context
 
-class PurchaseOrderDetailView(DetailView):
-    model = PurchaseOrder
-    query_pk_and_slug = True
+# class PurchaseOrderDetailView(DetailView):
+#     model = PurchaseOrder
+#     query_pk_and_slug = True
 
 # class PurchaseRequestCreateView(CreateView):
 #     model = PurchaseRequest
@@ -155,17 +159,17 @@ class PurchaseOrderDetailView(DetailView):
 #             "number"
 #         )
 
-def add_mfg(request):
-    form = AddManufacturerForm(request.POST or None)
+# def add_mfg(request):
+#     form = AddManufacturerForm(request.POST or None)
 
-    if request.method == "POST":
-        if form.is_valid():
-            manufacturer = form.save(commit=False)
-            # manufacturer.created_date = datetime.now()
-            manufacturer.save()
-            return redirect("home")
-    else:
-        return render(request, "purchases/add_manufacturer.html", {"form": form})
+#     if request.method == "POST":
+#         if form.is_valid():
+#             manufacturer = form.save(commit=False)
+#             # manufacturer.created_date = datetime.now()
+#             manufacturer.save()
+#             return redirect("home")
+#     else:
+#         return render(request, "purchases/add_manufacturer.html", {"form": form})
 
 def add_vendor(request):
     form = AddVendorForm(request.POST or None)
@@ -202,14 +206,14 @@ def add_vendor(request):
 #     else:
 #         return render(request, "purchases/new_pr.html", {"form": form})
 
-class ProductUpdateView(UpdateView):
-    model = Product
-    form_class = UpdateProductForm
-    template_name = 'purchases/add_product.html'
+# class ProductUpdateView(UpdateView):
+#     model = Product
+#     form_class = UpdateProductForm
+#     template_name = 'purchases/add_product.html'
 
-class ProductCreateView(CreateView):
-    form_class = AddProductForm
-    template_name = 'purchases/add_product.html'
+# class ProductCreateView(CreateView):
+#     form_class = AddProductForm
+#     template_name = 'purchases/add_product.html'
 
 class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
     permission_required = 'purchases.add_purchaserequest'
@@ -219,7 +223,8 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super(PurchaseRequestCreateView, self).get_context_data(**kwargs)
-        context['purchase_request_items_formset'] = ItemFormSet()
+        context['purchase_request_items_formset'] = SimpleProductFormset()
+        context['purchase_request_accounts_formset'] = PurchaseRequestAccountsFormset()
         # context['requisitioner'] = Requisitioner.objects.get(user=self.request.user)
         return context
 
@@ -227,28 +232,39 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
         self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        purchase_request_items_formset = ItemFormSet(self.request.POST)
-        if form.is_valid() and purchase_request_items_formset.is_valid():
-            return self.form_valid(form, purchase_request_items_formset)
+        purchase_request_items_formset = SimpleProductFormset(self.request.POST)
+        purchase_request_accounts_formset = PurchaseRequestAccountsFormset(self.request.POST)
+        if form.is_valid() and purchase_request_items_formset.is_valid() and purchase_request_accounts_formset.is_valid():
+            return self.form_valid(form, purchase_request_items_formset, purchase_request_accounts_formset)
         else:
-            return self.form_invalid(form, purchase_request_items_formset)
+            return self.form_invalid(form, purchase_request_items_formset, purchase_request_accounts_formset)
 
-    def form_valid(self, form, purchase_request_items_formset):
+    def form_valid(self, form, purchase_request_items_formset, purchase_request_accounts_formset):
         form.instance.requisitioner = Requisitioner.objects.get(user = self.request.user)
         self.object = form.save(commit=False)
         self.object.save()
+
+        ## Add Items
         purchase_request_items = purchase_request_items_formset.save(commit=False)
         for item in purchase_request_items:
             item.purchase_request = self.object
             item.save()
+        
+        ## Add Accounts
+        purchase_request_accounts = purchase_request_accounts_formset.save(commit=False)
+        for account in purchase_request_accounts:
+            account.purchase_request = self.object
+            account.save()
+
         self.object.update_totals()
         return redirect(reverse_lazy("home"))
 
-    def form_invalid(self, form, purchase_request_items_formset):
+    def form_invalid(self, form, purchase_request_items_formset, purchase_request_accounts_formset):
         return self.render_to_response(
             self.get_context_data(
-                form=form,
-                purchase_request_items_formset=purchase_request_items_formset
+                form = form,
+                purchase_request_items_formset = purchase_request_items_formset,
+                purchase_request_accounts_formset = purchase_request_accounts_formset
             )
         )
 
@@ -260,7 +276,7 @@ class PurchaseRequestUpdateView(UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super(PurchaseRequestUpdateView, self).get_context_data(**kwargs)
-        context['purchase_request_items_formset'] = ItemFormSet()
+        context['purchase_request_items_formset'] = SimpleProductFormset()
         context['requisitioner'] = PurchaseRequest.objects.get(slug=self.kwargs['slug']).requisitioner
     #     context['requisitioner'] = self.
     #     # context['requisitioner'] = Requisitioner.objects.get(user=self.request.user)
@@ -270,7 +286,7 @@ class PurchaseRequestUpdateView(UpdateView):
         self.object = None
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        purchase_request_items_formset = ItemFormSet(self.request.POST)
+        purchase_request_items_formset = SimpleProductFormset(self.request.POST)
         if form.is_valid() and purchase_request_items_formset.is_valid():
             return self.form_valid(form, purchase_request_items_formset)
         else:
@@ -295,15 +311,15 @@ class PurchaseRequestUpdateView(UpdateView):
             )
         )
 
-def manage_products(request):
-    ProductFormSet = formset_factory(AddProductForm, extra=3)
-    if request.method == 'POST':
-        formset = ProductFormSet(request.POST, request.FILES)
-        if formset.is_valid():
-            pass
-    else:
-        formset = ProductFormSet()
-    return render(request, 'purchases/manage_products.html', {'formset': formset})
+# def manage_products(request):
+#     ProductFormSet = formset_factory(AddProductForm, extra=3)
+#     if request.method == 'POST':
+#         formset = ProductFormSet(request.POST, request.FILES)
+#         if formset.is_valid():
+#             pass
+#     else:
+#         formset = ProductFormSet()
+#     return render(request, 'purchases/manage_products.html', {'formset': formset})
 
 
 
@@ -579,16 +595,16 @@ def appendAsList(data:list[list:str], list:list[list:str]):
 
 def item_rows(purchase_request:PurchaseRequest):
     """ Create nested list of items to be used in a table """
-    items = purchase_request.purchaserequestitems_set.all()
+    items = purchase_request.simpleproduct_set.all()
     rows = []
     for i in items:
         row = [
-            i.product.name,
-            i.product.identifier,
-            i.product.vendor_number,
+            i.name,
+            i.identifier,
+            "",
             i.quantity,
             i.unit,
-            i.price,
+            i.unit_price,
             i.extended_price
         ]
         rows.append(row)
@@ -597,3 +613,54 @@ def item_rows(purchase_request:PurchaseRequest):
 
 def fill_pr_pdf(request,purchase_request:PurchaseRequest):
     pass
+
+# def add_item_modal(request):
+#     print("we did something ")
+#     return
+
+# class ItemCreateView(BSModalCreateView):
+#     template_name = 'purchases/item_create.html'
+#     form_class = ItemModalForm
+#     suggess_message = 'Success'
+#     success_url = reverse_lazy('new_pr')
+
+class LedgersCreateView(CreateView):
+    model = Transaction
+    form_class = LedgersForm
+    template_name = 'purchases/ledgers_create.html'
+    success_url = reverse_lazy('balances_list')
+
+    # def post(self, request):
+        # self.success_url = redirect('balances_list')
+        # super().post(self.request.POST)
+        # return redirect('balances_list')
+
+class BalancesListView(ListView):
+    model = Balance
+    template_name = 'purchases/balances_list.html'
+
+class BalancesDetailView(DetailView):
+    model = Balance
+    template_name = 'purchases/balances_detail.html'
+
+class LedgersUpdateView(UpdateView):
+    model = Transaction
+    form_class = LedgersForm
+    template_name = 'purchases/ledgers_create.html'
+    success_url = reverse_lazy('balances_list')
+
+    # def post(self):
+    #     pass
+
+class LedgersDetailView(DetailView):
+    model = Transaction
+
+class LedgersListView(ListView):
+    model = Transaction
+    template_name = 'purchases/ledgers_list.html'
+
+def update_balance(request, pk:int):
+    balance = get_object_or_404(Balance,pk=pk)
+    balance.update_balance_complete()
+
+    return redirect('balances_list')

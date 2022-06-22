@@ -7,7 +7,7 @@
 
     <div class="btn-group col-3" role="group" aria-label="Basic example">
         <a href="{% block previous %}{% endblock %}" class="btn btn-primary">Previous</a>
-        <a href="{% block edit %}{% url 'update_product' pk=object.id slug=object.slug %}{% endblock %}" class="btn btn-primary">Edit</a>
+        {% comment %} <a href="{% block edit %}{% url 'update_product' pk=object.id slug=object.slug %}{% endblock %}" class="btn btn-primary">Edit</a> {% endcomment %}
         <a href="{% block next %}{% endblock %}" class="btn btn-primary">Next</a>
     </div>
 </div>

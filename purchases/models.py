@@ -3,6 +3,7 @@ from asyncio.windows_events import NULL
 import decimal
 from re import sub
 import http.client, json
+from time import strptime
 from django.conf import settings
 from django.db import models
 from django.db.models import Avg,Sum
@@ -101,14 +102,15 @@ class Product(models.Model):
     description = models.TextField("Description of product",max_length=255)
     created_date = models.DateTimeField("Date Product Created",auto_now_add=True)
     original_manufacturer = models.ForeignKey(Manufacturer,on_delete=models.PROTECT)
-    specification = models.TextField("Detailed Specifications (required if no specification sheet)")
-    spec_sheet = models.FileField("Specification Sheet",upload_to='products',blank=True)
+    specification = models.TextField("Detailed Specifications (required if no specification sheet)",blank=True,null=True)
+    spec_sheet = models.FileField("Specification Sheet",upload_to='products',blank=True,null=True)
     picture = models.ImageField("Product Image (optional)",upload_to='products',blank=True)
     substitution = models.CharField(
         "Product Replacement",
         choices=SUBSTITUTIONS,
         default='buyers_choice',
-        max_length=150
+        max_length=150,
+        blank="True"
     )
     approved_substitutes = models.ForeignKey('self',null=True,on_delete=models.PROTECT,blank=True)
     approved_vendors = models.ForeignKey(Vendor,on_delete=models.CASCADE,null=True)
@@ -177,7 +179,7 @@ class Accounts(models.Model):
         verbose_name_plural = "Accounts"
 
     def __str__(self):
-        return self.account_title
+        return "%s (%s)" % (self.program_workday,self.account_title)
 
 ###--------------------------------------- Helper Tables -------------------------------------
 
@@ -195,6 +197,7 @@ class Accounts(models.Model):
 #         default='pcard',
 #         max_length=150
 #     )
+
 
 ###--------------------------------------- Request Setup -------------------------------------
 
@@ -224,7 +227,8 @@ class Tracker(models.Model):
     tracking_number = models.CharField(max_length=100)
     events = models.JSONField(default=None,blank=True,null=True)
     shipment_id = models.CharField(max_length=100,blank=True,null=True)
-    status = models.CharField(max_length=50,editable=False,blank=True,null=True)
+    status = models.CharField(max_length=50,blank=True,null=True)
+    delivery_estimate = models.DateTimeField(blank=True,null=True)
 
     class Meta:
         indexes = [
@@ -233,7 +237,7 @@ class Tracker(models.Model):
 
     def update(self):
         api_key = settings.SHIP24_KEY
-        id = self.id
+        # id = self.id
         tracking_number = self.tracking_number
         conn = http.client.HTTPSConnection("api.ship24.com")
         headers = {
@@ -259,11 +263,14 @@ class Tracker(models.Model):
         if carrier:
             self.carrier = carrier
         self.shipment_id = shipment.get('shipmentId')
-        self.status = shipment.get('statusCode')
+        
+        self.delivery_estimate = shipment.get('delivery').get('estimatedDeliveryDate')
         self.events = events
+        if status := shipment.get('statusCode'):
+            self.status = status
+        elif status := event_data.get('event_status'):
+            self.status = status
         self.save()
-
-
 
     def __str__(self):
         return str(self.id)
@@ -309,21 +316,35 @@ def get_tracker(sender, instance, *args, **kwargs):
         instance.tracking_number = tracking['trackingNumber']
         # instance.events = dataJson.get('events')
 
+WL = '0'
+AA = '1'
+AP = '2'
+CM = '3'
+DN = '4'
+RT = '5'
+PURCHASE_REQUEST_STATUSES = (
+    (WL, 'Wish List/Created'),
+    (AA, 'Awaiting Approval'),
+    (AP, 'Approved, Awaiting PO Creation'),
+    (CM, 'Complete'),
+    (DN, 'Denied (no resubmission)'),
+    (RT, 'Returned (please resubmit)')
+)
+
 class PurchaseRequest(models.Model):
     id = models.AutoField(primary_key=True,editable=False)
     slug = models.SlugField(max_length=255, default='', editable=False)
     requisitioner = models.ForeignKey(Requisitioner,on_delete=models.PROTECT)
-    # requisitioner_django = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
     number = models.CharField(max_length=10,blank=True)
     vendor = models.ForeignKey(Vendor,on_delete=models.PROTECT,null=True)
-    # products = models.ManyToManyField(Product,through='PurchaseRequestItems')
-    items = models.ManyToManyField(Product,through='PurchaseRequestItems')
+    # items = models.ManyToManyField(Product,through='PurchaseRequestItems')
     created_date = models.DateTimeField("Created Date",auto_now_add=True)
     need_by_date = models.DateField("Date Required (optional)",blank=True,null=True)
     tax_exempt = models.BooleanField("Tax Exempt?",default=False)
     accounts = models.ManyToManyField(Accounts,through='PurchaseRequestAccounts')
     subtotal = MoneyField("Subtotal",decimal_places=2,max_digits=14,default_currency='USD',default=0)
     shipping = MoneyField("Shipping ($)",decimal_places=2,max_digits=14,default_currency='USD',default=0)
+    sales_tax_rate = models.DecimalField(max_digits=5,decimal_places=3,default=settings.DEFAULT_TAX_RATE)
     sales_tax = MoneyField("Sales Tax ($)",decimal_places=2,max_digits=14,default_currency='USD',default=0)
     grand_total = MoneyField("Grand Total ($)",decimal_places=2,max_digits=14,default_currency='USD',default=0)
     urgency = models.ForeignKey(Urgency,on_delete=models.PROTECT,default=1)
@@ -334,12 +355,6 @@ class PurchaseRequest(models.Model):
     )
     carrier = models.ForeignKey("Carrier",Carrier,blank=True,null=True)
     tracking_number = models.CharField(max_length=55,blank=True,null=True)
-    # tracking_link = models.URLField(blank=True, null=True)
-    # tracker_created = models.BooleanField(default=False)
-    # shipping_status = models.CharField(max_length=55,blank=True,null=True)
-    # shipping_status_datetime = models.DateTimeField(blank=True,null=True)
-    # tracker_active = models.BooleanField(default=True)
-    # tracker_id = models.CharField(max_length=100,blank=True,null=True)
     tracker = models.ForeignKey(Tracker,on_delete=models.SET_NULL,blank=True,null=True)
 
     PO = 'po'
@@ -361,22 +376,8 @@ class PurchaseRequest(models.Model):
         max_length=150
     )
 
-    WL = '0'
-    AA = '1'
-    AP = '2'
-    CM = '3'
-    DN = '4'
-    RT = '5'
-    STATUSES = (
-        (WL, 'Wish List/Created'),
-        (AA, 'Awaiting Approval'),
-        (AP, 'Approved, Awaiting PO Creation'),
-        (CM, 'Complete'),
-        (DN, 'Denied (no resubmission)'),
-        (RT, 'Returned (please resubmit)')
-    )
     status = models.CharField(
-        choices=STATUSES,
+        choices=PURCHASE_REQUEST_STATUSES,
         default='0',
         max_length=150
     )
@@ -395,7 +396,7 @@ class PurchaseRequest(models.Model):
         self.set_number()
 
     def get_subtotal(self):
-        extended_price = PurchaseRequestItems.objects.filter(purchase_request_id=self.id).aggregate(Sum('extended_price'))
+        extended_price = SimpleProduct.objects.filter(purchase_request_id=self.id).aggregate(Sum('extended_price'))
         if extended_price['extended_price__sum'] != None:
             pass
         else:
@@ -420,6 +421,12 @@ class PurchaseRequest(models.Model):
         self.shipping_status = last_event.get('status')
         self.shipping_status_datetime = last_event.get('datetime')
         self.save()
+
+    def get_tracking_link(self):
+        if stub := self.carrier.tracking_link:
+            return stub + self.tracking_number
+        else:
+            return None
 
     def set_number(self):
         if not self.number:
@@ -459,7 +466,12 @@ def create_tracker(sender, instance, *args, **kwargs):
         tracker = Tracker.objects.get_or_create(carrier=carrier,tracking_number=tracking_number)
         # tracker = Tracker.objects.get(id=tracker.id)
         instance.tracker = tracker[0]
-        Tracker.update(tracker[0])
+        # Tracker.update(tracker[0])
+
+@receiver(post_save, sender=PurchaseRequest)
+def update_tracker(sender, instance, *args, **kwargs):
+    if tracker := instance.tracker:
+        Tracker.update(tracker)
 
 # def save_formset(sender, instance, *args, **kwargs):
 
@@ -472,179 +484,195 @@ def create_tracker(sender, instance, *args, **kwargs):
 #         instance.subtotal = subtotal
 #         instance.save()
 
-class PurchaseRequestItems(models.Model):
-    product = models.ForeignKey(Product,on_delete=models.PROTECT)
+class SimpleProduct(models.Model):
+    name = models.CharField(max_length=100)
     purchase_request = models.ForeignKey(PurchaseRequest,on_delete=models.CASCADE)
-
-    class Meta:
-        verbose_name_plural = "Purchase Request Items"
-
-    quantity = models.DecimalField(blank=False,decimal_places=3,max_digits=14)
-
+    identifier = models.CharField("Part Number/ASIN/etc.",max_length=50,blank=True,null=True)
+    link = models.URLField(blank=True,null=True)
+    unit_price = models.DecimalField(max_digits=14,decimal_places=2)
+    quantity = models.DecimalField(max_digits=14,decimal_places=3,default=1)
     unit = models.ForeignKey(Unit,on_delete=models.PROTECT,default=1)
-    price = MoneyField(max_digits=14,decimal_places=2,default_currency='USD',null=True,blank=True)
-    extended_price = MoneyField(max_digits=14, decimal_places=2, default_currency='USD',default=0)
+    extended_price = MoneyField(max_digits=14,decimal_places=2,default_currency='USD',blank=True)
 
-    # def save(self, *args, **kwargs):
-    #     self.extended_price = self.extend()
-    #     super().save(*args, **kwargs)
-
-    def extend(self):
-        extended_price = self.quantity * self.price
+    def extend_price(self):
+        extended_price = self.quantity * self.unit_price
         return extended_price
 
     def save(self, *args, **kwargs):
-        if not self.price:
-            self.price = self.product.last_price
-        self.extended_price = self.extend()
+        self.extended_price = self.extend_price()
         super().save(*args, **kwargs)
 
-    # def get_initial_price(self):
-    #     return PurchaseRequestItems.objects.get(id=self.id).last_price
-
     def __str__(self):
-        name = self.product.name
+        name = self.name
         return name
 
-class PurchaseOrder(models.Model):
-    id = models.AutoField(primary_key=True,editable=False)
-    slug = models.SlugField(max_length=255, default='', editable=False)
-    number = models.CharField(max_length=10,unique=True,blank=True)
-    requisitioner = models.ForeignKey(Requisitioner,on_delete=models.PROTECT)
-    source_purchase_request = models.ForeignKey(PurchaseRequest,on_delete=models.PROTECT)
-    vendor = models.ForeignKey("Vendor",Vendor)
-    items = models.ManyToManyField(Product,through='PurchaseOrderItems')
-    # products = models.ManyToManyField(Product)
-    created_date = models.DateTimeField("Created Date",auto_now_add=True)
-    tax_exempt = models.BooleanField("Tax Exempt?",default=False)
-    accounts = models.ManyToManyField(Accounts,through='PurchaseOrderAccounts')
-    # accounts = models.ManyToManyField(Accounts)
-    # subtotal = models.DecimalField("Subtotal",decimal_places=2,max_digits=10)
-    shipping = MoneyField("Shipping ($)",decimal_places=2,max_digits=14,default_currency='USD',default=0)
-    sales_tax = models.DecimalField("Sales Tax ($)",decimal_places=2,max_digits=10)
-    grand_total = models.DecimalField("Grand Total ($)",decimal_places=2,max_digits=10)
-    carrier = models.ForeignKey("Carrier",Carrier,blank=True,null=True)
-    tracking_number = models.CharField(max_length=55,blank=True,null=True)
-    tracking_link = models.URLField(blank=True, null=True)
-    tracker_created = models.BooleanField(default=False)
-    shipping_status = models.CharField(max_length=55,blank=True,null=True)
-    tracker_active = models.BooleanField(default=True)
-    tracker_id = models.CharField(max_length=100,blank=True,null=True)
 
-    PO = 'po'
-    PCARD = 'pcard'
-    IRI = 'iri'
-    INV_VOUCHER = 'invoice voucher'
-    CONTRACT = 'contract'
-    PURCHASE_TYPE = (
-        (PO, 'PURCHASE ORDER'),
-        (PCARD, 'PCARD'),
-        (IRI, 'IRI'),
-        (INV_VOUCHER, 'INVOICE VOUCHER'),
-        (CONTRACT, 'CONTRACT')
-    )
-    purchase_type = models.CharField(
-        "Choose One",
-        choices=PURCHASE_TYPE,
-        default='pcard',
-        max_length=150
-    )
+# class PurchaseRequestItems(models.Model):
+#     product = models.ForeignKey(Product,on_delete=models.PROTECT)
+#     purchase_request = models.ForeignKey(PurchaseRequest,on_delete=models.CASCADE)
 
-    CR = '0'
-    OR = '1'
-    SH = '2'
-    RC = '3'
-    CH = '4'
-    STATUSES = (
-        (CR, 'Created'),
-        (OR, 'Ordered'),
-        (SH, 'Shipped'),
-        (RC, 'Recieved'),
-        (CH, 'Changed Required')
-    )
-    status = models.CharField(
-        choices=STATUSES,
-        default='created',
-        max_length=150
-    )
+#     class Meta:
+#         verbose_name_plural = "Purchase Request Items"
 
-    def get_absolute_url(self):
-        kwargs = {
-            'slug': self.slug
-        }
-        return reverse('purchaseorder_detail', kwargs=kwargs)  
+#     quantity = models.DecimalField(blank=False,decimal_places=3,max_digits=14)
 
-    def get_tracking_link(self):
-        return self.carrier.tracking_link + self.tracking_number
+#     unit = models.ForeignKey(Unit,on_delete=models.PROTECT,default=1)
+#     price = MoneyField(max_digits=14,decimal_places=2,default_currency='USD',null=True,blank=True)
+#     extended_price = MoneyField(max_digits=14, decimal_places=2, default_currency='USD',default=0)
 
-    def save(self, *args, **kwargs):
-        value = self.number
-        self.slug = slugify(value, allow_unicode=True)
-        super().save(*args, **kwargs)
-        self.set_number()
+#     def extend(self):
+#         extended_price = self.quantity * self.price
+#         return extended_price
 
-    # def get_tracking(self, *args, **kwargs):
-    #     carrier = self.carrier
-    #     tracking_number = self.tracking_number
+#     def save(self, *args, **kwargs):
+#         if not self.price:
+#             self.price = self.product.last_price
+#         self.extended_price = self.extend()
+#         super().save(*args, **kwargs)
 
-    def update_tracking(self, events):
-        self.shipping_status = events[0].get('status')
-        self.save()
+#     def __str__(self):
+#         name = self.product.name
+#         return name
 
-    def set_number(self):
-        if not self.number:
-            number = "PO" + str(self.id + (10 ** 4))            # Creates a number starting with 'PO' and ending with a 5 character (10^4) unique ID
-            request = PurchaseOrder.objects.get(id=self.id)
-            request.number = number
-            request.save()
+# class PurchaseOrder(models.Model):
+#     id = models.AutoField(primary_key=True,editable=False)
+#     slug = models.SlugField(max_length=255, default='', editable=False)
+#     number = models.CharField(max_length=10,unique=True,blank=True)
+#     requisitioner = models.ForeignKey(Requisitioner,on_delete=models.PROTECT)
+#     source_purchase_request = models.ForeignKey(PurchaseRequest,on_delete=models.PROTECT)
+#     vendor = models.ForeignKey("Vendor",Vendor)
+#     items = models.ManyToManyField(Product,through='PurchaseOrderItems')
+#     # products = models.ManyToManyField(Product)
+#     created_date = models.DateTimeField("Created Date",auto_now_add=True)
+#     tax_exempt = models.BooleanField("Tax Exempt?",default=False)
+#     accounts = models.ManyToManyField(Accounts,through='PurchaseOrderAccounts')
+#     # accounts = models.ManyToManyField(Accounts)
+#     # subtotal = models.DecimalField("Subtotal",decimal_places=2,max_digits=10)
+#     shipping = MoneyField("Shipping ($)",decimal_places=2,max_digits=14,default_currency='USD',default=0)
+#     sales_tax = models.DecimalField("Sales Tax ($)",decimal_places=2,max_digits=10)
+#     grand_total = models.DecimalField("Grand Total ($)",decimal_places=2,max_digits=10)
+#     carrier = models.ForeignKey("Carrier",Carrier,blank=True,null=True)
+#     tracking_number = models.CharField(max_length=55,blank=True,null=True)
+#     tracking_link = models.URLField(blank=True, null=True)
+#     tracker_created = models.BooleanField(default=False)
+#     shipping_status = models.CharField(max_length=55,blank=True,null=True)
+#     tracker_active = models.BooleanField(default=True)
+#     tracker_id = models.CharField(max_length=100,blank=True,null=True)
 
-    def __str__(self):
-        return self.number
+#     PO = 'po'
+#     PCARD = 'pcard'
+#     IRI = 'iri'
+#     INV_VOUCHER = 'invoice voucher'
+#     CONTRACT = 'contract'
+#     PURCHASE_TYPE = (
+#         (PO, 'PURCHASE ORDER'),
+#         (PCARD, 'PCARD'),
+#         (IRI, 'IRI'),
+#         (INV_VOUCHER, 'INVOICE VOUCHER'),
+#         (CONTRACT, 'CONTRACT')
+#     )
+#     purchase_type = models.CharField(
+#         "Choose One",
+#         choices=PURCHASE_TYPE,
+#         default='pcard',
+#         max_length=150
+#     )
+
+#     CR = '0'
+#     OR = '1'
+#     SH = '2'
+#     RC = '3'
+#     CH = '4'
+#     STATUSES = (
+#         (CR, 'Created'),
+#         (OR, 'Ordered'),
+#         (SH, 'Shipped'),
+#         (RC, 'Recieved'),
+#         (CH, 'Changed Required')
+#     )
+#     status = models.CharField(
+#         choices=STATUSES,
+#         default='created',
+#         max_length=150
+#     )
+
+#     def get_absolute_url(self):
+#         kwargs = {
+#             'slug': self.slug
+#         }
+#         return reverse('purchaseorder_detail', kwargs=kwargs)  
+
+#     def get_tracking_link(self):
+#         return self.carrier.tracking_link + self.tracking_number
+
+#     def save(self, *args, **kwargs):
+#         value = self.number
+#         self.slug = slugify(value, allow_unicode=True)
+#         super().save(*args, **kwargs)
+#         self.set_number()
+
+#     # def get_tracking(self, *args, **kwargs):
+#     #     carrier = self.carrier
+#     #     tracking_number = self.tracking_number
+
+#     def update_tracking(self, events):
+#         self.shipping_status = events[0].get('status')
+#         self.save()
+
+#     def set_number(self):
+#         if not self.number:
+#             number = "PO" + str(self.id + (10 ** 4))            # Creates a number starting with 'PO' and ending with a 5 character (10^4) unique ID
+#             request = PurchaseOrder.objects.get(id=self.id)
+#             request.number = number
+#             request.save()
+
+#     def __str__(self):
+#         return self.number
 
 
-# TODO - invert commented lines!
-@receiver(pre_save, sender=PurchaseOrder)
-def get_tracking(sender, instance, *args, **kwargs):
-    if instance.tracking_number:       # and not instance.tracker_id:
-        # carrier = instance.carrier
-        tracking_number = instance.tracking_number
-        tracker_created = instance.tracker_created
-        api_key = settings.SHIP24_KEY
+# # TODO - invert commented lines!
+# @receiver(pre_save, sender=PurchaseOrder)
+# def get_tracking(sender, instance, *args, **kwargs):
+#     if instance.tracking_number:       # and not instance.tracker_id:
+#         # carrier = instance.carrier
+#         tracking_number = instance.tracking_number
+#         tracker_created = instance.tracker_created
+#         api_key = settings.SHIP24_KEY
 
-        tracker = TrackerOld.get('slug',tracking_number,tracker_created,api_key)
-        instance.tracker_created = True
+#         tracker = TrackerOld.get('slug',tracking_number,tracker_created,api_key)
+#         instance.tracker_created = True
 
-        # instance.tracking_link = tracker.courier_tracking_link
-        # instance.shipping_status = tracker.tag
-        # instance.tracker_active = tracker.active
-        if not instance.tracker_id:
-            instance.tracker_id = tracker.id
-    # pass
+#         # instance.tracking_link = tracker.courier_tracking_link
+#         # instance.shipping_status = tracker.tag
+#         # instance.tracker_active = tracker.active
+#         if not instance.tracker_id:
+#             instance.tracker_id = tracker.id
+#     # pass
 
-class PurchaseOrderItems(models.Model):
-    product = models.ForeignKey(Product,on_delete=models.PROTECT)
-    purchase_order = models.ForeignKey(PurchaseOrder,on_delete=models.PROTECT)
+# class PurchaseOrderItems(models.Model):
+#     product = models.ForeignKey(Product,on_delete=models.PROTECT)
+#     purchase_order = models.ForeignKey(PurchaseOrder,on_delete=models.PROTECT)
 
-    class Meta:
-        verbose_name_plural = "Purchase Order Items"
+#     class Meta:
+#         verbose_name_plural = "Purchase Order Items"
 
-    quantity = models.DecimalField(blank=False,decimal_places=3,max_digits=14)
+#     quantity = models.DecimalField(blank=False,decimal_places=3,max_digits=14)
 
-    unit = models.ForeignKey(Unit,on_delete=models.PROTECT,default=1)
-    price = MoneyField(max_digits=14,decimal_places=2,default_currency='USD',null=True)
-    # extended_price = MoneyField(max_digits=14, decimal_places=2, default_currency='USD',default=0)
+#     unit = models.ForeignKey(Unit,on_delete=models.PROTECT,default=1)
+#     price = MoneyField(max_digits=14,decimal_places=2,default_currency='USD',null=True)
+#     # extended_price = MoneyField(max_digits=14, decimal_places=2, default_currency='USD',default=0)
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        self.extended_price = self.quantity * self.price
+#     def save(self, *args, **kwargs):
+#         super().save(*args, **kwargs)
+#         self.extended_price = self.quantity * self.price
 
-    def extend(self):
-        extended_price = self.quantity * self.price
-        return extended_price
+#     def extend(self):
+#         extended_price = self.quantity * self.price
+#         return extended_price
 
-    def __str__(self):
-        name = self.product.name
-        return name
+#     def __str__(self):
+#         name = self.product.name
+#         return name
 
 class SpendCategory(models.Model):
     class Meta:
@@ -656,7 +684,7 @@ class SpendCategory(models.Model):
     subobject = models.CharField(max_length=50)
 
     def __str__(self):
-        return self.description
+        return "%s (%s)" % (self.code,self.description)
 
 class PurchaseRequestAccounts(models.Model):
     class Meta:
@@ -665,24 +693,38 @@ class PurchaseRequestAccounts(models.Model):
     accounts = models.ForeignKey(Accounts,on_delete=models.PROTECT)
 
     spend_category = models.ForeignKey(SpendCategory,on_delete=models.PROTECT)
-    distribution_amount = MoneyField("Distribution",max_digits=14,decimal_places=2,default_currency='USD',blank=True,null=True)
-    distribution_percent = models.FloatField(default=0)
+    # distribution_amount = MoneyField("Distribution",max_digits=14,decimal_places=2,default_currency='USD',blank=True,null=True)
+    # distribution_percent = models.FloatField(default=0)
+
+    PERCENT = 'percent'
+    AMOUNT = 'amount'
+    DISTRIBUTION_TYPE = (
+        (PERCENT, 'Percent'),
+        (AMOUNT, 'Amount')
+    )
+    distribution_type = models.CharField(
+        choices=DISTRIBUTION_TYPE,
+        default='percent',
+        max_length=15
+    )
+
+    distribution_input = models.FloatField(default=100)
 
     def __str__(self):
-        return self.spend_category
+        return "%s | %s" % (self.accounts.program_workday,self.spend_category.code)
 
-class PurchaseOrderAccounts(models.Model):
-    class Meta:
-        verbose_name_plural = "Purchase Order Accounts"
-    purchase_order = models.ForeignKey(PurchaseOrder,on_delete=models.PROTECT)
-    accounts = models.ForeignKey(Accounts,on_delete=models.PROTECT)
+# class PurchaseOrderAccounts(models.Model):
+#     class Meta:
+#         verbose_name_plural = "Purchase Order Accounts"
+#     purchase_order = models.ForeignKey(PurchaseOrder,on_delete=models.PROTECT)
+#     accounts = models.ForeignKey(Accounts,on_delete=models.PROTECT)
 
-    spend_category = models.ForeignKey(SpendCategory,on_delete=models.PROTECT)
-    distribution_amount = MoneyField("Distribution",max_digits=14,decimal_places=2,default_currency='USD',blank=True,null=True)
-    distribution_percent = models.FloatField(default=0)
+#     spend_category = models.ForeignKey(SpendCategory,on_delete=models.PROTECT)
+#     distribution_amount = MoneyField("Distribution",max_digits=14,decimal_places=2,default_currency='USD',blank=True,null=True)
+#     distribution_percent = models.FloatField(default=0)
 
-    def __str__(self):
-        return self.spend_category
+#     def __str__(self):
+#         return self.spend_category
 
 class TrackingWebhookMessage(models.Model):
     received_at = models.DateTimeField(help_text="DateTime that message was recieved.")
@@ -692,3 +734,95 @@ class TrackingWebhookMessage(models.Model):
         indexes = [
             models.Index(fields=['received_at'])
         ]
+
+###--------------------------------------- Accounting ----------------------------------------
+
+class Balance(models.Model):
+    account = models.OneToOneField(Accounts,on_delete=models.CASCADE)
+    balance = MoneyField(max_digits=14,decimal_places=2,default_currency='USD')
+    updated_datetime = models.DateTimeField(auto_now_add=True)
+    starting_balance = MoneyField(max_digits=14,decimal_places=2,default_currency='USD',default=0)
+
+    # class Meta:
+        # verbose_name_plural = "Balances"
+        
+    def get_absolute_url(self):
+        kwargs = {
+            'pk': self.pk
+        }
+        return reverse('balances_detail', kwargs=kwargs)
+
+    def update_balance(self,ledger_value:decimal):
+        new_balance = self.balance + ledger_value
+        self.balance = new_balance
+        self.updated_datetime = timezone.now()
+        self.save()
+        return self.balance
+
+    def update_balance_complete(self):
+        ledger_total_value = Transaction.objects.filter(account = self).aggregate(Sum('total_value'))
+        # SimpleProduct.objects.filter(purchase_request_id=self.id).aggregate(Sum('extended_price'))
+        if ledger_total_value.get('total_value__sum'):
+            new_balance = self.starting_balance.amount + ledger_total_value.get('total_value__sum')
+        else:
+            new_balance = self.starting_balance
+        self.updated_datetime = timezone.now()
+        self.balance = new_balance
+        self.save()
+
+    def __str__(self):
+        return "%s [%s]" % (self.account.account_title,self.balance.amount)
+
+@receiver(post_save, sender=Balance)
+def set_initial_balance(sender, instance, created, **kwargs):
+    if created:
+        instance.balance = instance.initial_balance
+        instance.save()
+
+class TransactionManager(models.Manager):
+    def get_queryset(self,account:Accounts):
+        queryset = super().get_queryset().filter(account=account)
+        return queryset
+
+class Transaction(models.Model):
+    balance = models.ForeignKey(Balance,on_delete=models.CASCADE)
+    purchase_request = models.OneToOneField(PurchaseRequest,on_delete=models.CASCADE)
+    processed_datetime = models.DateTimeField(auto_now_add=True)
+    total_value = MoneyField(max_digits=14,decimal_places=2,default_currency='USD')
+
+    objects = models.Manager()
+    balance_objects = TransactionManager()
+
+    class Meta:
+        # verbose_name_plural = "Ledgers"
+        ordering = ['-processed_datetime']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_total = self.total_value
+
+    def get_absolute_url(self):
+        kwargs = {
+            'pk': self.pk
+        }
+        return reverse('update_ledger_item', kwargs=kwargs) 
+
+    def save(self, *args, **kwargs):
+        balance_account = self.balance
+        if self.total_value != self.__original_total:
+            if self.__original_total:
+                balance_change = self.total_value - self.__original_total
+            else:
+                balance_change = self.total_value
+        else:
+            balance_change = 0
+        print("Old Balance: " + str(balance_account.balance.amount))
+        # if self.pk:
+        #     existing_value = self.total_value
+        # else:
+        new_balance = Balance.update_balance(balance_account,balance_change)
+        print("New Balance: " + str(new_balance.amount))
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return "%s | %s [%s]" % (self.balance.account.account_title,self.purchase_request,self.total_value.amount)
