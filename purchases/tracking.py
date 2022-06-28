@@ -1,8 +1,10 @@
 # from ast import If
 import http.client
 import json
+from xml.dom import NotFoundErr
 
 from django.conf import settings
+from purchases.models.models_apis import Tracker
 
 from purchases.models.models_metadata import Carrier
 
@@ -204,7 +206,7 @@ def register_tracker(tracking_number:str, carrier:Carrier):
         "number": tracking_number
     }]
     if carrier:
-        payload_dict['carrier'] = carrier.carrier_code
+        payload_dict[0]['carrier'] = carrier.carrier_code
     
     payload = json.dumps(payload_dict)
 
@@ -221,8 +223,14 @@ def register_tracker(tracking_number:str, carrier:Carrier):
         for row in data['accepted']:
             response = True
             message = None
-            if carr_code := row['carrier'] != carrier.carrier_code:
-                carrier = Carrier.objects.get(carrier_code=carr_code)
+            returned_carrier_code = row['carrier']
+            returned_carrier, _ = Carrier.objects.get_or_create(
+                carrier_code = returned_carrier_code,
+                defaults = {
+                    'name': returned_carrier_code
+                }
+            )
+            carrier = returned_carrier
             number = row['number']
         if response != True:
             number,carrier,message,response = get_tracker(tracking_number,carrier)
@@ -281,3 +289,111 @@ def get_tracker(tracking_number:str, carrier:Carrier):
     tuple = (number,carrier,message,response)
 
     return tuple
+
+def update_tracking_details(tracker:Tracker):
+
+    if tracker == None:
+        return False
+
+    conn = http.client.HTTPSConnection("api.17track.net")
+
+    headers = {
+        'Content-Type': "application/json",
+        '17token': settings._17TRACK_KEY
+        }
+
+    payload_dict = [{
+        "number": tracker.tracking_number,
+        "carrier": tracker.carrier.carrier_code
+    }]
+    
+    payload = json.dumps(payload_dict)
+
+    conn.request("POST", "/track/v2/gettrackinfo", payload, headers)
+
+    res = conn.getresponse()
+    dataBytes = res.read()
+    dataJson = json.loads(dataBytes.decode("utf-8"))
+
+    # code = dataJson.get('code')
+    data = dataJson.get('data')
+    response = False            #set to false as default value
+    try:
+        for row in data['accepted']:
+            response = True
+            message = None
+            returned_carrier_code = row['carrier']
+            returned_carrier, _ = Carrier.objects.get_or_create(
+                carrier_code = returned_carrier_code,
+                defaults = {
+                    'name': returned_carrier_code
+                }
+            )
+            tracker.carrier = returned_carrier
+            tracker.tracking_number = row['number']
+            tracker.status = row['track_info']['latest_status']['status']
+            tracker.delivery_estimate = row['track_info']['time_metrics']['estimated_delivery_date']['from']
+            tracker.events = row['track_info']['tracking']['providers'][0]['events']
+            tracker.save()
+        if response != True:
+            rejected = data['rejected'][0]
+            message = rejected['error']['message']
+            number = rejected['number']
+            raise Exception(message)
+    except:
+        raise
+
+    return response
+
+def bulk_update_tracking_details(trackers:list[Tracker]):
+
+    if len(trackers) == 0:
+        return False
+
+    conn = http.client.HTTPSConnection("api.17track.net")
+
+    headers = {
+        'Content-Type': "application/json",
+        '17token': settings._17TRACK_KEY
+        }
+
+    payload_dict = []
+    for t in trackers:
+        if t:
+            payload_dict.append({
+                "number": t.tracking_number,
+                "carrier": t.carrier.carrier_code
+            })
+    
+    payload = json.dumps(payload_dict)
+
+    conn.request("POST", "/track/v2/gettrackinfo", payload, headers)
+
+    res = conn.getresponse()
+    dataBytes = res.read()
+    dataJson = json.loads(dataBytes.decode("utf-8"))
+
+    # code = dataJson.get('code')
+    data = dataJson.get('data')
+    response = False            #set to false as default value
+    updated_trackers = []
+    try:
+        for row in data['accepted']:
+            returned_carrier_code = row['carrier']
+            returned_carrier, _ = Carrier.objects.get_or_create(
+                carrier_code = returned_carrier_code,
+                defaults = {
+                    'name': returned_carrier_code
+                }
+            )
+            tracker = Tracker.objects.get(tracking_number=row['number'],carrier=returned_carrier)
+            tracker.status = row['track_info']['latest_status']['status']
+            tracker.delivery_estimate = row['track_info']['time_metrics']['estimated_delivery_date']['from']
+            tracker.events = row['track_info']['tracking']['providers'][0]['events']
+            updated_trackers.append(tracker)
+
+        Tracker.objects.bulk_update(updated_trackers,['status','delivery_estimate','events'])
+    except:
+        raise
+
+    return

@@ -360,7 +360,7 @@ class PurchaseRequestUpdateView(UpdateView):
 
 
 @csrf_exempt
-# @require_POST
+@require_POST
 @non_atomic_requests
 def tracking_webhook(request):
 
@@ -368,8 +368,8 @@ def tracking_webhook(request):
         response = HttpResponse("Message successfully received.", content_type="text/plain")
         return response
     else:
-        secret = settings.SHIP24_WEBHOOK_SECRET
-        given_token = request.headers.get("Authorization","")
+        secret = settings._17TRACK_KEY
+        given_token = request.headers.get("sign","")
         signature = generate_signature(secret,None)
         # if not compare_digest(given_token,signature):
         #     return HttpResponseForbidden(
@@ -393,9 +393,37 @@ def tracking_webhook(request):
 
 @atomic
 def process_webhook_payload(payload):
+    event_type = payload.get('event')
+    data = payload.get('data')
+
+    tracking_number = data.get('number')
+    carrier_code = data.get('carrier')
+    status = data['track_info']['latest_status']['status']
+    estimated_delivery_date = data['track_info']['time_metrics']['estimated_delivery_date']['from']
+    last_update_date = data['track_info']['latest_event']['time_utc']
+    events = data['track_info']['tracking']['providers'][0]['events']
+
+    try:
+        carrier = Carrier.objects.get(carrier_code=carrier_code)
+        tracker = Tracker.objects.get(tracking_number=tracking_number,carrier=carrier)
+    except:
+        raise
+    
+    if event_type == 'TRACKING_UPDATED':
+        tracker.status = status
+        tracker.delivery_estimate = estimated_delivery_date
+        tracker.events = events
+        tracker.save()
+
+    return
+
+
+
+
+
     trackings = payload.get('trackings')
     for t in trackings:
-        shipment = t.get('shipment')
+        # shipment = t.get('shipment')
         tNumber = shipment.get('trackingNumbers')[0]['tn']
         events = t.get('events')
 

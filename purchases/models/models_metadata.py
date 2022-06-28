@@ -163,7 +163,14 @@ class Accounts(models.Model):
         verbose_name_plural = "Accounts"
 
     def __str__(self):
-        return "%s (%s)" % (self.program_workday,self.account_title)
+        if self.program_workday:
+            return "%s (%s)" % (self.program_workday,self.account_title)
+        elif self.grant:
+            return "%s (%s)" % (self.grant,self.account_title)
+        elif self.gift:
+            return "%s (%s)" % (self.gift,self.account_title)
+        else:
+            return self.account_title
 
 class Department(models.Model):
     code = models.CharField("Code/Abbreviation",max_length=10)

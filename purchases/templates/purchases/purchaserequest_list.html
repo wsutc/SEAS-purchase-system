@@ -18,6 +18,7 @@ List of Manufacturers
             <th scope="col">Number</th>
             <th>Status</th>
             <th>Total</th>
+            <th>Shipping Status</th>
           </tr>
           </thead>
           <tbody>
@@ -27,6 +28,7 @@ List of Manufacturers
                     <td><a href="{{ o.get_absolute_url }}">{{ o.number }}</a></td>
                     <td>{{ o.get_status_display }}</td>
                     <td>{{ o.grand_total }}</td>
+                    <td>{{ o.tracker.status }}</td>
                 </tr>
             {% endfor %}
           </tbody>

@@ -1,4 +1,7 @@
+from typing import Set
 from django.contrib import admin
+
+from purchases import tracking
 
 from .models.models_metadata import (
     Accounts, Carrier, Department, DocumentNumber, Manufacturer,
@@ -50,23 +53,35 @@ def save_requests(modeladmin, request, queryset):
         r.update_totals()
         r.update_transactions()
 
-# @admin.action(description="Update Trackers")
-# def update_trackers(modeladmin, request, queryset):
-#     for r in queryset:
-#         tracker_created = create_tracker('',r)
-#         if tracker_created:
-#             r.save()
-#         update_tracker('',r)
+@admin.action(description="Update Tracker(s)")
+def update_trackers(modeladmin, request, queryset):
+    tracker_list = []
+    for r in queryset:
+        tracker_created = create_tracker('',r)
+        if tracker_created:
+            r.save()
+        tracker_list.append(r.tracker)
+    
+    if len(tracker_list) > 0:
+        print("First tracker: %s" % (tracker_list[0]))
+    tracking.bulk_update_tracking_details(tracker_list)
 
 @admin.register(PurchaseRequest)
 class PurchaseRequestAdmin(admin.ModelAdmin):
     list_display = ['requisitioner', 'number', 'grand_total', 'status', 'slug', 'get_tracker_status']
     inlines = [SimpleProductInline,PurchaseRequestAccountsInline]
-    actions = [make_awaiting_approval,save_requests]#,update_trackers]
+    actions = [make_awaiting_approval,save_requests,update_trackers]
 
     @admin.display(description='Tracking Status')
     def get_tracker_status(self, obj):
         if obj.tracker:
+            return obj.tracker.status
+        return
+
+    @admin.display(description='Update Tracker(s)')
+    def update_tracker(self, obj):
+        if obj.tracker:
+            tracking.update_tracking_details(obj.tracker)
             return obj.tracker.status
         return
 

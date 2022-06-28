@@ -19,49 +19,11 @@ class Tracker(models.Model):
             models.Index(fields=['id'])
         ]
 
-    # def save(self, *args, **kwargs):
-    #     super().save(*args, **kwargs)
-
-    # def update(self):
-    #     api_key = settings.SHIP24_KEY
-    #     # id = self.id
-    #     tracking_number = self.tracking_number
-    #     conn = http.client.HTTPSConnection("api.ship24.com")
-    #     headers = {
-    #         'Content-Type': "application/json",
-    #         'Authorization': "Bearer " + api_key
-    #     }
-
-    #     get_path = "/public/v1/trackers/search/%s" % (tracking_number)
-
-    #     conn.request("GET", get_path, headers=headers)
-    #     response = conn.getresponse()
-    #     data = response.read()
-    #     dataJson = json.loads(data.decode("utf-8"))
-    #     # print(dataJson)
-    #     dataDict = dataJson.get('data')
-    #     trackings = dataDict.get('trackings')
-    #     # tracker = trackings[0].get('tracker')
-    #     shipment = trackings[0].get('shipment')
-    #     events = trackings[0].get('events')
-    #     event_data = get_event_data(events[0])
-
-    #     if courier_code := event_data.get('courier_code'):                              # Only attempt if courier_code is present
-    #         carrier, _ = Carrier.objects.get_or_create(                                 # Create new courier if match not found
-    #             slug = courier_code,
-    #             defaults = {'name': courier_code}
-    #         )
-    #         self.carrier = carrier
-
-    #     self.shipment_id = shipment.get('shipmentId')
-        
-    #     self.delivery_estimate = shipment.get('delivery').get('estimatedDeliveryDate')
-    #     self.events = events
-    #     if status := shipment.get('statusCode'):
-    #         self.status = status
-    #     elif status := event_data.get('event_status'):
-    #         self.status = status
-    #     self.save()
+    def get_tracking_link(self):
+        if stub := self.carrier.tracking_link:
+            return "%s%s" % (stub,self.tracking_number)
+        else:
+            return None
 
     def __str__(self):
         return str(self.id)
