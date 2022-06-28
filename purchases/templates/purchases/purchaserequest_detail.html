@@ -69,7 +69,17 @@
                         </tr>
                         <tr>
                             <td align="right">Shipping</td>
-                            <td>{% if object.tracker %}<a href="{{ object.get_tracking_link }}" target="_blank" rel="noopener noreferrer">{{ object.tracker.carrier }} {{ object.tracker.tracking_number }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a>{% endif %}</td>
+                            <td>
+                                {% if object.tracker %}
+                                    {% if object.tracker.get_tracking_link %}
+                                        <a href="{{ object.tracker.get_tracking_link }}" target="_blank" rel="noopener noreferrer">
+                                            {{ object.tracker.carrier }} {{ object.tracker.tracking_number }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i>
+                                        </a>
+                                    {% else %}
+                                        {{ object.tracker.carrier }} {{ object.tracker.tracking_number }}
+                                    {% endif %}
+                                {% endif %}
+                            </td>
                         </tr>
                     </tbody>
                 </table>

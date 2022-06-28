@@ -56,6 +56,7 @@
                     </thead>
                     <tbody id="account-table-body" class="{{ purchase_request_accounts_formset.prefix }}">
                         {% for account in purchase_request_accounts_formset %}
+                            {{ account.id }}
                             <tr class="account-row">
                                 <td>{{ account.accounts }}</td>
                                 <td>{{ account.spend_category }}</td>
@@ -77,6 +78,8 @@
                 </table>
                 <button id="add-account" type="button" class="btn btn-secondary"><i class="fa-solid fa-plus"></i></button>
 
+                {% comment %} <p>Sales Tax: {{ form.sales_tax_rate }}</p> {% endcomment %}
+                
                 <p class="h1 text-info">Add Items</p>
                 {{ purchase_request_items_formset.non_form_errors }}
                 {{ purchase_request_items_formset.management_form }}
@@ -92,6 +95,7 @@
                     </thead>
                     <tbody id="item-table-body" class="{{ purchase_request_items_formset.prefix }}">
                         {% for form in purchase_request_items_formset %}
+                            {{ form.id }}
                             <tr class="item-row">
                                 <td>{{ form.name }}</td>
                                 <td>{{ form.identifier }}</td>

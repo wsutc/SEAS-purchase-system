@@ -14,13 +14,21 @@ from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils.timezone import datetime,activate
 from django.shortcuts import get_object_or_404
-from .models import Accounts, Balance, Carrier, Transaction, Manufacturer, Product, PurchaseRequest, Requisitioner, Tracker, Vendor, TrackingWebhookMessage, get_event_data
+from .models.models_metadata import (
+    Carrier, Vendor
+)
+from .models.models_data import (
+    Balance, Transaction, PurchaseRequest, Requisitioner
+)
+from .models.models_apis import (
+    Tracker, TrackingWebhookMessage, get_event_data
+)
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView
 from django.db.models import Sum, Count
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from .forms import LedgersForm, PurchaseRequestAccountsFormset, SimpleProductForm, SimpleProductFormset
+from .forms import PurchaseRequestAccountsFormset, SimpleProductForm, SimpleProductFormset
 
 import datetime as dt
 import json
@@ -256,7 +264,25 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
             account.purchase_request = self.object
             account.save()
 
+        # Set PR totals and update balance
         self.object.update_totals()
+        ## Update/create balance and create transaction record
+        account = purchase_request_accounts[0].accounts
+        balance, _ = Balance.objects.get_or_create(
+            account = account,
+            defaults = {
+                'balance': 0,
+                'starting_balance': 0
+            }
+        )
+        transaction, _ = Transaction.objects.get_or_create(
+            balance = balance,
+            purchase_request = self.object,
+            total_value = -self.object.grand_total
+        )
+
+        balance.adjust_balance(transaction.total_value)
+
         return redirect(reverse_lazy("home"))
 
     def form_invalid(self, form, purchase_request_items_formset, purchase_request_accounts_formset):
@@ -276,10 +302,11 @@ class PurchaseRequestUpdateView(UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super(PurchaseRequestUpdateView, self).get_context_data(**kwargs)
-        context['purchase_request_items_formset'] = SimpleProductFormset()
+        context['purchase_request_items_formset'] = SimpleProductFormset(instance=self.object)
+        context['purchase_request_accounts_formset'] = PurchaseRequestAccountsFormset(instance=self.object)
         context['requisitioner'] = PurchaseRequest.objects.get(slug=self.kwargs['slug']).requisitioner
     #     context['requisitioner'] = self.
-    #     # context['requisitioner'] = Requisitioner.objects.get(user=self.request.user)
+        context['requisitioner'] = Requisitioner.objects.get(user=self.request.user)
         return context
 
     def post(self, request, *args, **kwargs):
@@ -287,27 +314,36 @@ class PurchaseRequestUpdateView(UpdateView):
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         purchase_request_items_formset = SimpleProductFormset(self.request.POST)
-        if form.is_valid() and purchase_request_items_formset.is_valid():
-            return self.form_valid(form, purchase_request_items_formset)
+        purchase_request_accounts_formset = PurchaseRequestAccountsFormset(self.request.POST)
+        if form.is_valid() and purchase_request_items_formset.is_valid() and purchase_request_accounts_formset.is_valid():
+            return self.form_valid(form, purchase_request_items_formset, purchase_request_accounts_formset)
         else:
-            return self.form_invalid(form, purchase_request_items_formset)
+            return self.form_invalid(form, purchase_request_items_formset, purchase_request_accounts_formset)
 
-    def form_valid(self, form, purchase_request_items_formset):
+    def form_valid(self, form, purchase_request_items_formset, purchase_request_accounts_formset):
         # form.instance.requisitioner = Requisitioner.objects.get(user = self.request.user)
         self.object = form.save(commit=False)
         self.object.save()
         purchase_request_items = purchase_request_items_formset.save(commit=False)
+        purchase_request_accounts = purchase_request_accounts.formset.save(commit=False)
         for item in purchase_request_items:
             item.purchase_request = self.object
             item.save()
+        ## Add Accounts
+        purchase_request_accounts = purchase_request_accounts_formset.save(commit=False)
+        for account in purchase_request_accounts:
+            account.purchase_request = self.object
+            account.save()
         self.object.update_totals()
+
         return redirect(reverse_lazy("purchaserequest_detail/<slug:self.object.slug>"))
 
-    def form_invalid(self, form, purchase_request_items_formset):
+    def form_invalid(self, form, purchase_request_items_formset, purchase_request_accounts_formset):
         return self.render_to_response(
             self.get_context_data(
                 form=form,
                 purchase_request_items_formset=purchase_request_items_formset,
+                purchase_request_accounts_formset=purchase_request_accounts_formset
             )
         )
 
@@ -624,16 +660,16 @@ def fill_pr_pdf(request,purchase_request:PurchaseRequest):
 #     suggess_message = 'Success'
 #     success_url = reverse_lazy('new_pr')
 
-class LedgersCreateView(CreateView):
-    model = Transaction
-    form_class = LedgersForm
-    template_name = 'purchases/ledgers_create.html'
-    success_url = reverse_lazy('balances_list')
+# class LedgersCreateView(CreateView):
+#     model = Transaction
+#     form_class = LedgersForm
+#     template_name = 'purchases/ledgers_create.html'
+#     success_url = reverse_lazy('balances_list')
 
-    # def post(self, request):
-        # self.success_url = redirect('balances_list')
-        # super().post(self.request.POST)
-        # return redirect('balances_list')
+#     # def post(self, request):
+#         # self.success_url = redirect('balances_list')
+#         # super().post(self.request.POST)
+#         # return redirect('balances_list')
 
 class BalancesListView(ListView):
     model = Balance
@@ -643,14 +679,14 @@ class BalancesDetailView(DetailView):
     model = Balance
     template_name = 'purchases/balances_detail.html'
 
-class LedgersUpdateView(UpdateView):
-    model = Transaction
-    form_class = LedgersForm
-    template_name = 'purchases/ledgers_create.html'
-    success_url = reverse_lazy('balances_list')
+# class LedgersUpdateView(UpdateView):
+#     model = Transaction
+#     form_class = LedgersForm
+#     template_name = 'purchases/ledgers_create.html'
+#     success_url = reverse_lazy('balances_list')
 
-    # def post(self):
-    #     pass
+#     # def post(self):
+#     #     pass
 
 class LedgersDetailView(DetailView):
     model = Transaction
@@ -661,6 +697,6 @@ class LedgersListView(ListView):
 
 def update_balance(request, pk:int):
     balance = get_object_or_404(Balance,pk=pk)
-    balance.update_balance_complete()
+    balance.recalculate_balance()
 
     return redirect('balances_list')

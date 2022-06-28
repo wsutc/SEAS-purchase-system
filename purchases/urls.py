@@ -2,11 +2,11 @@ from unicodedata import name
 from django.urls import path
 from purchases import views
 from purchases.views import (
-    BalancesDetailView, BalancesListView, LedgersCreateView, LedgersDetailView, LedgersListView, LedgersUpdateView, PurchaseRequestListView, PurchaseRequestUpdateView,
+    BalancesDetailView, BalancesListView, LedgersDetailView, LedgersListView, PurchaseRequestListView, PurchaseRequestUpdateView,
     VendorDetailView, VendorListView, PurchaseRequestDetailView,
     PurchaseRequestCreateView, tracking_webhook
 )
-from purchases.models import Manufacturer, Product
+from purchases.models.models_metadata import Manufacturer, Product
 from django.conf.urls.static import static
 from django.conf import settings
 
@@ -45,10 +45,10 @@ urlpatterns = [
     # path("update-product/<int:pk>-<str:slug>", ProductUpdateView.as_view(), name="update_product"),
     path("webhooks/tracking/BJD3ZX4b1gNvcIAOhGeTiE6kcC0ugjp/",tracking_webhook),
     path("purchase-request/<slug:slug>/pdf", views.generate_pr_pdf, name="generate_pdf"),
-    path("add-ledger-item/", LedgersCreateView.as_view(), name="add_ledger_item"),
+    # path("add-ledger-item/", LedgersCreateView.as_view(), name="add_ledger_item"),
     path("account-transactions/<int:pk>/", LedgersListView.as_view(), name="ledger_list"),
-    path("update-ledger-item/<int:pk>/", LedgersUpdateView.as_view(), name="update_ledger_items"),
-    path("ledger-item/<int:pk>/", LedgersDetailView.as_view(), name="ledger_item"),
+    # path("update-ledger-item/<int:pk>/", LedgersUpdateView.as_view(), name="update_ledger_items"),
+    # path("ledger-item/<int:pk>/", LedgersDetailView.as_view(), name="ledger_item"), 
     path("account-balances/", BalancesListView.as_view(), name="balances_list"),
     path("account-balances/<int:pk>/", BalancesDetailView.as_view(), name="balances_detail"),
     path("account/<int:pk>/update/", views.update_balance, name="update_balance"),

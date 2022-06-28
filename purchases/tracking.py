@@ -2,6 +2,10 @@
 import http.client
 import json
 
+from django.conf import settings
+
+from purchases.models.models_metadata import Carrier
+
 class TrackerOld:
     # def __init__(self, slug, tracking_number, created, api_key):
     #     self.meta_code = None
@@ -184,10 +188,96 @@ def build_payload(tracking_number, slug):
     if slug:
         tracking_dict['courierCode'] = slug
 
-    # ### Second, nest the 'tracking' tag in a larger dict
-    # payload_dict = {'tracking':tracking_dict}
-
-    ### Last, turn the nested dict into json
     payload = json.dumps(tracking_dict,indent=2)
 
     return payload
+
+def register_tracker(tracking_number:str, carrier:Carrier):
+    conn = http.client.HTTPSConnection("api.17track.net")
+
+    headers = {
+        'Content-Type': "application/json",
+        '17token': settings._17TRACK_KEY
+        }
+
+    payload_dict = [{
+        "number": tracking_number
+    }]
+    if carrier:
+        payload_dict['carrier'] = carrier.carrier_code
+    
+    payload = json.dumps(payload_dict)
+
+    conn.request("POST", "/track/v2/register", payload, headers)
+
+    res = conn.getresponse()
+    dataBytes = res.read()
+    dataJson = json.loads(dataBytes.decode("utf-8"))
+
+    # code = dataJson.get('code')
+    data = dataJson.get('data')
+    response = False            #set to false as default value
+    try:
+        for row in data['accepted']:
+            response = True
+            message = None
+            if carr_code := row['carrier'] != carrier.carrier_code:
+                carrier = Carrier.objects.get(carrier_code=carr_code)
+            number = row['number']
+        if response != True:
+            number,carrier,message,response = get_tracker(tracking_number,carrier)
+    except:
+        raise
+
+    tuple = (number,carrier,message,response)
+
+    return tuple
+
+def get_tracker(tracking_number:str, carrier:Carrier):
+    conn = http.client.HTTPSConnection("api.17track.net")
+
+    headers = {
+        'Content-Type': "application/json",
+        '17token': settings._17TRACK_KEY
+        }
+
+    payload_dict = {
+        "number": tracking_number
+    }
+    if carrier:
+        payload_dict['carrier'] = carrier.carrier_code
+    
+    payload = json.dumps(payload_dict)
+
+    conn.request("POST", "/track/v2/gettracklist", payload, headers)
+
+    res = conn.getresponse()
+    dataBytes = res.read()
+    dataJson = json.loads(dataBytes.decode("utf-8"))
+
+    # code = dataJson.get('code')
+    data = dataJson.get('data')
+    response = False            #set to false as default value
+    try:
+        for row in data['accepted']:
+            response = True
+            message = None
+            returned_carrier_code = row['carrier']
+            returned_carrier, _ = Carrier.objects.get_or_create(
+                carrier_code = returned_carrier_code,
+                defaults = {
+                    'name': returned_carrier_code
+                }
+            )
+            carrier = returned_carrier
+            number = row['number']
+        if response != True:
+            rejected = data['rejected'][0]
+            message = rejected['error']['message']
+            number = rejected['number']
+    except:
+        raise
+
+    tuple = (number,carrier,message,response)
+
+    return tuple

@@ -1,79 +1,15 @@
+# from decimal import Decimal
 from django import forms
-from purchases.models import Transaction, Manufacturer, Product, PurchaseRequest, PurchaseRequestAccounts, Vendor, SimpleProduct
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Field, Fieldset, Div, HTML, ButtonHolder, Submit
+from purchases.models.models_data import (
+    PurchaseRequest, PurchaseRequestAccounts,
+    Vendor, SimpleProduct
+)
 from django.forms.models import inlineformset_factory
-from bootstrap_modal_forms.forms import BSModalModelForm
-# from .widgets import NoCurrencyMoneyWidget
-
-# class AddManufacturerForm(forms.ModelForm):
-#     class Meta:
-#         model = Manufacturer
-#         fields = (
-#             "name",
-#             "website",
-#             "wsu_discount",
-#             "discount_percentage",
-#             "phone",
-#         )
 
 class AddVendorForm(forms.ModelForm):
     class Meta:
         model = Vendor
-        fields = (
-            "name",
-            "website",
-            "wsu_discount",
-            "discount_percentage",
-            "street1",
-            "street2",
-            "city",
-            "state",
-            "zip"
-        )
-
-# class AddProductForm(forms.ModelForm):
-#     # ProductFormSet = forms.formset_factory(AddProductForm, extra=3)
-#     # formset = ProductFormSet()
-#     class Meta:
-#         model = Product
-#         widgets = {
-#             'description': forms.Textarea(attrs={'rows':4}),
-#             'specification': forms.Textarea(attrs={'rows':8})
-#         }
-#         fields = "__all__"
-#         # (
-#         #     "name",
-#         #     "description",
-#         #     "original_manufacturer",
-#         #     "specification",
-#         #     "spec_sheet",
-#         #     "substitution",
-#         #     "approved_substitutes",
-#         #     "approved_vendors",
-#         #     "last_price",
-#         #     "link",
-#         #     "identifier"
-#         # )
-
-# class UpdateProductForm(forms.ModelForm):
-#     class Meta:
-#         model = Product
-#         widgets = {
-#             'description': forms.Textarea(attrs={'rows':4}),
-#             'specification': forms.Textarea(attrs={'rows':8})
-#         }
-#         fields = "__all__"
-
-
-# class ItemFormSetHelper(FormHelper):
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         self.form_method = 'post'
-#         self.layout = Layout(
-#             'product',
-#         )
-#         self.render_required_fields = True
+        fields = "__all__"
 
 class NewPRForm(forms.ModelForm):
     class Meta:
@@ -81,32 +17,10 @@ class NewPRForm(forms.ModelForm):
         # name = 'this is a test'
         widgets = {
             'justification': forms.Textarea(attrs={'rows':2}),
-            'instruction': forms.Textarea(attrs={'rows':2})
+            'instruction': forms.Textarea(attrs={'rows':2}),
+            # 'sales_tax_rate': PercentInput(),
         }
         exclude = ['created_date','number','items','subtotal','sales_tax','requisitioner','grand_total','accounts']
-
-    # def save(self, *args, **kwargs):
-    #     print("NewPRForm save")
-    #     super().save(*args, **kwargs)
-
-# class NewPRIForm(forms.ModelForm):
-#     class Meta:
-#         model = PurchaseRequestItems
-#         fields = (
-#             'product',
-#             'quantity',
-#             'unit',
-#             'price'
-#         )
-#         # widgets = {
-#         #     }
-
-# ItemFormSet = inlineformset_factory(
-#     PurchaseRequest,
-#     PurchaseRequestItems,
-#     form = NewPRIForm,
-#     extra=1
-#     )
 
 class SimpleProductForm(forms.ModelForm):
     class Meta:
@@ -152,18 +66,3 @@ PurchaseRequestAccountsFormset = inlineformset_factory(
     form = PurchaseRequestAccountsForm,
     extra=1
 )
-
-# class ItemModalForm(BSModalModelForm):
-#     class Meta:
-#         model = PurchaseRequestItems
-#         fields = {
-#             'product',
-#             'quantity',
-#             'unit',
-#             'price',
-#         }
-
-class LedgersForm(forms.ModelForm):
-    class Meta:
-        model = Transaction
-        fields = "__all__"

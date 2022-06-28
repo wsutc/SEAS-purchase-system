@@ -1,6 +1,16 @@
 from django.contrib import admin
 
-from .models import Accounts, Balance, Carrier, Department, Transaction, Manufacturer, PurchaseRequestAccounts, Requisitioner, SimpleProduct, SpendCategory, Tracker, Urgency, Vendor, Product, PurchaseRequest, State, Unit
+from .models.models_metadata import (
+    Accounts, Carrier, Department, DocumentNumber, Manufacturer,
+    Urgency, Vendor, State, Unit
+)
+from .models.models_data import (
+    Balance, PurchaseRequest, Transaction,
+    PurchaseRequestAccounts, SimpleProduct,
+    SpendCategory, Requisitioner
+)
+from .models.models_apis import Tracker
+from .signals import create_tracker#, update_tracker
 from import_export.admin import ImportExportModelAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
@@ -38,12 +48,27 @@ def make_awaiting_approval(modeladmin, request, queryset):
 def save_requests(modeladmin, request, queryset):
     for r in queryset:
         r.update_totals()
+        r.update_transactions()
+
+# @admin.action(description="Update Trackers")
+# def update_trackers(modeladmin, request, queryset):
+#     for r in queryset:
+#         tracker_created = create_tracker('',r)
+#         if tracker_created:
+#             r.save()
+#         update_tracker('',r)
 
 @admin.register(PurchaseRequest)
 class PurchaseRequestAdmin(admin.ModelAdmin):
-    list_display = ['requisitioner', 'number', 'grand_total', 'status', 'slug']
+    list_display = ['requisitioner', 'number', 'grand_total', 'status', 'slug', 'get_tracker_status']
     inlines = [SimpleProductInline,PurchaseRequestAccountsInline]
-    actions = [make_awaiting_approval,save_requests]
+    actions = [make_awaiting_approval,save_requests]#,update_trackers]
+
+    @admin.display(description='Tracking Status')
+    def get_tracker_status(self, obj):
+        if obj.tracker:
+            return obj.tracker.status
+        return
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
@@ -80,7 +105,7 @@ class RequisitionerAdmin(admin.ModelAdmin):
 
 @admin.register(Accounts)
 class AccountsAdmin(admin.ModelAdmin):
-    list_display = ['account']
+    list_display = ['account','account_title','program_workday']
 
 @admin.register(SpendCategory)
 class SpendCategoryAdmin(admin.ModelAdmin):
@@ -98,9 +123,14 @@ class UnitsAdmin(admin.ModelAdmin):
 class UrgencyAdmin(admin.ModelAdmin):
     list_display = ['name','note']
 
+class TrackerInline(admin.TabularInline):
+    model = Tracker
+    extra = 0
+
 @admin.register(Carrier)
 class CarrierAdmin(admin.ModelAdmin):
     list_display = ['name']
+    inlines = [TrackerInline]
 
 @admin.register(Tracker)
 class TrackerAdmin(admin.ModelAdmin):
@@ -117,3 +147,7 @@ class BalancesAdmin(admin.ModelAdmin):
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
     list_display = ['balance','processed_datetime','purchase_request','total_value']
+
+@admin.register(DocumentNumber)
+class DocumentNumberAdmin(admin.ModelAdmin):
+    list_display = ['document','prefix','next_counter','last_number']
