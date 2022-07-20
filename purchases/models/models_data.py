@@ -51,10 +51,16 @@ AP = '2'
 CM = '3'
 DN = '4'
 RT = '5'
+OR = '6'
+SH = '7'
+RC = '8'
 PURCHASE_REQUEST_STATUSES = (
     (WL, 'Wish List/Created'),
     (AA, 'Awaiting Approval'),
-    (AP, 'Approved, Awaiting PO Creation'),
+    (AP, 'Approved'),
+    (OR, 'Ordered'),
+    (SH, 'Shipped'),
+    (RC, 'Received'),
     (CM, 'Complete'),
     (DN, 'Denied (no resubmission)'),
     (RT, 'Returned (please resubmit)')
@@ -123,6 +129,7 @@ class PurchaseRequest(models.Model):
         return reverse('purchaserequest_detail', kwargs=kwargs)  
 
     def save(self, *args, **kwargs):
+        print(self._state.adding)
         if not self.number:
             doc_number, _ = DocumentNumber.objects.get_or_create(
                 document = 'PurchaseRequest',
@@ -148,7 +155,7 @@ class PurchaseRequest(models.Model):
     def update_totals(self):
         subtotal = self.get_subtotal()['extended_price__sum']
         shipping = self.shipping
-        tax = round((subtotal + shipping.amount) * decimal.Decimal(settings.DEFAULT_TAX_RATE),2)
+        tax = round((subtotal + shipping.amount) * decimal.Decimal(self.sales_tax_rate),2)
         total = subtotal + shipping.amount + tax
 
         self.subtotal = subtotal
@@ -157,6 +164,10 @@ class PurchaseRequest(models.Model):
 
         self.save()
         return
+
+    def sales_tax_display(self):
+        percent = self.sales_tax_rate * 100
+        return "%s" % percent
 
     def update_tracking(self, events):
         last_event = events[0]
@@ -257,7 +268,7 @@ class SimpleProduct(models.Model):
 class PurchaseRequestAccounts(models.Model):
     class Meta:
         verbose_name_plural = "Purchase Request Accounts"
-    purchase_request = models.ForeignKey(PurchaseRequest,on_delete=models.PROTECT)
+    purchase_request = models.ForeignKey(PurchaseRequest,on_delete=models.CASCADE)
     accounts = models.ForeignKey(Accounts,on_delete=models.PROTECT)
 
     spend_category = models.ForeignKey(SpendCategory,on_delete=models.PROTECT)

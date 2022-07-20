@@ -47,6 +47,14 @@ class PurchaseRequestAccountsInline(admin.TabularInline):
 def make_awaiting_approval(modeladmin, request, queryset):
     queryset.update(status='1')
 
+@admin.action(description="Change Selected to \'Approved\'")
+def make_approved(modeladmin, request, queryset):
+    queryset.update(status='2')
+
+@admin.action(description="Change Selected to \'Ordered\'")
+def make_ordered(modeladmin, request, queryset):
+    queryset.update(status='6')
+
 @admin.action(description="Update Totals")
 def save_requests(modeladmin, request, queryset):
     for r in queryset:
@@ -124,7 +132,7 @@ class AccountsAdmin(admin.ModelAdmin):
 
 @admin.register(SpendCategory)
 class SpendCategoryAdmin(admin.ModelAdmin):
-    list_display = ['code','description']
+    list_display = ['code','description','object','subobject']
 
 @admin.register(PurchaseRequestAccounts)
 class PurchaseRequestAccountsAdmin(admin.ModelAdmin):

@@ -1,7 +1,23 @@
 {% extends 'purchases/detail_page.html' %}
-{% block header %}{{ object.name }}{% endblock %}
+{% block title %}{{ object.name }}{% endblock %}
+{% block navigation %}
+<div class="row mb-3">
+    <h1 class="wsu-c-heading col-sm">{{ object.name }} <span class="header-em">{% block number %}{% endblock %}</span></h1>
+    
+    {% comment %} {% block post_header %}{% endblock post_header %} {% endcomment %}
 
+    <div class="btn-group col-3" role="group" aria-label="Navigation">
+        <a href="{% url 'update_vendor' pk=object.pk slug=object.slug %}" class="btn btn-secondary">Edit</a>
+        <a href="{% url 'delete_vendor' pk=object.pk slug=object.slug %}" class="btn btn-secondary">Delete</a>
+    </div>
+</div>{% endblock navigation %}
 {% block page %}
+
+{% comment %} <a href="{% url 'update_vendor' pk=object.pk slug=object.slug %}">Edit</a> {% endcomment %}
+
+{% comment %} <a href="{% url 'generate_pdf' slug=object.slug %}">PDF</a> {% endcomment %}
+
+{% comment %} <a href="{% url 'delete_vendor' pk=object.pk slug=object.slug %}">Delete</a> {% endcomment %}
 
 <div class="row g-3">
     <ul class="list-group list-group-flush">
@@ -14,16 +30,46 @@
             {% if object.street1 %}<div>{{ object.street1 }}</div>{% endif %}
             {% if object.street2 %}<div>{{ object.street2 }}</div>{% endif %}
             {% if object.city %}
-                <div>{{ object.city }}, {{ object.state.name }} {{ object.zip }}</div>
+                <div>{{ object.city }}, {{ object.state.abbreviation }} {{ object.zip }}</div>
             {% elif object.zip %}
-                <div>{{ object.state.name }}</div>
+                <div>{{ object.state.abbreviations }}</div>
                 <div>{{ object.zip }}</div>
             {% else %}
-                <div>{{ object.state.name }}</div>
+                <div>{{ object.state.abbreviation }}</div>
             {% endif %}
         </li>
         {% endif %}
     </ul>
 </div>
+
+{% if debug %}<div>debug ->count:{{ object.purchaserequest_set.count }}</div>{% endif %}
+    <div class="col-12">
+        <div class="h4">Related Purchase Requests</div>
+            <div class="bd-example-snippet bd-code-snippet">
+                <div class="bd-example">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th scope="col">Purchase Request</th>
+                                <th scope="col">Date</th>
+                                <th>Status</th>
+                                <th scope="col">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in object.purchaserequest_set.all %}
+                                <tr>
+                                    <td><a href="{{ row.get_absolute_url }}">{{ row }}</a></td>
+                                    <td>{{ row.created_date }}</td>
+                                    <td>{{ row.get_status_display }}
+                                    <td>{{ row.grand_total }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
 {% endblock %}

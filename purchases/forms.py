@@ -6,6 +6,38 @@ from purchases.models.models_data import (
 )
 from django.forms.models import inlineformset_factory
 
+from django_select2 import forms as s2forms
+
+class RequisitionerWidget(s2forms.Select2Widget):
+    search_fields = [
+        "user__icontains",
+        # "user__last_name__icontains",
+    ]
+
+class VendorWidget(s2forms.Select2Widget):
+    search_fields = [
+        "name__icontains"
+    ]
+
+class AccountWidget(s2forms.ModelSelect2Widget):
+    search_fields = [
+        "account_title__icontains",
+        "program_workday__icontains",
+        "grant__icontains",
+        "gift__icontains"
+    ]
+
+class CarrierWidget(s2forms.Select2Widget):
+    search_fields = [
+        "name__icontains"
+    ]
+
+class SpendCategoryWidget(s2forms.Select2Widget):
+    search_fields = [
+        "description__icontains",
+        "code__icontains"
+    ]
+
 class AddVendorForm(forms.ModelForm):
     class Meta:
         model = Vendor
@@ -18,9 +50,18 @@ class NewPRForm(forms.ModelForm):
         widgets = {
             'justification': forms.Textarea(attrs={'rows':2}),
             'instruction': forms.Textarea(attrs={'rows':2}),
+            # 'requisitioner': forms.TextInput(),
             # 'sales_tax_rate': PercentInput(),
+            'requisitioner': RequisitionerWidget(attrs={'class':'select-input'}),
+            'vendor': VendorWidget(attrs={'class':'select-input'}),
+            'carrier': CarrierWidget(attrs={'class':'select-input'})
         }
-        exclude = ['created_date','number','items','subtotal','sales_tax','requisitioner','grand_total','accounts']
+        exclude = ['created_date','number','items','subtotal','sales_tax','grand_total','accounts','tracker']
+
+    # def __init__(self, *args, **kwargs):
+    #     self.user = kwargs.pop('user')
+    #     super().__init__(*args,**kwargs)
+    #     self.fields['requisitioner'].initial = self.user
 
 class SimpleProductForm(forms.ModelForm):
     class Meta:
@@ -55,8 +96,8 @@ class PurchaseRequestAccountsForm(forms.ModelForm):
         fields = "__all__"
         widgets = {
             'distribution_type': forms.RadioSelect(),
-            'accounts': forms.Select(attrs={'style':'width:100%'}),
-            'spend_category': forms.Select(attrs={'style':'width:100%'}),
+            'accounts': AccountWidget(attrs={'class':'select-account'}),
+            'spend_category': SpendCategoryWidget(attrs={'class':'select-spendcat'}),
             'distribution_input': forms.TextInput(attrs={'style':'width:100%'})
         }
 

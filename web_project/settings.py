@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'inventory',
     'django_mysql',
     'bootstrap_modal_forms',
+    'django_select2',
 ]
 
 MIDDLEWARE = [

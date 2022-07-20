@@ -1,13 +1,13 @@
 {% extends "purchases/layout.html" %}
 {% block title %}
-List of Manufacturers
+Home
 {% endblock %}
 {% block content %}
 
-    {% comment %} <div> {% endcomment %}
-        <h1 class="wsu-c-heading">All <span class="header-em">Purchase Requests</span></h1>
-        <div style=text-align:right><a href="{% url 'new_pr' %}" class="save btn btn-primary">New</a></div>
-    {% comment %} </div> {% endcomment %}
+  <div class="row mb-3">
+    <h1 class="wsu-c-heading col-sm">All <span class="header-em">Purchase Requests</span></h1>
+    <a href="{% url 'new_pr' %}" class="save btn btn-primary col-2">New</a>
+  </div>
 
     {% if object_list %}
     <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
@@ -16,6 +16,7 @@ List of Manufacturers
           <tr>
             <th scope="col">Requisitioner</th>
             <th scope="col">Number</th>
+            <th>Vendor</th>
             <th>Status</th>
             <th>Total</th>
             <th>Shipping Status</th>
@@ -26,6 +27,7 @@ List of Manufacturers
                 <tr>
                     <td>{{ o.requisitioner }}</td>
                     <td><a href="{{ o.get_absolute_url }}">{{ o.number }}</a></td>
+                    <td><a href="{{ o.vendor.get_absolute_url }}">{{ o.vendor }}</a></td>
                     <td>{{ o.get_status_display }}</td>
                     <td>{{ o.grand_total }}</td>
                     <td>{{ o.tracker.status }}</td>

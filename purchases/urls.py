@@ -1,10 +1,10 @@
 from unicodedata import name
-from django.urls import path
+from django.urls import path,include
 from purchases import views
 from purchases.views import (
-    BalancesDetailView, BalancesListView, LedgersDetailView, LedgersListView, PurchaseRequestListView, PurchaseRequestUpdateView,
-    VendorDetailView, VendorListView, PurchaseRequestDetailView,
-    PurchaseRequestCreateView, tracking_webhook
+    BalancesDetailView, BalancesListView, LedgersDetailView, LedgersListView, PurchaseRequestDeleteView, PurchaseRequestListView, PurchaseRequestUpdateView,
+    VendorDetailView, VendorListView, PurchaseRequestDetailView, VendorDeleteView,
+    PurchaseRequestCreateView, VendorUpdateView, tracking_webhook
 )
 from purchases.models.models_metadata import Manufacturer, Product
 from django.conf.urls.static import static
@@ -31,8 +31,11 @@ urlpatterns = [
     # path("product-list/", product_list_view, name="product_list"),
     # path("new-purchase-request/", PurchaseRequestCreateView.as_view(), name="create_purchase_request"),
     path("new-purchase-request/", PurchaseRequestCreateView.as_view(), name="new_pr"),
+    path("purchase-request/<slug:slug>/delete", PurchaseRequestDeleteView.as_view(), name="delete_pr"),
     path("all-vendors", VendorListView.as_view(), name="all_vendors"),
     path("vendor/<int:pk>-<str:slug>/", VendorDetailView.as_view(), name='vendor_detail'),
+    path("vendor/<int:pk>-<str:slug>/update", VendorUpdateView.as_view(), name='update_vendor'),
+    path("vendor/<int:pk>-<str:slug>/delete", VendorDeleteView.as_view(), name='delete_vendor'),
     # path("all-products", ProductListView.as_view(), name='product_list'),
     # path("product/<int:pk>-<str:slug>/", ProductDetailView.as_view(), name='product_detail'),
     # path("all-manufacturers", ManufacturerListView.as_view(), name="all_manufacturers"),
@@ -42,6 +45,7 @@ urlpatterns = [
     # path("new-pr-item/<str:pk>", PurchaseRequestItemCreateView.as_view(), name="new_pr_item"),
     # path("manage-products", views.manage_products, name="manage_products"),
     path("update-purchase-request/<slug:slug>", PurchaseRequestUpdateView.as_view(), name="update_pr"),
+    path("purchase-request/<slug:slug>/update-status", views.update_pr_status, name="update_pr_status"),
     # path("update-product/<int:pk>-<str:slug>", ProductUpdateView.as_view(), name="update_product"),
     path("webhooks/tracking/BJD3ZX4b1gNvcIAOhGeTiE6kcC0ugjp/",tracking_webhook),
     path("purchase-request/<slug:slug>/pdf", views.generate_pr_pdf, name="generate_pdf"),
@@ -52,5 +56,7 @@ urlpatterns = [
     path("account-balances/", BalancesListView.as_view(), name="balances_list"),
     path("account-balances/<int:pk>/", BalancesDetailView.as_view(), name="balances_detail"),
     path("account/<int:pk>/update/", views.update_balance, name="update_balance"),
+    path("list-json/<str:model>/", views.autocomplete_list, name="get_autocomp_list"),
+    path("select2/", include("django_select2.urls")),
     # path("new-purchase-request/add-item/", views.ItemCreateView.as_view(), name="add_item_modal")
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

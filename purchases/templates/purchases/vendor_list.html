@@ -5,8 +5,10 @@ All Vendors
 
 {% block content %}
 
-<h1 class="wsu-c-heading">All <span class="header-em">Vendors</span></h1>
-<div style=text-align:right><a href="{% url 'add_vendor' %}" class="save btn btn-primary">New</a></div>
+    <div class="row mb-3">
+        <h1 class="wsu-c-heading col-sm">All <span class="header-em">Purchase Requests</span></h1>
+        <a href="{% url 'add_vendor' %}" class="save btn btn-primary col-2">New</a>
+    </div>
 
     {% if object_list %}
     <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">

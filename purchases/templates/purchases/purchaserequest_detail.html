@@ -4,11 +4,42 @@
 {% block number %}{{ object.number }}{% endblock %}
 {% block previous %}{{ object.get_previous_by_created_date.get_absolute_url }}{% endblock %}
 {% block next %}{{ object.get_next_by_created_date.get_absolute_url }}{% endblock %}
+{% block edit %}{% url 'update_pr' slug=object.slug %}{% endblock %}
+{% block delete %}{% url 'delete_pr' slug=object.slug %}{% endblock delete %}
+{% block post_header %}
+<div class="dropdown">
+    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        {{ object.get_status_display }}
+    </button>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=awaiting-approval">Submit</a></li>
+        <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=approved">Approved</a></li>
+        <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=ordered">Ordered</a></li>
+        <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=shipped">Shipped</a></li>
+        <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=received">Received</a></li>
+    </ul>
+</div>
+{% endblock post_header %}
 {% block page %}
 
-<a href="{% url 'update_pr' slug=object.slug %}">Edit</a>
+
+<div class="dropdown">
+    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        {{ object.get_status_display }}
+    </button>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=awaiting-approval">Submit</a></li>
+        <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=approved">Approved</a></li>
+        <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=ordered">Ordered</a></li>
+        <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=shipped">Shipped</a></li>
+        <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=received">Received</a></li>
+    </ul>
+</div>
+
 
 <a href="{% url 'generate_pdf' slug=object.slug %}">PDF</a>
+
+
 
 <div class="row mb-3">
     <div class="col-4">
@@ -129,9 +160,9 @@
                 <thead>
                     <tr>
                         <th class="text-center" style="width: 40%;">Description</th>
-                        <th class="text-center" style="width:  5%;">Link</th>
-                        <th class="text-center" style="width: 10%;">Identifier</th>
-                        <th class="text-center" style="width: 10%;">Vendor ID</th>
+                        <th class="text-center" style="width: 10%;">Link</th>
+                        <th class="text-center" style="width: 15%;">Identifier</th>
+                        {% comment %} <th class="text-center" style="width: 10%;">Vendor ID</th> {% endcomment %}
                         <th class="text-center" style="width:  5%;">QTY</th>
                         <th class="text-center" style="width: 10%;">Unit</th>
                         <th class="text-center" style="width: 10%;">Unit Price</th>
@@ -151,8 +182,12 @@
                             {% else %}
                                 <td></td>
                             {% endif %}
-                            <td align="center">{{ item.identifier }}</td>
-                            <td align="center">{{ item.vendor_number|default_if_none:"" }}</td>
+                            {% if item.identifier %}
+                                <td align="center">{{ item.identifier }}</td>
+                            {% else %}
+                                <td></td>
+                            {% endif %}
+                            {% comment %} <td align="center">{{ item.vendor_number|default_if_none:"" }}</td> {% endcomment %}
                             <td align="right">{{ item.quantity }}</td>
                             <td align="center">{{ item.unit.unit }}</td>
                             <td align="right">{{ item.unit_price }}</td>
@@ -164,22 +199,22 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="4">&nbsp;</td>
+                        <td colspan="3">&nbsp;</td>
                         <td colspan="3" class="text-end">Subtotal</td>
                         <td align="right">{{ object.subtotal }}</td>
                     </tr>
                     <tr>
-                        <td colspan="4"></td>
+                        <td colspan="3"></td>
                         <td colspan="3" class="text-end">Shipping</td>
                         <td align="right">{{ object.shipping }}</td>
                     </tr>
                     <tr>
-                        <td colspan="4"></td>
-                        <td colspan="3" class="text-end">Sales Tax</td>
+                        <td colspan="3"></td>
+                        <td colspan="3" class="text-end">Sales Tax ({{ object.sales_tax_display|floatformat }}%)</td>
                         <td align="right">{{ object.sales_tax }}</td>
                     </tr>
                     <tr>
-                        <td colspan="4"></td>
+                        <td colspan="3"></td>
                         <td colspan="3" class="text-end">Grand Total</td>
                         <td align="right">{{ object.grand_total }}</td>
                     </tr>

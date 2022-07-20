@@ -54,6 +54,9 @@ class Vendor(models.Model):
     zip = models.CharField("ZIP Code",max_length=10,blank=True)
     email = models.EmailField(max_length=60,blank=True,null=True)
 
+    class Meta:
+        ordering = ['name']
+
     def get_absolute_url(self):
         kwargs = {
             'pk': self.id,
@@ -161,6 +164,7 @@ class Accounts(models.Model):
 
     class Meta:
         verbose_name_plural = "Accounts"
+        ordering = ['account_title']
 
     def __str__(self):
         if self.program_workday:
@@ -182,6 +186,7 @@ class Department(models.Model):
 class SpendCategory(models.Model):
     class Meta:
         verbose_name_plural = "Spend Categories"
+        ordering = ['code']
         
     description = models.TextField("Workday Description",blank=False)
     code = models.CharField("Workday ID",max_length=15,blank=False)
@@ -189,7 +194,7 @@ class SpendCategory(models.Model):
     subobject = models.CharField(max_length=50)
 
     def __str__(self):
-        return "%s (%s)" % (self.code,self.description)
+        return "%s (%s) [%s%s]" % (self.code,self.description,self.object,self.subobject)
 
 class DocumentNumber(models.Model):
     document = models.CharField(max_length=50,primary_key=True,unique=True)
