@@ -92,6 +92,9 @@ class PurchaseRequest(models.Model):
     tracking_number = models.CharField(max_length=55,blank=True,null=True)
     tracker = models.ForeignKey(Tracker,on_delete=models.SET_NULL,blank=True,null=True)
 
+    class Meta:
+        ordering = ['-created_date']
+
     PO = 'po'
     PCARD = 'pcard'
     IRI = 'iri'

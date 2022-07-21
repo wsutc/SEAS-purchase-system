@@ -6,24 +6,10 @@
 {% block next %}{{ object.get_next_by_created_date.get_absolute_url }}{% endblock %}
 {% block edit %}{% url 'update_pr' slug=object.slug %}{% endblock %}
 {% block delete %}{% url 'delete_pr' slug=object.slug %}{% endblock delete %}
-{% block post_header %}
-<div class="dropdown">
-    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-        {{ object.get_status_display }}
-    </button>
-    <ul class="dropdown-menu">
-        <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=awaiting-approval">Submit</a></li>
-        <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=approved">Approved</a></li>
-        <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=ordered">Ordered</a></li>
-        <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=shipped">Shipped</a></li>
-        <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=received">Received</a></li>
-    </ul>
-</div>
-{% endblock post_header %}
 {% block page %}
 
 
-<div class="dropdown">
+<div class="dropdown align-right">
     <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
         {{ object.get_status_display }}
     </button>
@@ -36,10 +22,7 @@
     </ul>
 </div>
 
-
 <a href="{% url 'generate_pdf' slug=object.slug %}">PDF</a>
-
-
 
 <div class="row mb-3">
     <div class="col-4">

@@ -4,13 +4,15 @@ import hashlib
 import hmac
 import os
 from django.apps import AppConfig,apps
+from django.template import RequestContext
+from traitlets import default
 import urllib3
 from http.client import HTTPResponse
 import io
 from itertools import product
 from django.conf import settings
 from django.forms import formset_factory
-from django.http import FileResponse, HttpResponse, HttpResponseForbidden, JsonResponse
+from django.http import FileResponse, HttpResponse, HttpResponseForbidden, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils.timezone import datetime,activate
@@ -31,7 +33,7 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.db.models import Sum, Count
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from .forms import PurchaseRequestAccountsFormset, SimpleProductForm, SimpleProductFormset
+from .forms import PurchaseRequestAccountsFormset, SimpleProductForm, SimpleProductFormset, VendorModelForm
 
 from django_select2.views import AutoResponseView
 
@@ -62,75 +64,22 @@ from .forms import AddVendorForm, NewPRForm
 
 
 # Create your views here.
-class HomeListView(ListView):
-    model = PurchaseRequest
-
-    # def get_context_data(self, **kwargs):
-    #     context = super(HomeListView, self).get_context_data(**kwargs)
-    #     return context
-
-# class ManufacturerListView(ListView):
-#     model = Manufacturer
-
-#     def get_context_data(self, **kwargs):
-#         context = super(ManufacturerListView, self).get_context_data(**kwargs)
-#         return context
-
-# class ProductListView(ListView):
-#     model = Product
-
-#     def get_context_data(self, **kwargs):
-#         context = super(ProductListView, self).get_context_data(**kwargs)
-#         return context
-
-# class PurchaseRequestItemCreateView(CreateView):
-#     model = PurchaseRequestItems
-#     fields = [
-#         'product',
-#         'quantity',
-#         'price'
-#         ]
-
-#     success_url = "/"
-
-#     def get_context_data(self, **kwargs):
-#         return super().get_context_data(**kwargs)
+# class HomeListView(ListView):
+#     model = PurchaseRequest
 
 class VendorListView(ListView):
-    model = Vendor
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
+    context_object_name = 'vendors'
+    paginate_by = '10'
+    queryset = Vendor.objects.order_by('name')
 
 class PurchaseRequestListView(ListView):
-    # model = PurchaseRequest
     context_object_name = 'purchaserequests'
     paginate_by = '10'
     queryset = PurchaseRequest.objects.order_by('-created_date')
 
-    # def get_context_data(self, **kwargs):
-    #     return super().get_context_data(**kwargs)
-
-# def all_vendors(request):
-#     vendors = Vendor.objects.all()
-#     return render(request, 'purchases/all_vendors.html', {'vendors': vendors})
-
-# def vendor_detail(request, slug):
-#     vendor = get_object_or_404(Vendor, slug=slug)
-#     return render(request, 'purchases/vendor_detail.html', {'vendor': vendor})
-
 class VendorDetailView(DetailView):
     model = Vendor
     query_pk_and_slug = True
-
-# class ProductDetailView(DetailView):
-#     model = Product
-#     query_pk_and_slug = True
-
-# class ManufacturerDetailView(DetailView):
-#     model = Manufacturer
-#     query_pk_and_slug = True
 
 class PurchaseRequestDetailView(DetailView):
     model = PurchaseRequest
@@ -138,95 +87,14 @@ class PurchaseRequestDetailView(DetailView):
     context_object_name = 'purchaserequest'
     query_pk_and_slug = True
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # context['requisitioner_full_name'] = self.requisitioner_django.get_full_name()
-        # context['requisitioner_full_name'] = PurchaseRequest.objects.filter(slug=self.kwargs.get('slug'))[0].requisitioner_django.get_full_name()
-        # context['requisition_full_name'] = PurchaseRequest.objects.filter(slug=self.kwargs.get('slug'))[0].requisitioner.user.get_full_name()
-    #     context['view_subtotal'] = PurchaseRequest.objects.filter(slug=self.kwargs.get('slug')).aggregate(Sum('purchaserequestitems__extended_price'))
-    #     # context['requisitioner_full_name'] = PurchaseRequest.requisitioner.get_object(self)
-    #     # print(self.kwargs.get('pk',-1))
-    #     # print(context['view_subtotal'])
-        print(context)
-        return context
+class VendorCreateView(CreateView):
+    form_class = AddVendorForm
+    template_name = 'purchases/add_vendor.html'
 
-# class PurchaseOrderDetailView(DetailView):
-#     model = PurchaseOrder
-#     query_pk_and_slug = True
-
-# class PurchaseRequestCreateView(CreateView):
-#     model = PurchaseRequest
-#     widgets = {
-#         'justification': forms.Textarea(attrs={'rows':2}),
-#     }
-#     fields = (
-#             "requisitioner",
-#             "items",
-#             "need_by_date",
-#             "tax_exempt",
-#             "accounts",
-#             "shipping",
-#             "justification",
-#             "instruction",
-#             "purchase_type",
-#             "number"
-#         )
-
-# def add_mfg(request):
-#     form = AddManufacturerForm(request.POST or None)
-
-#     if request.method == "POST":
-#         if form.is_valid():
-#             manufacturer = form.save(commit=False)
-#             # manufacturer.created_date = datetime.now()
-#             manufacturer.save()
-#             return redirect("home")
-#     else:
-#         return render(request, "purchases/add_manufacturer.html", {"form": form})
-
-def add_vendor(request):
-    form = AddVendorForm(request.POST or None)
-
-    if request.method == "POST":
-        if form.is_valid():
-            vendor = form.save(commit=False)
-            # vendor.created_date = datetime.now()
-            vendor.save()
-            return redirect(reverse_lazy('vendor_detail', kwargs={ 'slug': vendor.slug, 'pk': vendor.pk }))
-    else:
-        return render(request, "purchases/add_vendor.html", {"form": form})
-
-# def add_product(request):
-#     form = AddProductForm(request.POST or None)
-
-#     if request.method == "POST":
-#         if form.is_valid():
-#             product = form.save(commit=False)
-#             # product.created_date = datetime.now()
-#             product.save()
-#             return # redirect("home")
-#     else:
-#         return render(request, "purchases/add_product.html", {"form": form})
-
-# def new_pr(request):
-#     form = NewPRForm(request.POST or None)
-
-#     if request.method == "POST":
-#         if form.is_valid():
-#             pr = form.save(commit=False)
-#             pr.save()
-#             return redirect("home")
-#     else:
-#         return render(request, "purchases/new_pr.html", {"form": form})
-
-# class ProductUpdateView(UpdateView):
-#     model = Product
-#     form_class = UpdateProductForm
-#     template_name = 'purchases/add_product.html'
-
-# class ProductCreateView(CreateView):
-#     form_class = AddProductForm
-#     template_name = 'purchases/add_product.html'
+class VendorModalCreateView(BSModalCreateView):
+    template_name = 'purchases/vendor_create_modal.html'
+    form_class = VendorModelForm
+    success_message = 'Success: New Vendor created.'
 
 class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
     permission_required = 'purchases.add_purchaserequest'
@@ -295,9 +163,9 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
 
         # return redirect(reverse_lazy("home"))
 
-        redirect_url = reverse_lazy('purchaserequest_detail', kwargs={ 'slug': self.object.slug })
+        # redirect_url = reverse_lazy('purchaserequest_detail', kwargs={ 'slug': self.object.slug })
 
-        return redirect(redirect_url)
+        return redirect(self.object)
 
     def form_invalid(self, form, purchase_request_items_formset, purchase_request_accounts_formset):
         return self.render_to_response(
@@ -309,6 +177,7 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
         )
 
 class PurchaseRequestUpdateView(UpdateView):
+    # permission_required = 'purchases.change_purchaserequest'
     model = PurchaseRequest
     form_class = NewPRForm
     template_name = "purchases/new_pr.html"
@@ -325,40 +194,6 @@ class PurchaseRequestUpdateView(UpdateView):
             context['purchase_request_accounts_formset'] = PurchaseRequestAccountsFormset(instance=self.object, prefix='accounts')
         return context
 
-#     # permission_required = 'purchases.change_purchaserequest'
-#     model = PurchaseRequest
-#     form_class = NewPRForm
-#     template_name = 'purchases/new_pr.html'
-
-#     def get_context_data(self, **kwargs):
-#         context = super(PurchaseRequestUpdateView, self).get_context_data(**kwargs)
-#         context['purchase_request_items_formset'] = SimpleProductFormset(instance=self.object)
-#         context['purchase_request_accounts_formset'] = PurchaseRequestAccountsFormset(instance=self.object)
-#         context['requisitioner'] = PurchaseRequest.objects.get(slug=self.kwargs['slug']).requisitioner
-#     #     context['requisitioner'] = self.
-#         # context['requisitioner'] = Requisitioner.objects.get(user=self.request.user)
-#         return context
-
-    # def post(self, request, *args, **kwargs):
-        
-    #     # purchase_request = PurchaseRequest.objects.get(slug=self.kwargs['slug'])
-    #     form_class = self.get_form_class()
-    #     form = self.get_form(form_class)
-    #     # form.instance = self.object
-    #     # self.object = purchase_request
-    #     # purchase_request_items_formset = self.purchase_request_items_formset
-    #     # purchase_request_accounts_formset = self.purchase_request_accounts_formset
-    #     purchase_request_items_formset = SimpleProductFormset(self.request.POST, instance=purchase_request, prefix='items')
-    #     purchase_request_accounts_formset = PurchaseRequestAccountsFormset(self.request.POST, instance=purchase_request, prefix='accounts')
-    #     priValid = purchase_request_items_formset.is_valid()
-    #     if not priValid:
-    #         print(purchase_request_items_formset.errors)
-    #     praValid = purchase_request_accounts_formset.is_valid()
-    #     if form.is_valid() and priValid and praValid:
-    #         return self.form_valid(form, purchase_request_items_formset, purchase_request_accounts_formset,self.object) #purchase_request)
-    #     else:
-    #         return self.form_invalid(form, purchase_request_items_formset, purchase_request_accounts_formset)
-
     def form_valid(self, form): #, purchase_request_items_formset, purchase_request_accounts_formset,purchase_request):
         context = self.get_context_data()
         # form.instance.requisitioner = Requisitioner.objects.get(user = self.request.user)
@@ -367,27 +202,14 @@ class PurchaseRequestUpdateView(UpdateView):
         purchase_request_items_formset = context['purchase_request_items_formset']
         purchase_request_accounts_formset = context['purchase_request_accounts_formset']
 
-        purchase_request_items = purchase_request_items_formset.save(commit=True)
-        purchase_request_accounts = purchase_request_accounts_formset.save(commit=True)
-
-        ## Update Items
-        # for item in purchase_request_items:
-        #     item.purchase_request = purchase_request
-        #     item.save()
-
-        ## Update Accounts
-        # purchase_request_accounts = purchase_request_accounts_formset.save(commit=False)
-        # for account in purchase_request_accounts:
-        #     account.purchase_request = purchase_request
-        #     account.save()
+        purchase_request_items_formset.save(commit=True)
+        purchase_request_accounts_formset.save(commit=True)
 
         self.object.save()
 
         self.object.update_totals()
 
-        redirect_url = reverse_lazy('purchaserequest_detail', kwargs={'slug': self.object.slug})
-
-        return redirect(redirect_url)
+        return redirect(self.object)
 
     def form_invalid(self, form, purchase_request_items_formset, purchase_request_accounts_formset):
         return self.render_to_response(
@@ -420,30 +242,46 @@ def update_pr_status(request,slug,*args, **kwargs):
         purchase_request.status = status_number
         purchase_request.save()
 
-    redirect_url = reverse_lazy('purchaserequest_detail', kwargs={'slug':slug})
+    return redirect(purchase_request)
 
-    return redirect(redirect_url)
+def redirect_to_next(view, default_redirect='home'):
+
+    next = view.request.GET.get('next',None)
+    if next:
+        return next
+    else:
+        redirect_url = reverse_lazy(default_redirect)
+
+        return redirect_url
 
 class PurchaseRequestDeleteView(DeleteView):
     model = PurchaseRequest
-    success_url = reverse_lazy('home')
+
+    def form_valid(self, *args, **kwargs):
+        object = self.get_object()
+        object.delete()
+
+        redirect_url = redirect_to_next(self)
+
+        return redirect(redirect_url)
 
 class VendorUpdateView(UpdateView):
     model = Vendor
     form_class = AddVendorForm
     template_name = "purchases/add_vendor.html"
     query_pk_and_slug = True
-    
-    def form_valid(self, form):
-        self.object.save()
-
-        redirect_url = reverse_lazy( 'vendor_detail' , kwargs={ 'pk':self.object.pk, 'slug':self.object.slug })
-        return redirect(redirect_url)
-    # success_url = reverse_lazy( 'all_vendors' ) #, kwargs={'pk':object.pk} )
 
 class VendorDeleteView(DeleteView):
     model = Vendor
     success_url = reverse_lazy('all_vendors')
+
+    def form_valid(self, *args, **kwargs):
+        object = self.get_object()
+        object.delete()
+        
+        redirect_url = redirect_to_next(self, 'all_vendors')
+
+        return redirect(redirect_url)
 
 @csrf_exempt
 @require_POST
@@ -610,6 +448,26 @@ def generate_pr_pdf(request,slug):
 
     # link = '<link href="' + purchase_request.vendor.website + '">' + purchase_request.vendor.website + '</link>'
 
+    # <td rowspan=2>{{ object.vendor.street1 }}<br>
+    #                             {% if object.vendor.street2 %}
+    #                                 {{ object.vendor.street2 }}<br>
+    #                             {% endif %}
+    #                             {% if object.vendor.city %}
+    #                                 {{ object.vendor.city }}, {{ object.vendor.state.abbreviation }} {{ object.vendor.zip }}
+    #                             {% else %}
+    #                             {% endif %}
+    #                         </td>
+    vendor = purchase_request.vendor
+    address_line = ''
+    if hasattr(vendor.state,'abbreviation'):
+        address_line += str(vendor.state.abbreviation)
+        if city := vendor.city:
+            address_line = str(city) + ', ' + address_line + ' ' + str(vendor.zip)
+            if street2 := vendor.street2:
+                address_line = str(street2) + '\n' + address_line
+            if street1 := vendor.street1:
+                address_line = str(street1) + '\n' + address_line
+
     info_data = [
         [
             'Needed By', purchase_request.need_by_date,
@@ -620,7 +478,7 @@ def generate_pr_pdf(request,slug):
             'Email', purchase_request.requisitioner.user.email
         ],
         [
-            'Address', purchase_request.vendor.street1 + "\n" + str(purchase_request.vendor.city) + ", " + str(purchase_request.vendor.state.abbreviation) + " " + str(purchase_request.vendor.zip),
+            'Address', address_line,
             'Phone', purchase_request.requisitioner.phone
         ],
         [
@@ -815,19 +673,19 @@ def update_balance(request, pk:int):
 
     return redirect('balances_list')
 
-def autocomplete_list(request, model):
-    model_object = apps.get_model(app_label='purchases',model_name='requisitioner')
-    # if not q:
-    object_list = model_object.objects.all()
-    # else:
-    #     object_list = model_object.objects.filter(user__full_name=q)
+# def autocomplete_list(request, model):
+#     model_object = apps.get_model(app_label='purchases',model_name='requisitioner')
+#     # if not q:
+#     object_list = model_object.objects.all()
+#     # else:
+#     #     object_list = model_object.objects.filter(user__full_name=q)
 
-    choices = []
-    for object in object_list:
-        choices.append('{ "value": %s, "text": "%s" }' % (object.id,object.user.get_full_name()))
+#     choices = []
+#     for object in object_list:
+#         choices.append('{ "value": %s, "text": "%s" }' % (object.id,object.user.get_full_name()))
 
-    response = JsonResponse(choices, safe=False)
-    return response
+#     response = JsonResponse(choices, safe=False)
+#     return response
 
 # class AccountAutoResponseView(AutoResponseView):
     

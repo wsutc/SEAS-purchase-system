@@ -32,6 +32,12 @@
     }
 </style>
 
+<div class="modal fade" tabindex="-1" role="dialog" id="modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content"></div>>
+    </div>
+</div>
+
 <div class="container mt-4">
     <form method="post">
         {% csrf_token %}
@@ -45,6 +51,7 @@
                 <table>
                     {{ form.as_table }}
                 </table>
+                <button id="create-vendor" class="btn btn-primary" type="button" name="button">Create Vendor</button>
                 <p class="h1 text-info">Account(s)</p>
                 {{ purchase_request_accounts_formset.non_form_errors }}
                 {{ purchase_request_accounts_formset.management_form }}
@@ -136,6 +143,7 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="{% static 'js/jquery.bootstrap.modal.forms.js' %}"></script>
 {{ form.media.js }}
 
 <script>
@@ -201,6 +209,12 @@
         rowCopyTarget.append(copyEmptyRow)
     }
 
+
+    $(document).ready(function() {
+        $("#create-vendor").modalForm({
+            formURL: "{% url 'modal_create_vendor' %}"
+        });
+    });
     /*testButton.addEventListener('click', runDjangoSelect2)
     function runDjangoSelect2(event) {
         if (event) {

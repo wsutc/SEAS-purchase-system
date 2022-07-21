@@ -6,6 +6,8 @@ from purchases.models.models_data import (
 )
 from django.forms.models import inlineformset_factory
 
+from bootstrap_modal_forms.forms import BSModalForm
+
 from django_select2 import forms as s2forms
 
 class RequisitionerWidget(s2forms.Select2Widget):
@@ -62,6 +64,11 @@ class NewPRForm(forms.ModelForm):
     #     self.user = kwargs.pop('user')
     #     super().__init__(*args,**kwargs)
     #     self.fields['requisitioner'].initial = self.user
+
+class VendorModelForm(BSModalForm):
+    class Meta:
+        model = Vendor
+        fields = '__all__'
 
 class SimpleProductForm(forms.ModelForm):
     class Meta:

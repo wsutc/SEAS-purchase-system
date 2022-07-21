@@ -6,7 +6,7 @@ All Vendors
 {% block content %}
 
     <div class="row mb-3">
-        <h1 class="wsu-c-heading col-sm">All <span class="header-em">Purchase Requests</span></h1>
+        <h1 class="wsu-c-heading col-sm">All <span class="header-em">Vendors</span></h1>
         <a href="{% url 'add_vendor' %}" class="save btn btn-primary col-2">New</a>
     </div>
 
@@ -16,7 +16,9 @@ All Vendors
           <thead>
           <tr>
             <th scope="col">Vendor</th>
-            <th scope="col">Website</th>
+            <th class="col-1">Website</th>
+            <th class="col-1"></th>
+            <th class="col-1"></th>
           </tr>
           </thead>
           <tbody>
@@ -28,12 +30,37 @@ All Vendors
                 {% else %}
                     <td></td>
                 {% endif %}
+                <td class="text-center">
+                    <a href="{% url 'update_vendor' slug=v.slug pk=v.pk %}">
+                        <i class="fa-solid fa-pencil"></i>
+                    </a>
+                </td>
+                <td>
+                    <a href="{% url 'delete_vendor' slug=v.slug pk=v.pk %}?next={{ request.get_full_path }}">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </a>
+                </td>
             </tr>
         {% endfor %}
           </tbody>
         </table>
         </div>
     </div>
+    {% if page_obj.paginator.num_pages > 1 %}
+        <div class="pagination  container">
+            <div class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+                {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
     {% else %}
         <p>No vendors have been added. Use the <a href="{% url 'add_vendor' %}">Add Vendor</a> form</p>
     {% endif %}

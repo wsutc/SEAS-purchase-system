@@ -76,7 +76,7 @@ def update_trackers(modeladmin, request, queryset):
 
 @admin.register(PurchaseRequest)
 class PurchaseRequestAdmin(admin.ModelAdmin):
-    list_display = ['requisitioner', 'number', 'grand_total', 'status', 'slug', 'get_tracker_status']
+    list_display = ['requisitioner', 'vendor', 'number', 'grand_total', 'status', 'slug', 'get_tracker_status']
     inlines = [SimpleProductInline,PurchaseRequestAccountsInline]
     actions = [make_awaiting_approval,save_requests,update_trackers]
 
@@ -128,7 +128,7 @@ class RequisitionerAdmin(admin.ModelAdmin):
 
 @admin.register(Accounts)
 class AccountsAdmin(admin.ModelAdmin):
-    list_display = ['account','account_title','program_workday']
+    list_display = ['account','account_title','program_workday','grant','gift']
 
 @admin.register(SpendCategory)
 class SpendCategoryAdmin(admin.ModelAdmin):
@@ -161,7 +161,7 @@ class TrackerAdmin(admin.ModelAdmin):
 
 @admin.register(SimpleProduct)
 class SimpleProductAdmin(admin.ModelAdmin):
-    list_display = ['name','link']
+    list_display = ['name','link','purchase_request']
 
 @admin.register(Balance)
 class BalancesAdmin(admin.ModelAdmin):

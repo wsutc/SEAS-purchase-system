@@ -7,8 +7,11 @@ from djmoney.models.fields import MoneyField
 from phonenumber_field.modelfields import PhoneNumberField
 
 class State(models.Model):
-    name = models.CharField(max_length=50)
-    abbreviation = models.CharField(max_length=2)
+    name = models.CharField(max_length=50,unique=True)
+    abbreviation = models.CharField(max_length=2,unique=True)
+
+    class Meta:
+        ordering = ['name']
 
     def __str__(self):
         return self.name

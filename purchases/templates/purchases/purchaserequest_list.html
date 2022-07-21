@@ -20,6 +20,8 @@ Home
             <th>Status</th>
             <th>Total</th>
             <th>Shipping Status</th>
+            <th class="text-center"></th>
+            <th></th>
           </tr>
           </thead>
           <tbody>
@@ -31,26 +33,38 @@ Home
                     <td>{{ o.get_status_display }}</td>
                     <td>{{ o.grand_total }}</td>
                     <td>{{ o.tracker.status }}</td>
+                    <td class="text-center">
+                      <a href="{% url 'update_pr' slug=o.slug %}">
+                        <i class="fa-solid fa-pencil"></i>
+                      </a>
+                    </td>
+                    <td>
+                      <a href="{% url 'delete_pr' slug=o.slug %}?next={{ request.get_full_path }}">
+                        <i class="fa-solid fa-trash-can"></i>
+                      </a>
+                    </td>
                 </tr>
             {% endfor %}
           </tbody>
         </table>
     </div>
-    
-    <div class="pagination container">
-      <div class="step-links row">
-          {% if page_obj.has_previous %}
-              <a href="?page=1">&laquo; first</a>
-              <a href="?page={{ page_obj.previous_page_number }}">previous</a>
-          {% endif %}
-            {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-          {% if page_obj.has_next %}
-              <a href="?page={{ page_obj.next_page_number }}">next</a>
-              <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
-          {% endif %}
-        </div>
-    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+      <div class="pagination  container">
+        <div class="step-links">
+            {% if page_obj.has_previous %}
+                <a href="?page=1">&laquo; first</a>
+                <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+            {% endif %}
+              {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+          </div>
+      </div>
+    {% endif %}
     {% else %}
-        <p>No manufacturers have been added. Use the <a href="{% url 'add_mfg' %}">Add Manufacturer</a> form</p>
+        <p>No manufacturers have been added. Use the <a href="{% url 'new_pr' %}">Add Purchase Request</a> form</p>
     {% endif %}
 {% endblock %}
