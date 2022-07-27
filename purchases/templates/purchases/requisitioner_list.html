@@ -1,0 +1,41 @@
+{% extends "purchases/list_page.html" %}
+{% block title %}
+All Requisitioners
+{% endblock %}
+{% block header %}Requisitioners{% endblock header %}
+{% block new_url %}{% url 'new_requisitioner' %}{% endblock new_url %}
+
+{% block page %}
+
+    {% if object_list %}
+    <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
+        <table class="table table-striped">
+          <thead>
+          <tr>
+            <th class="col-3">User</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th class="col-1"></th>
+          </tr>
+          </thead>
+          <tbody>
+            {% for v in object_list %}
+            <tr>
+                <td><a href="{{ v.get_absolute_url }}">{{ v.user.get_full_name }}</a></td>
+                <td><a href="mailto:{{ object.requisitioner.user.email }}">{{ v.user.email }}</a></td>
+                <td>{{ v.phone|default_if_none:"" }}</td>
+                <td class="text-center">
+                    <a href="#">
+                        <i class="fa-solid fa-pencil"></i>
+                    </a>
+                </td>
+            </tr>
+        {% endfor %}
+          </tbody>
+        </table>
+        </div>
+    </div>
+    {% else %}
+        <p>No requisitioners have been added. Use the <a href="{% url 'new_requisitioner' %}">Add Requisitioner</a> form</p>
+    {% endif %}
+{% endblock %}

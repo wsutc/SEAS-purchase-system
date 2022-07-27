@@ -386,8 +386,9 @@
       </a>
 
       <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
-        <li><a href="{% url 'home' %}" class="nav-link px-2 link-secondary">Home</a></li>
+        <li><a href="{% url 'home' %}" class="nav-link px-2 link-secondary">Purchase Requests</a></li>
         <li><a href="{% url 'all_vendors' %}" class="nav-link px-2 link-dark">Vendors</a></li>
+        <li><a href="{% url 'all_requisitioners' %}" class="nav-link px-2 link-dark">Requisitioners</a></li>
         {% comment %} <li><a href="{% url 'home' %}" class="nav-link px-2 link-dark">Purchase Requests</a></li> {% endcomment %}
         {% comment %} <li><a href="{% url 'product_list' %}" class="nav-link px-2 link-dark">Products</a></li> {% endcomment %}
       </ul>
@@ -408,12 +409,19 @@
               <li class="dropdown-item">{{ user.get_username }}</li>
             {% endif %}
             <li><hr class="dropdown-divider"></li>
+            {% if user.is_staff %}
+              <li><a href="/admin" class="dropdown-item">Administration</a></li>
+              <li><hr class="dropdown-divider"></li>
+            {% endif %}
+            <li><a class="dropdown-item" href="/accounts/logout">Sign out</a></li>
+          {% else %}
+            <li><a class="dropdown-item" href="/accounts/login">Sign in</a></li>
           {% endif %}
-          <li><a class="dropdown-item" href="#">New project...</a></li>
+          {% comment %} <li><a class="dropdown-item" href="#">New project...</a></li>
           <li><a class="dropdown-item" href="#">Settings</a></li>
-          <li><a class="dropdown-item" href="#">Profile</a></li>
-          <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item" href="/accounts/logout">Sign out</a></li>
+          <li><a class="dropdown-item" href="#">Profile</a></li> {% endcomment %}
+          {% comment %} <li><hr class="dropdown-divider"></li> {% endcomment %}
+          
         </ul>
       </div>
     </div>

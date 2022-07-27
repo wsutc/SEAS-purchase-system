@@ -1,22 +1,26 @@
-from ast import If
-import base64
-import hashlib
-import hmac
+# from ast import If
+# import base64
+# from email import message
+# import hashlib
+# import hmac
 import os
-from django.apps import AppConfig,apps
-from django.template import RequestContext
-from traitlets import default
-import urllib3
+# from xml.dom import NotFoundErr
+# from django.apps import AppConfig,apps
+# from django.template import RequestContext
+# from traitlets import default
+# import urllib3
 from http.client import HTTPResponse
 import io
-from itertools import product
+# from itertools import product
 from django.conf import settings
 from django.forms import formset_factory
-from django.http import FileResponse, HttpResponse, HttpResponseForbidden, HttpResponseRedirect, JsonResponse
+from django.http import FileResponse, Http404, HttpRequest, HttpResponse, HttpResponseForbidden, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils.timezone import datetime,activate
 from django.shortcuts import get_object_or_404
+# from django.core.paginator import Paginator,InvalidPage
+from django.contrib.auth.models import User
 
 import purchases
 from .models.models_metadata import (
@@ -26,14 +30,14 @@ from .models.models_data import (
     PURCHASE_REQUEST_STATUSES, Balance, Transaction, PurchaseRequest, Requisitioner
 )
 from .models.models_apis import (
-    Tracker, TrackingWebhookMessage, get_event_data
+    Tracker, TrackingEvent, TrackingWebhookMessage, get_event_data
 )
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.db.models import Sum, Count
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from .forms import PurchaseRequestAccountsFormset, SimpleProductForm, SimpleProductFormset, VendorModelForm
+from .forms import CreateUserForm, PurchaseRequestAccountsFormset, SimpleProductForm, SimpleProductFormset, VendorModelForm
 
 from django_select2.views import AutoResponseView
 
@@ -70,12 +74,74 @@ from .forms import AddVendorForm, NewPRForm
 class VendorListView(ListView):
     context_object_name = 'vendors'
     paginate_by = '10'
+    paginate_orphans = '2'
     queryset = Vendor.objects.order_by('name')
+
+    def get(self, request, *args, **kwargs):
+
+        changed,url = paginate(self,'all_vendors')
+
+        if changed:
+            return url
+        else:
+            return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_list'] = context['paginator'].get_elided_page_range(context['page_obj'].number,on_each_side=2,on_ends=1)
+        return context
+
+def paginate(self:ListView,url:str) -> tuple[bool,HTTPResponse]:
+    """Validate incoming page number and create redirect if outside bounds or invalid
+
+    Arguments:\n
+    self -- a ListView with a paginator defined
+
+    url -- the name of a URL defined in urls.py
+
+    Returns:
+    A tuple with a boolean describing whether the URL is changed/needs to redirect and
+    the url to redirect to, if required.
+    e.g. (True,redirect('home'))
+    """
+    paginator = self.get_paginator(self.queryset,self.paginate_by,self.paginate_orphans)
+    try:
+        page = self.request.GET['page']
+    except:
+        return (False,'')
+
+    page_new = paginator.get_page(page)
+    try:
+        page_int = int(page)
+        if page_int != page_new.number:
+            redirect_url = reverse_lazy(url) + "?page=" + str(page_new.number)
+        else:
+            return (False,'')
+    except:
+        redirect_url = reverse_lazy(url) + "?page=" + str(page_new.number)
+    
+    return (True,redirect(redirect_url))
 
 class PurchaseRequestListView(ListView):
     context_object_name = 'purchaserequests'
     paginate_by = '10'
+    paginate_orphans = '2'
     queryset = PurchaseRequest.objects.order_by('-created_date')
+
+    def get(self, request, *args, **kwargs):
+
+        changed,url = paginate(self,'home')
+
+        if changed:
+            return url
+        else:
+            return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_list'] = context['paginator'].get_elided_page_range(context['page_obj'].number,on_each_side=2,on_ends=1)
+
+        return context
 
 class VendorDetailView(DetailView):
     model = Vendor
@@ -86,6 +152,64 @@ class PurchaseRequestDetailView(DetailView):
     template_name = "purchases/purchaserequest_detail.html"
     context_object_name = 'purchaserequest'
     query_pk_and_slug = True
+
+class RequisitionerCreateView(CreateView):
+    form_class = CreateUserForm
+    template_name = "purchases/requisitioner_create.html"
+
+    def form_valid(self, form):
+        user = form.save()
+        user.refresh_from_db()
+
+        user.requisitioner.wsu_id = form.cleaned_data.get('wsu_id')
+        user.save()
+
+        return redirect(user.requisitioner)
+
+class RequisitionerDetailView(DetailView):
+    model = Requisitioner
+    template_name = "purchases/requisitioner_detail.html"
+    query_pk_and_slug = True
+
+class RequisitionerListView(ListView):
+    context_object_name = 'requisitioners'
+    paginate_by = '10'
+    paginate_orphans = '2'
+    admin_user = User.objects.filter(username='admin').first()
+    queryset = Requisitioner.objects.exclude(user=admin_user).order_by('user')
+
+    def get(self, request, *args, **kwargs):
+
+        changed,url = paginate(self,'all_requisitioners')
+
+        if changed:
+            return url
+        else:
+            return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_list'] = context['paginator'].get_elided_page_range(context['page_obj'].number,on_each_side=2,on_ends=1)
+
+        return context
+
+class RequisitionerUpdateView(UpdateView):
+    model = Requisitioner
+    form_class = CreateUserForm
+    template_name = "purchases/requisitioner_create.html"
+    query_pk_and_slug = True
+
+class VendorDeleteView(DeleteView):
+    model = Vendor
+    success_url = reverse_lazy('all_vendors')
+
+    def form_valid(self, *args, **kwargs):
+        object = self.get_object()
+        object.delete()
+        
+        redirect_url = redirect_to_next(self, 'all_vendors')
+
+        return redirect(redirect_url)
 
 class VendorCreateView(CreateView):
     form_class = AddVendorForm
@@ -180,7 +304,7 @@ class PurchaseRequestUpdateView(UpdateView):
     # permission_required = 'purchases.change_purchaserequest'
     model = PurchaseRequest
     form_class = NewPRForm
-    template_name = "purchases/new_pr.html"
+    template_name = "purchases/purchaserequest_update.html"
     query_pk_and_slug = True
     # success_url = reverse_lazy('purchaserequest_detail')
 
@@ -268,7 +392,7 @@ class PurchaseRequestDeleteView(DeleteView):
 class VendorUpdateView(UpdateView):
     model = Vendor
     form_class = AddVendorForm
-    template_name = "purchases/add_vendor.html"
+    template_name = "purchases/vendor_update.html"
     query_pk_and_slug = True
 
 class VendorDeleteView(DeleteView):
@@ -329,15 +453,27 @@ def process_webhook_payload(payload):
 
     try:
         carrier = Carrier.objects.get(carrier_code=carrier_code)
-        tracker = Tracker.objects.get(tracking_number=tracking_number,carrier=carrier)
+        tracker, _ = Tracker.objects.get_or_create(tracking_number=tracking_number,carrier=carrier)
     except:
         raise
-    
+
     if event_type == 'TRACKING_UPDATED':
         tracker.status = status
         tracker.delivery_estimate = estimated_delivery_date
         tracker.events = events
         tracker.save()
+
+        # Create events matching tracker
+        for event in events:
+            event_object, _ = TrackingEvent.objects.update_or_create(
+                tracker = tracker,
+                time_utc = event['time_utc'],
+                location = event['location'],
+                defaults= {
+                    'description': event['description'],
+                    'stage': event['stage']
+                }
+            )
 
     return
 

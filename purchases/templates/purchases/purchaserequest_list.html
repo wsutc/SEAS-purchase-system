@@ -1,13 +1,10 @@
-{% extends "purchases/layout.html" %}
+{% extends "purchases/list_page.html" %}
 {% block title %}
 Home
 {% endblock %}
-{% block content %}
-
-  <div class="row mb-3">
-    <h1 class="wsu-c-heading col-sm">All <span class="header-em">Purchase Requests</span></h1>
-    <a href="{% url 'new_pr' %}" class="save btn btn-primary col-2">New</a>
-  </div>
+{% block header %}Purchase Requests{% endblock header %}
+{% block new_url %}{% url 'new_pr' %}{% endblock new_url %}
+{% block page %}
 
     {% if object_list %}
     <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
@@ -49,21 +46,6 @@ Home
         </table>
     </div>
 
-    {% if page_obj.paginator.num_pages > 1 %}
-      <div class="pagination  container">
-        <div class="step-links">
-            {% if page_obj.has_previous %}
-                <a href="?page=1">&laquo; first</a>
-                <a href="?page={{ page_obj.previous_page_number }}">previous</a>
-            {% endif %}
-              {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-            {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}">next</a>
-                <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
-            {% endif %}
-          </div>
-      </div>
-    {% endif %}
     {% else %}
         <p>No manufacturers have been added. Use the <a href="{% url 'new_pr' %}">Add Purchase Request</a> form</p>
     {% endif %}

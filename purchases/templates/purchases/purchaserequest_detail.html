@@ -1,4 +1,5 @@
 {% extends 'purchases/detail_page.html' %}
+{% load purchases_extras %}
 {% block title %}Purchase Request {{ object.number }}{% endblock %}
 {% block header %}Purchase Request{% endblock %}
 {% block number %}{{ object.number }}{% endblock %}
@@ -22,11 +23,11 @@
     </ul>
 </div>
 
-<a href="{% url 'generate_pdf' slug=object.slug %}">PDF</a>
+{% comment %} <a href="{% url 'generate_pdf' slug=object.slug %}">PDF</a> {% endcomment %}{% comment %}someday!!!{% endcomment %}
 
 <div class="row mb-3">
     <div class="col-4">
-        Created {{ object.created_date }}
+        Created {{ object.created_date|date:"DATE_FORMAT" }}
     </div>
     <div class="col-12">
         <div class="bd-example-snippet bd-code-snippet">
@@ -43,7 +44,7 @@
                                 {% endif %}
                             </td>
                             <td style="width: 10em" align="right">Requestor</td>
-                            <td>{{ object.requisitioner.user.get_full_name }}</td>
+                            <td><a href="{{ object.requisitioner.get_absolute_url }}">{{ object.requisitioner.user.get_full_name }}</a></td>
                         </tr>
                         <tr>
                             <td align="right">Vendor</td>
@@ -63,7 +64,7 @@
                                 {% endif %}
                             </td>
                             <td align="right">Phone</td>
-                            <td>{{ object.requisitioner.phone }}</td>
+                            <td>{{ object.requisitioner.phone|default_if_none:"" }}</td>
                         </tr>
                         <tr>
                             <td align="right">Department</td>
@@ -84,15 +85,24 @@
                         <tr>
                             <td align="right">Shipping</td>
                             <td>
-                                {% if object.tracker %}
-                                    {% if object.tracker.get_tracking_link %}
-                                        <a href="{{ object.tracker.get_tracking_link }}" target="_blank" rel="noopener noreferrer">
-                                            {{ object.tracker.carrier }} {{ object.tracker.tracking_number }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i>
-                                        </a>
-                                    {% else %}
-                                        {{ object.tracker.carrier }} {{ object.tracker.tracking_number }}
-                                    {% endif %}
-                                {% endif %}
+                                <table>
+                                    {% for tracker in object.tracker_set.all %}
+                                        <tr>
+                                            <td>
+                                                {% if tracker.get_tracking_link %}
+                                                    <a href="{{ tracker.get_tracking_link }}" target="_blank" rel="noopener noreferrer">
+                                                        {{ tracker.carrier }} {{ tracker.tracking_number }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i>
+                                                    </a>
+                                                {% else %}
+                                                    {{ tracker.carrier }} {{ tracker.tracking_number }}
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-capitalize">
+                                                Status: {{ tracker.status }}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </table>
                             </td>
                         </tr>
                     </tbody>
@@ -123,9 +133,9 @@
                             <td>{{ budget.accounts.grant }}</td>
                             <td>{{ budget.spend_category.code }}</td>
                             {% if budget.distribution_type == 'percent' %}
-                                <td>{{ budget.distribution_input }}%</td>
+                                <td>{{ budget.distribution_input|percent:2 }}</td>
                             {% elif budget.distribution_type == 'amount' %}
-                                <td>${{ budget.distribution_input|floatformat:2 }}</td>
+                                <td>{{ budget.distribution_input|currency }}</td>
                             {% endif %}
                         </tr>
                     {% endfor %}
@@ -165,15 +175,11 @@
                             {% else %}
                                 <td></td>
                             {% endif %}
-                            {% if item.identifier %}
-                                <td align="center">{{ item.identifier }}</td>
-                            {% else %}
-                                <td></td>
-                            {% endif %}
+                            <td align="center">{{ item.identifier|default_if_none:"" }}</td>
                             {% comment %} <td align="center">{{ item.vendor_number|default_if_none:"" }}</td> {% endcomment %}
-                            <td align="right">{{ item.quantity }}</td>
+                            <td align="center">{{ item.quantity|floatformat }}</td>
                             <td align="center">{{ item.unit.unit }}</td>
-                            <td align="right">{{ item.unit_price }}</td>
+                            <td align="right">{{ item.unit_price|currency }}</td>
                             <td align="right">{{ item.extended_price }}</td>
                         </tr>
                     {% empty %}
@@ -193,7 +199,7 @@
                     </tr>
                     <tr>
                         <td colspan="3"></td>
-                        <td colspan="3" class="text-end">Sales Tax ({{ object.sales_tax_display|floatformat }}%)</td>
+                        <td colspan="3" class="text-end">Sales Tax ({{ object.sales_tax_rate|numeric2percent }})</td>
                         <td align="right">{{ object.sales_tax }}</td>
                     </tr>
                     <tr>
@@ -217,7 +223,7 @@
     </div>
 </div>
 
-
+{% block related_pr_table %}{% endblock related_pr_table %}
 {% comment %} <pre> {% filter force_escape %} {% debug %} {% endfilter %} </pre> {% endcomment %}
 
 {% endblock %}

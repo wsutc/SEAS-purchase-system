@@ -1,0 +1,37 @@
+{% extends 'purchases/detail_page.html' %}
+{% block title %}{{ object.user.get_full_name }}{% endblock %}
+{% block header %}Requisitioner{% endblock %}
+
+{% block navigation %}{% endblock navigation %}
+
+{% block page %}
+
+<div class="container mt-4">
+      <div class="card col">
+        <div class="card-header">
+          <h4 class="header-em">{{ object.user.get_full_name }}</h4>
+        </div>
+        <div class="card-body">
+          <table>
+            <tr>
+                <td class="pe-2 fw-bold">Username</td>
+                <td>{{ object.user.username }}</td>
+            </tr>
+            <tr>
+                <td class="pe-2 fw-bold">WSU ID</td>
+                {% if object.wsu_id %}
+                    <td>{{ object.wsu_id }}</td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+            </tr>
+            <tr>
+                <td class="pe-2 fw-bold">Email</td>
+                <td><a href="mailto:{{ object.user.email }}">{{ object.user.email }}</a></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+  </div>
+
+{% endblock %}

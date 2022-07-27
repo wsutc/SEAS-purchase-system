@@ -1,14 +1,11 @@
-{% extends "purchases/layout.html" %}
+{% extends "purchases/list_page.html" %}
 {% block title %}
 All Vendors
 {% endblock %}
+{% block header %}Vendors{% endblock header %}
+{% block new_url %}{% url 'add_vendor' %}{% endblock new_url %}
 
-{% block content %}
-
-    <div class="row mb-3">
-        <h1 class="wsu-c-heading col-sm">All <span class="header-em">Vendors</span></h1>
-        <a href="{% url 'add_vendor' %}" class="save btn btn-primary col-2">New</a>
-    </div>
+{% block page %}
 
     {% if object_list %}
     <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
@@ -46,21 +43,6 @@ All Vendors
         </table>
         </div>
     </div>
-    {% if page_obj.paginator.num_pages > 1 %}
-        <div class="pagination  container">
-            <div class="step-links">
-                {% if page_obj.has_previous %}
-                    <a href="?page=1">&laquo; first</a>
-                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
-                {% endif %}
-                {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-                {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}">next</a>
-                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
-                {% endif %}
-            </div>
-        </div>
-    {% endif %}
     {% else %}
         <p>No vendors have been added. Use the <a href="{% url 'add_vendor' %}">Add Vendor</a> form</p>
     {% endif %}

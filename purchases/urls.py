@@ -2,7 +2,7 @@ from unicodedata import name
 from django.urls import path,include
 from purchases import views
 from purchases.views import (
-    BalancesDetailView, BalancesListView, LedgersDetailView, LedgersListView, PurchaseRequestDeleteView, PurchaseRequestListView, PurchaseRequestUpdateView, VendorCreateView, VendorModalCreateView,
+    BalancesDetailView, BalancesListView, LedgersDetailView, LedgersListView, PurchaseRequestDeleteView, PurchaseRequestListView, PurchaseRequestUpdateView, RequisitionerCreateView, RequisitionerDetailView, RequisitionerListView, RequisitionerUpdateView, VendorCreateView, VendorModalCreateView,
     VendorDetailView, VendorListView, PurchaseRequestDetailView, VendorDeleteView,
     PurchaseRequestCreateView, VendorUpdateView, tracking_webhook
 )
@@ -24,6 +24,7 @@ from django.conf import settings
 
 urlpatterns = [
     path("", PurchaseRequestListView.as_view(), name="home"),
+    # path("<int:page>", PurchaseRequestListView.as_view(), name="home"),
     # path("add-vendor/", views.add_vendor, name="add_vendor"),
     path("new-vendor", VendorCreateView.as_view(), name='add_vendor'),
     path("all-vendors", VendorListView.as_view(), name="all_vendors"),
@@ -42,6 +43,10 @@ urlpatterns = [
     path("account-balances/", BalancesListView.as_view(), name="balances_list"),
     path("account-balances/<int:pk>/", BalancesDetailView.as_view(), name="balances_detail"),
     path("account/<int:pk>/update/", views.update_balance, name="update_balance"),
+    path("all-requisitioners", RequisitionerListView.as_view(), name="all_requisitioners"),
+    path("requisitioner/new", RequisitionerCreateView.as_view(), name="new_requisitioner"),
+    path("requisitioner/<int:pk>-<slug:slug>/", RequisitionerDetailView.as_view(), name="requisitioner_detail"),
+    # path("requisitioner/<int:pk>-<slug:slug>/update", RequisitionerUpdateView.as_view(), name="update_requisitioner"),
     # path("list-json/<str:model>/", views.autocomplete_list, name="get_autocomp_list"),
     path("select2/", include("django_select2.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

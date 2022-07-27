@@ -1,14 +1,20 @@
 # from decimal import Decimal
 from django import forms
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
 from purchases.models.models_data import (
-    PurchaseRequest, PurchaseRequestAccounts,
+    PurchaseRequest, PurchaseRequestAccounts, Requisitioner,
     Vendor, SimpleProduct
 )
 from django.forms.models import inlineformset_factory
 
 from bootstrap_modal_forms.forms import BSModalForm
 
+from phonenumber_field.formfields import PhoneNumberField
+
 from django_select2 import forms as s2forms
+
+from purchases.models.models_metadata import Department
 
 class RequisitionerWidget(s2forms.Select2Widget):
     search_fields = [
@@ -45,6 +51,32 @@ class AddVendorForm(forms.ModelForm):
         model = Vendor
         fields = "__all__"
 
+# class AddRequisitionerForm(forms.ModelForm):
+#     class Meta:
+#         model = Requisitioner
+#         fields = "__all__"
+
+class CreateUserForm(UserCreationForm):
+    wsu_id = forms.CharField(label='WSU ID',max_length=50,required=False)
+    phone = PhoneNumberField(label='Phone Number',max_length=25,required=False)
+    queryset = Department.objects.order_by('name')
+    department = forms.ModelChoiceField(queryset)
+
+    class Meta:
+        model = User
+        fields = fields = (
+            'username',
+            'first_name',
+            'last_name',
+            'email',
+            'phone',
+            'wsu_id',
+            'department',
+            'groups',
+            'password1',
+            'password2'
+        )
+
 class NewPRForm(forms.ModelForm):
     class Meta:
         model = PurchaseRequest
@@ -58,7 +90,7 @@ class NewPRForm(forms.ModelForm):
             'vendor': VendorWidget(attrs={'class':'select-input'}),
             'carrier': CarrierWidget(attrs={'class':'select-input'})
         }
-        exclude = ['created_date','number','items','subtotal','sales_tax','grand_total','accounts','tracker']
+        exclude = ['created_date','number','items','subtotal','sales_tax','grand_total','accounts','tracker','carrier','tracking_number']
 
     # def __init__(self, *args, **kwargs):
     #     self.user = kwargs.pop('user')

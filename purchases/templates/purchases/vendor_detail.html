@@ -42,34 +42,4 @@
     </ul>
 </div>
 
-{% if debug %}<div>debug ->count:{{ object.purchaserequest_set.count }}</div>{% endif %}
-    <div class="col-12">
-        <div class="h4">Related Purchase Requests</div>
-            <div class="bd-example-snippet bd-code-snippet">
-                <div class="bd-example">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th scope="col">Purchase Request</th>
-                                <th scope="col">Date</th>
-                                <th>Status</th>
-                                <th scope="col">Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for row in object.purchaserequest_set.all %}
-                                <tr>
-                                    <td><a href="{{ row.get_absolute_url }}">{{ row }}</a></td>
-                                    <td>{{ row.created_date }}</td>
-                                    <td>{{ row.get_status_display }}
-                                    <td>{{ row.grand_total }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
 {% endblock %}

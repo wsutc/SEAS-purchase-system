@@ -12,17 +12,32 @@ from django.utils.text import slugify
 from django.db.models import Avg,Sum
 
 from .models_metadata import DocumentNumber, Vendor, Accounts, Carrier, Unit, Urgency, SpendCategory, Department
-from .models_apis import Tracker
+# from .models_apis import Tracker
 
 class Requisitioner(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     wsu_id = models.CharField("WSU ID",max_length=50,blank=True,null=True)
     # first_name = models.CharField("First Name",max_length=50,blank=False)
     # last_name = models.CharField("Last Name",max_length=50,blank=False)
-    # slug = models.SlugField(max_length=255, unique=True)
+    slug = models.SlugField(null=True)
     phone = PhoneNumberField("Phone Number",max_length=25,blank=True,null=True)
     # email = models.EmailField("Email",max_length=50,blank=False)
     department = models.ForeignKey(Department,on_delete=models.PROTECT)
+
+    class Meta:
+        ordering = ['user']
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.user.get_full_name(), allow_unicode=True)
+
+        super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        kwargs = {
+            'slug': self.slug,
+            'pk': self.pk
+        }
+        return reverse('requisitioner_detail', kwargs=kwargs)
 
     def __str__(self):
         return self.user.get_full_name()
@@ -88,9 +103,9 @@ class PurchaseRequest(models.Model):
         "Special Instructions",
         default=settings.DEFAULT_INSTRUCTIONS,
     )
-    carrier = models.ForeignKey("Carrier",Carrier,blank=True,null=True)
-    tracking_number = models.CharField(max_length=55,blank=True,null=True)
-    tracker = models.ForeignKey(Tracker,on_delete=models.SET_NULL,blank=True,null=True)
+    # carrier = models.ForeignKey("Carrier",Carrier,blank=True,null=True)
+    # tracking_number = models.CharField(max_length=55,blank=True,null=True)
+    # tracker = models.ForeignKey(Tracker,on_delete=models.SET_NULL,blank=True,null=True)
 
     class Meta:
         ordering = ['-created_date']
@@ -119,11 +134,6 @@ class PurchaseRequest(models.Model):
         default='0',
         max_length=150
     )
-
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-        # self.requestor = Requisitioner.get()
-        # row = SmartsheetRows.objects.create()
 
     def get_absolute_url(self):
         kwargs = {
@@ -206,45 +216,8 @@ class PurchaseRequest(models.Model):
         else:
             return None
 
-    # def set_number(self):
-    #     if not self.number:
-            
-    #         request = PurchaseRequest.objects.get(id=self.id)
-    #         request.number = number
-    #         request.save()
-
     def __str__(self):
         return self.number
-
-################## This is the "good" one ######################
-# @receiver(pre_save, sender=PurchaseRequest)
-# def get_tracking(sender, instance, *args, **kwargs):
-#     if not instance.tracker_id and instance.tracking_number:
-#         # carrier = instance.carrier
-#         tracking_number = instance.tracking_number
-#         # tracker_created = instance.tracker_created
-#         api_key = settings.SHIP24_KEY
-
-#         tracker = TrackerOld.get('slug',tracking_number,api_key)
-#         # instance.tracker_created = True
-
-#         # instance.tracking_link = tracker.courier_tracking_link
-#         # instance.shipping_status = tracker.tag
-#         # instance.tracker_active = tracker.active
-#         instance.tracker_id = tracker.id
-
-# def update_tracking(instance)
-
-
-
-
-
-    # sheet = SmartsheetSheet(name="Purchase Requests")
-
-    # response = sheet.add_sheet_rows(data)
-
-    # print(response)
-
 
 class SimpleProduct(models.Model):
     name = models.CharField(max_length=100)
@@ -302,9 +275,6 @@ class Balance(models.Model):
     balance = MoneyField(max_digits=14,decimal_places=2,default_currency='USD')
     updated_datetime = models.DateTimeField(auto_now_add=True)
     starting_balance = MoneyField(max_digits=14,decimal_places=2,default_currency='USD',default=0)
-
-    # class Meta:
-        # verbose_name_plural = "Balances"
         
     def get_absolute_url(self):
         kwargs = {
@@ -356,29 +326,6 @@ class Transaction(models.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__original_total = self.total_value
-
-    # def get_absolute_url(self):
-    #     kwargs = {
-    #         'pk': self.pk
-    #     }
-    #     return reverse('update_ledger_item', kwargs=kwargs) 
-
-    # def save(self, *args, **kwargs):
-    #     balance_account = self.balance
-    #     if self.total_value != self.__original_total:
-    #         if self.__original_total:
-    #             balance_change = self.total_value - self.__original_total
-    #         else:
-    #             balance_change = self.total_value
-    #     else:
-    #         balance_change = 0
-    #     print("Old Balance: " + str(balance_account.balance.amount))
-    #     # if self.pk:
-    #     #     existing_value = self.total_value
-    #     # else:
-    #     new_balance = Balance.add_transaction(balance_account,balance_change)
-    #     print("New Balance: " + str(new_balance.amount))
-    #     super().save(*args, **kwargs)
 
     def __str__(self):
         return "%s | %s [%s]" % (self.balance.account.account_title,self.purchase_request,self.total_value.amount)

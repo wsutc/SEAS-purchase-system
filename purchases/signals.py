@@ -6,10 +6,10 @@ from django.conf import settings
 from django.contrib.auth.models import User
 
 from .models.models_metadata import Department
-from .models.models_apis import Tracker
+from .models.models_apis import Tracker, create_events
 from .models.models_data import Requisitioner, PurchaseRequest
 
-from .tracking import build_payload
+from .tracking import build_payload, update_tracking_details
 from purchases import tracking
 
 @receiver(post_save, sender=User)
@@ -22,17 +22,32 @@ def create_requisitioner(sender, instance, created, **kwargs):
 def save_requisitioner(sender, instance, **kwargs):
     instance.requisitioner.save() 
 
-@receiver(pre_save, sender=Tracker)
-def get_tracker(sender, instance, *args, **kwargs):
-    if not instance.id:
-        instance.id = instance.tracking_number
-        n,c,m,r = tracking.register_tracker(instance.tracking_number, instance.carrier)
+@receiver(post_save, sender=Tracker)
+def post_save_tracker_update(sender, instance, created, **kwargs):
+    # tracker = Tracker.objects.get(id=instance.id)
+    response = update_tracking_details(instance.tracking_number, instance.carrier.carrier_code)
 
-        if r:
-            instance.carrier = c
-            instance.tracking_number = n
-        else:
-            raise KeyError('No valid trackers created. Is the tracker already registered?')
+    # Update values on Tracker
+    if instance.status != response.get('status'):
+        instance.status = response.get('status')
+        instance.delivery_estimate = response.get('delivery_estimate')
+        instance.events = response.get('events')
+        instance.save()
+
+    _, _ = create_events(instance,instance.events)
+
+
+# @receiver(pre_save, sender=Tracker)
+# def get_tracker(sender, instance, *args, **kwargs):
+#     if not instance.id:
+#         instance.id = instance.tracking_number
+#         n,c,m,r = tracking.register_tracker(instance.tracking_number, instance.carrier)
+
+#         if r:
+#             instance.carrier = c
+#             instance.tracking_number = n
+#         else:
+#             raise KeyError('No valid trackers created. Is the tracker already registered?')
 
     # api_key = settings.SHIP24_KEY
 
@@ -63,23 +78,23 @@ def get_tracker(sender, instance, *args, **kwargs):
     #     instance.tracking_number = tracking['trackingNumber']
     #     # instance.events = dataJson.get('events')
 
-@receiver(pre_save, sender=PurchaseRequest)
-def create_tracker(sender, instance, *args, **kwargs):
-    if not instance.tracker and instance.tracking_number:
-        carrier = instance.carrier
-        tracking_number = instance.tracking_number
+# @receiver(pre_save, sender=PurchaseRequest)
+# def create_tracker(sender, instance, *args, **kwargs):
+#     if not instance.tracker and instance.tracking_number:               # if tracking number but no tracker; suggests that it has just been added
+#         carrier = instance.carrier
+#         tracking_number = instance.tracking_number
 
-        try:
-            tracker, _ = Tracker.objects.get_or_create(carrier=carrier,tracking_number=tracking_number)
-            # tracker.id = tracker.tracking_number
-            # tracker.save()
-            # tracker = Tracker.objects.get(id=tracker.id)
-            instance.tracker = tracker
-            # Tracker.update(tracker[0])
-            # return True
-        except KeyError as err:
-            print(err)
-    # return False
+#         try:
+#             tracker, _ = Tracker.objects.get_or_create(carrier=carrier,tracking_number=tracking_number)
+#             # tracker.id = tracker.tracking_number
+#             # tracker.save()
+#             # tracker = Tracker.objects.get(id=tracker.id)
+#             instance.tracker = tracker
+#             # Tracker.update(tracker[0])
+#             # return True
+#         except KeyError as err:
+#             print(err)
+#     # return False
 
 # @receiver(post_save, sender=PurchaseRequest)
 # def update_tracker(sender, instance, *args, **kwargs):
