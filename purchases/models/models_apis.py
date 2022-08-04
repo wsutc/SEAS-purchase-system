@@ -1,9 +1,10 @@
-from django.conf import settings
 from django.db import models
-import json, http.client
+from django.contrib import messages
+from django.urls import reverse
+from django.utils.text import slugify
 
 from purchases.models.models_data import PurchaseRequest
-from purchases.tracking import get_tracker, register_tracker
+from purchases.tracking import register_tracker
 
 
 from .models_metadata import Carrier
@@ -13,8 +14,10 @@ class Tracker(models.Model):
     carrier = models.ForeignKey(Carrier,on_delete=models.PROTECT,blank=True,null=True)
     tracking_number = models.CharField(max_length=100)
     events = models.JSONField(default=None,blank=True,null=True)
+    events_hash = models.CharField(max_length=100, editable=False,null=True)
     shipment_id = models.CharField(max_length=100,blank=True,null=True)
     status = models.CharField(max_length=50,blank=True,null=True)
+    sub_status = models.CharField(max_length=50,editable=False,null=True)
     delivery_estimate = models.DateTimeField(blank=True,null=True)
     purchase_request = models.ForeignKey(PurchaseRequest,on_delete=models.CASCADE,null=True)
 
@@ -25,30 +28,34 @@ class Tracker(models.Model):
         constraints = [
             models.UniqueConstraint(fields = ('tracking_number','carrier'),name='unique_tracking_number_carrier')
         ]
+        # ordering = ['-purchase_request','status','id']
+
+    def get_absolute_url(self):
+        kwargs = {
+            'pk': slugify(self.id, allow_unicode=True)
+        }
+        return reverse('tracker_detail', kwargs=kwargs)
+
+    # def get_previous_by_sort_order(self):
+    #     qs = Tracker.objects.all().order_by('-purchase_request__number','status','id')
+    #     return qs.first()
 
     def save(self, *args, **kwargs):
-        if self._state.adding:
-            
-            # if self.carrier:
-            if not Tracker.objects.filter(tracking_number = self.tracking_number, carrier = self.carrier).exists():
+        if self._state.adding:          # only register as new tracker if this is a new tracker
 
-                n,c,m,r = register_tracker(self.tracking_number, self.carrier.carrier_code)
+            n,c,m,r = register_tracker(self.tracking_number, self.carrier.carrier_code)
 
-                if r:
-                    self.carrier, _ = Carrier.objects.get_or_create(
-                        carrier_code = c,
-                        defaults={
-                            'name': c
-                        }
-                    )
-                    self.tracking_number = n
-                    self.id = n
-                else:
-                    raise KeyError('No valid trackers created. Is the tracker already registered?')
-
-                
+            if r:
+                self.carrier, _ = Carrier.objects.get_or_create(
+                    carrier_code = c,
+                    defaults={
+                        'name': c
+                    }
+                )
+                self.tracking_number = n
+                self.id = n
             else:
-                raise
+                raise KeyError('No valid trackers created. Is the tracker already registered?')
 
         super().save(*args, **kwargs)
 
@@ -59,17 +66,8 @@ class Tracker(models.Model):
             return None
 
     def __str__(self):
-        return str(self.id)
-
-def get_event_data(event):
-    event_data = {
-        'event_id': event.get('eventId'),
-        'event_status': event.get('status'),
-        'event_datetime': event.get('datetime'),
-        'courier_code': event.get('courierCode')
-    }
-
-    return event_data
+        value = "{0} {1}".format(self.carrier,self.tracking_number)
+        return str(value)
 
 class TrackingWebhookMessage(models.Model):
     received_at = models.DateTimeField(help_text="DateTime that message was recieved.")
@@ -92,7 +90,8 @@ class TrackingEvent(models.Model):
         get_latest_by = ['time_utc']
 
     def __str__(self):
-        return "%s; %s; %s" % (self.location,self.description,self.time_utc.strftime("%c %Z"))
+        value = "{location}; {description}; {time}".format(location=self.location,description=self.description,time=self.time_utc.strftime("%c %Z"))
+        return value
 
 def create_events(tracker:Tracker, events) -> tuple[list[TrackingEvent], list[TrackingEvent]]:
     created_events = []
@@ -114,3 +113,28 @@ def create_events(tracker:Tracker, events) -> tuple[list[TrackingEvent], list[Tr
             updated_events.append(event_object)
 
     return (created_events,updated_events)
+
+def update_tracker_fields(tracker:Tracker,fields:dict):
+    """Updates <tracker> using <fields>"""
+    qs = Tracker.objects.filter(pk=tracker.pk)          # using `queryset.update` prevents using `model.save`, therefore, no `post_save` signal
+
+    update_fields = {}                                  # create a dict of fields with values to send to the ``.update` method
+    if tracker.status != (status := fields.get('status')):
+        update_fields['status'] = status
+
+    if tracker.sub_status != (sub_status := fields.get('sub_status')):
+        update_fields['sub_status'] = sub_status
+
+    if tracker.delivery_estimate != (delivery_estimate := fields.get('delivery_estimate')):
+        update_fields['delivery_estimate'] = delivery_estimate
+
+    events_hash = str(fields.get('events_hash'))
+
+    if tracker.events_hash != events_hash:
+        _,_ = create_events(tracker,fields.get('events'))
+
+        update_fields['events'] = fields.get('events')
+        update_fields['events_hash'] = events_hash
+
+    if len(update_fields):
+        qs.update(**update_fields)

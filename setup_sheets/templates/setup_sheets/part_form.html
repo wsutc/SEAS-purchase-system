@@ -1,6 +1,6 @@
 {% extends "purchases/layout.html" %}
 {% comment %} {% load widget_tweaks %} {% endcomment %}
-{% block title %}Add Setup Sheet{% endblock %}
+{% block title %}Add Part{% endblock %}
 
 {% block content %}
 
@@ -9,7 +9,7 @@
     {% csrf_token %}
     <div class="card col">
       <div class="card-header">
-        <h4>Create <span class="header-em">Setup Sheet</span></h4>
+        <h4>Create <span class="header-em">Part</span></h4>
       </div>
       <div class="card-body">
         {{ form.non_form_errors }}

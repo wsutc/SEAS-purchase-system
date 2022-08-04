@@ -1,31 +1,18 @@
-from unicodedata import name
 from django.urls import path,include
 from purchases import views
 from purchases.views import (
-    BalancesDetailView, BalancesListView, LedgersDetailView, LedgersListView, PurchaseRequestDeleteView, PurchaseRequestListView, PurchaseRequestUpdateView, RequisitionerCreateView, RequisitionerDetailView, RequisitionerListView, RequisitionerUpdateView, VendorCreateView, VendorModalCreateView,
+    BalancesDetailView, BalancesListView, LedgersListView, PurchaseRequestDeleteView,
+    PurchaseRequestListView, PurchaseRequestUpdateView, RequisitionerCreateView,
+    RequisitionerDetailView, RequisitionerListView, SimpleProductCopyView,
+    SimpleProductListView, TrackerCreateView, TrackerDetailView, TrackerListView, VendorCreateView, VendorModalCreateView,
     VendorDetailView, VendorListView, PurchaseRequestDetailView, VendorDeleteView,
     PurchaseRequestCreateView, VendorUpdateView, tracking_webhook
 )
-from purchases.models.models_metadata import Manufacturer, Product
 from django.conf.urls.static import static
 from django.conf import settings
 
-# home_list_view = views.HomeListView.as_view(
-#     queryset=Manufacturer.objects.order_by()[:5],
-#     context_object_name="manufacturer_list",
-#     template_name="purchases/home.html"
-# )
-
-# product_list_view = views.ListView.as_view(
-#     queryset=Product.objects.order_by(),
-#     context_object_name="product_list",
-#     template_name="purchases/product_list"
-# )
-
 urlpatterns = [
     path("", PurchaseRequestListView.as_view(), name="home"),
-    # path("<int:page>", PurchaseRequestListView.as_view(), name="home"),
-    # path("add-vendor/", views.add_vendor, name="add_vendor"),
     path("new-vendor", VendorCreateView.as_view(), name='add_vendor'),
     path("all-vendors", VendorListView.as_view(), name="all_vendors"),
     path("vendor/<int:pk>-<str:slug>/", VendorDetailView.as_view(), name='vendor_detail'),
@@ -39,6 +26,10 @@ urlpatterns = [
     path("purchase-request/<slug:slug>/delete", PurchaseRequestDeleteView.as_view(), name="delete_pr"),
     path("purchase-request/<slug:slug>/pdf", views.generate_pr_pdf, name="generate_pdf"),
     path("webhooks/tracking/BJD3ZX4b1gNvcIAOhGeTiE6kcC0ugjp/",tracking_webhook),
+    path("trackers/", TrackerListView.as_view(), name="tracker_list"),
+    path("trackers/new/", TrackerCreateView.as_view(), name="create_tracker"),
+    path("trackers/<slug:pk>/", TrackerDetailView.as_view(), name="tracker_detail"),
+    path("trackers/<slug:pk>/update-tracker/", views.update_tracker, name="update_tracker"),
     path("account-transactions/<int:pk>/", LedgersListView.as_view(), name="ledger_list"), 
     path("account-balances/", BalancesListView.as_view(), name="balances_list"),
     path("account-balances/<int:pk>/", BalancesDetailView.as_view(), name="balances_detail"),
@@ -46,7 +37,7 @@ urlpatterns = [
     path("all-requisitioners", RequisitionerListView.as_view(), name="all_requisitioners"),
     path("requisitioner/new", RequisitionerCreateView.as_view(), name="new_requisitioner"),
     path("requisitioner/<int:pk>-<slug:slug>/", RequisitionerDetailView.as_view(), name="requisitioner_detail"),
-    # path("requisitioner/<int:pk>-<slug:slug>/update", RequisitionerUpdateView.as_view(), name="update_requisitioner"),
-    # path("list-json/<str:model>/", views.autocomplete_list, name="get_autocomp_list"),
+    path("simple-products/copy/<int:pk>", SimpleProductCopyView.as_view(), name="copy_simpleproduct"),
+    path("simple-products/", SimpleProductListView.as_view(), name="simpleproducts"),
     path("select2/", include("django_select2.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

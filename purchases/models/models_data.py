@@ -166,16 +166,13 @@ class PurchaseRequest(models.Model):
         return extended_price
 
     def update_totals(self):
+        qs = PurchaseRequest.objects.filter(pk=self.pk)
         subtotal = self.get_subtotal()['extended_price__sum']
         shipping = self.shipping
         tax = round((subtotal + shipping.amount) * decimal.Decimal(self.sales_tax_rate),2)
         total = subtotal + shipping.amount + tax
 
-        self.subtotal = subtotal
-        self.sales_tax = tax
-        self.grand_total = total
-
-        self.save()
+        qs.update(subtotal=subtotal,sales_tax=tax,grand_total=total)
         return
 
     def sales_tax_display(self):
@@ -229,6 +226,11 @@ class SimpleProduct(models.Model):
     unit = models.ForeignKey(Unit,on_delete=models.PROTECT,default=1)
     extended_price = MoneyField(max_digits=14,decimal_places=2,default_currency='USD',blank=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields = ('purchase_request','identifier','name'),name='unique_purchase_request_part_number')
+        ]
+
     def extend_price(self):
         extended_price = self.quantity * self.unit_price
         return extended_price
@@ -236,6 +238,11 @@ class SimpleProduct(models.Model):
     def save(self, *args, **kwargs):
         self.extended_price = self.extend_price()
         super().save(*args, **kwargs)
+
+    @property
+    def vendor(self):
+        vendor = self.purchase_request.vendor
+        return vendor
 
     def __str__(self):
         name = self.name

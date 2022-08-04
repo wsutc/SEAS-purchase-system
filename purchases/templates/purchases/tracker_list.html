@@ -1,0 +1,47 @@
+{% extends "purchases/list_page.html" %}
+{% load purchases_extras %}
+{% block title %}
+Trackers
+{% endblock %}
+{% block header %}Trackers{% endblock header %}
+{% block new_url %}{% url 'create_tracker' %}{% endblock new_url %}
+
+{% block page %}
+
+    {% if object_list %}
+    <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+                <th scope="col">Carrier</th>
+                <th>Tracking Number</th>
+                <th class="col-1">Track</th>
+                <th class="col">Status</th>
+                <th class="col-2">Purchase Request</th>
+                <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for o in object_list %}
+            <tr>
+                <td><a href="{{ o.carrier.website }}">{{ o.carrier }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a></td>
+                <td><a href="{{ o.get_absolute_url }}">{{ o.tracking_number }}</a></td>
+                <td>
+                    {% if o.get_tracking_link %}
+                        <a href="{{ o.get_tracking_link }}" target="_blank" rel="noopener noreferrer">
+                            <i class="fa-solid fa-up-right-from-square"></i>
+                        </a>
+                    {% endif %}
+                </td>
+                <td>{{ o.status }}</td>
+                <td><a href="{{ o.purchase_request.get_absolute_url }}">{{ o.purchase_request }}</a></td>
+            </tr>
+        {% endfor %}
+          </tbody>
+        </table>
+        </div>
+    </div>
+    {% else %}
+        <p>No trackers created</p>
+    {% endif %}
+{% endblock %}

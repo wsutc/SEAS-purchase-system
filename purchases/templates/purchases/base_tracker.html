@@ -1,15 +1,28 @@
 {% extends "purchases/layout.html" %}
-{% comment %} {% load widget_tweaks %} {% endcomment %}
-{% block title %}Add Setup Sheet{% endblock %}
+{% load widget_tweaks %}
+{% block title %}{% block title_prefix %} Tracker{% endblock %}{% endblock %}
 
 {% block content %}
+
+{{ form.media.css }}
+
+<style>
+
+  .select-pr {
+      width: 15em
+  }
+
+  .select-carrier {
+    width: 15em
+  }
+</style>
 
 <div class="container mt-4">
   <form method="post">
     {% csrf_token %}
     <div class="card col">
       <div class="card-header">
-        <h4>Create <span class="header-em">Setup Sheet</span></h4>
+        <h4>{% block header %}{% endblock header %} <span class="header-em">Tracker</span></h4>
       </div>
       <div class="card-body">
         {{ form.non_form_errors }}
@@ -23,5 +36,8 @@
     </div>
   </form>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+{{ form.media.js }}
 
 {% endblock %}

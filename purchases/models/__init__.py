@@ -1,6 +1,6 @@
 from .models_metadata import (
     State, Vendor, Carrier, Unit, Urgency,
-    Accounts, Department, SpendCategory, Manufacturer,
+    Accounts, Department, SpendCategory,
     DocumentNumber
 )
 from .models_apis import (

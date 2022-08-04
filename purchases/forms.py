@@ -2,11 +2,13 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from purchases.models.models_apis import Tracker
 from purchases.models.models_data import (
     PurchaseRequest, PurchaseRequestAccounts, Requisitioner,
     Vendor, SimpleProduct
 )
 from django.forms.models import inlineformset_factory
+from django.db.models import FilteredRelation, Q
 
 from bootstrap_modal_forms.forms import BSModalForm
 
@@ -44,6 +46,14 @@ class SpendCategoryWidget(s2forms.Select2Widget):
     search_fields = [
         "description__icontains",
         "code__icontains"
+    ]
+
+class PurchaseRequestWidget(s2forms.ModelSelect2Widget):
+    search_fields = [
+        "number__icontains",
+        "vendor__name__icontains",
+        "requisitioner__user__first_name__icontains",
+        "requisitioner__user__last_name__icontains",
     ]
 
 class AddVendorForm(forms.ModelForm):
@@ -122,11 +132,31 @@ class SimpleProductForm(forms.ModelForm):
             # 'specification': forms.Textarea(attrs={'rows':8})
         }
 
+class CustomInlineFormSet(forms.BaseInlineFormSet):
+    """Checks that there are not two items on one purchase request with the same part number/ID"""
+    def clean(self):
+        super().clean()
+        if any(self.errors):
+            return
+        products = []
+        for form in self.forms:
+            if self.can_delete and self._should_delete_form(form):
+                continue
+            product = (form.cleaned_data.get('purchase_request'),form.cleaned_data.get('identifier'))
+            print("%s" % product[1])
+            if product in products:
+                print("Duplicate Found")
+                raise forms.ValidationError("Part Numbers must be unique per Purchase Request.")
+            products.append(product)
+
+        print(products.count)
+
 SimpleProductFormset = inlineformset_factory(
     PurchaseRequest,
     SimpleProduct,
     form = SimpleProductForm,
-    extra=1
+    extra=1,
+    # formset=CustomInlineFormSet
 )
 
 class PurchaseRequestAccountsForm(forms.ModelForm):
@@ -146,3 +176,59 @@ PurchaseRequestAccountsFormset = inlineformset_factory(
     form = PurchaseRequestAccountsForm,
     extra=1
 )
+
+class SimpleProductCopyForm(forms.ModelForm):
+    class Meta:
+        model = SimpleProduct
+        fields = {
+            'purchase_request',
+            'name',
+            'identifier',
+            'link',
+            'quantity',
+            'unit_price'
+        }
+        widgets = {
+            'identifier': forms.TextInput(attrs={'readonly':'readonly'})
+        }
+
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs)
+        vendor = self.instance.purchase_request.vendor
+
+        # Reduce list of purchase requests to only those that are the same
+        # vendor but exclude those that already include this item
+        self.fields['purchase_request'].queryset = (
+            PurchaseRequest.objects.filter(vendor=vendor)
+            .exclude(simpleproduct__identifier=self.instance.identifier)
+        )
+        self.fields['link'].disabled
+        self.fields['identifier'].disabled
+
+    def clean(self):
+        purchase_request = self.cleaned_data.get('purchase_request')
+        identifier = self.instance.identifier
+        if (
+            SimpleProduct.objects
+            .filter(purchase_request = purchase_request,identifier=identifier)
+            .exists()
+        ):
+            raise forms.ValidationError(
+                'Product with part number %(identifier)s already exists on Purchase Request %(purchase_request)s.',
+                code='duplicate',
+                params={
+                    'purchase_request': purchase_request,
+                    'identifier': identifier
+                }
+            )
+        
+        clean = super().clean()
+
+class TrackerForm(forms.ModelForm):
+    class Meta:
+        model = Tracker
+        widgets = {
+            'purchase_request': PurchaseRequestWidget(attrs={'class':'select-pr'}),
+            'carrier': CarrierWidget(attrs={'class':'select-carrier'})
+        }
+        exclude = ['events','shipment_id','status','delivery_estimate']

@@ -1,66 +1,49 @@
-# from ast import If
-# import base64
-# from email import message
-# import hashlib
-# import hmac
 import os
-# from xml.dom import NotFoundErr
-# from django.apps import AppConfig,apps
-# from django.template import RequestContext
-# from traitlets import default
-# import urllib3
 from http.client import HTTPResponse
 import io
-# from itertools import product
+from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
-from django.forms import formset_factory
-from django.http import FileResponse, Http404, HttpRequest, HttpResponse, HttpResponseForbidden, HttpResponseRedirect, JsonResponse
-from django.shortcuts import redirect, render
+from django.http import FileResponse, HttpResponse, HttpResponseForbidden, HttpResponseNotFound
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
-from django.utils.timezone import datetime,activate
 from django.shortcuts import get_object_or_404
-# from django.core.paginator import Paginator,InvalidPage
 from django.contrib.auth.models import User
 
-import purchases
+from purchases.tracking import get_generated_signature, update_tracking_details
 from .models.models_metadata import (
     Carrier, Vendor
 )
 from .models.models_data import (
-    PURCHASE_REQUEST_STATUSES, Balance, Transaction, PurchaseRequest, Requisitioner
+    Balance, SimpleProduct, Transaction, PurchaseRequest, Requisitioner
 )
 from .models.models_apis import (
-    Tracker, TrackingEvent, TrackingWebhookMessage, get_event_data
+    Tracker, TrackingWebhookMessage, update_tracker_fields
 )
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.db.models import Sum, Count
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from .forms import CreateUserForm, PurchaseRequestAccountsFormset, SimpleProductForm, SimpleProductFormset, VendorModelForm
-
-from django_select2.views import AutoResponseView
+from .forms import CreateUserForm, PurchaseRequestAccountsFormset, SimpleProductCopyForm, SimpleProductFormset, TrackerForm, VendorModelForm
 
 import datetime as dt
 import json
-from secrets import compare_digest
 from django.utils import timezone
 
 from django.db.transaction import atomic, non_atomic_requests
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import cm, inch
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-from reportlab.lib import colors, pagesizes
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, PageTemplate, Image
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, PageTemplate
 from reportlab.platypus.paragraph import Paragraph
 from reportlab.platypus.frames import Frame
 from functools import partial
 
-from fdfgen import forge_fdf
+# from fdfgen import forge_fdf
 
 from bootstrap_modal_forms.generic import BSModalCreateView
 
@@ -68,8 +51,6 @@ from .forms import AddVendorForm, NewPRForm
 
 
 # Create your views here.
-# class HomeListView(ListView):
-#     model = PurchaseRequest
 
 class VendorListView(ListView):
     context_object_name = 'vendors'
@@ -80,6 +61,26 @@ class VendorListView(ListView):
     def get(self, request, *args, **kwargs):
 
         changed,url = paginate(self,'all_vendors')
+
+        if changed:
+            return url
+        else:
+            return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_list'] = context['paginator'].get_elided_page_range(context['page_obj'].number,on_each_side=2,on_ends=1)
+        return context
+
+class SimpleProductListView(ListView):
+    context_object_name = 'simpleproduct'
+    paginate_by = '10'
+    paginate_orphans = '2'
+    queryset = SimpleProduct.objects.order_by('purchase_request__vendor','name')
+
+    def get(self, request, *args, **kwargs):
+
+        changed,url = paginate(self,'simpleproducts')
 
         if changed:
             return url
@@ -126,7 +127,15 @@ class PurchaseRequestListView(ListView):
     context_object_name = 'purchaserequests'
     paginate_by = '10'
     paginate_orphans = '2'
-    queryset = PurchaseRequest.objects.order_by('-created_date')
+    # queryset = PurchaseRequest.objects.order_by('-created_date')
+
+    def get_queryset(self):
+        requisitioner_value = self.request.GET.get('requisitioner', '')
+        if requisitioner_value != '':
+            requisitioner = get_object_or_404(Requisitioner,slug=requisitioner_value)
+            return PurchaseRequest.objects.filter(requisitioner = requisitioner).order_by('-created_date')
+        else:
+            return PurchaseRequest.objects.order_by('-created_date')
 
     def get(self, request, *args, **kwargs):
 
@@ -222,13 +231,11 @@ class VendorModalCreateView(BSModalCreateView):
 
 class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
     permission_required = 'purchases.add_purchaserequest'
-    # model = PurchaseRequest
     form_class = NewPRForm
     template_name = 'purchases/new_pr.html'
-    # success_url = reverse_lazy('purchaserequest_detail')
 
     def get_context_data(self, **kwargs):
-        context = super(PurchaseRequestCreateView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['purchase_request_items_formset'] = SimpleProductFormset(prefix='items')
         context['purchase_request_accounts_formset'] = PurchaseRequestAccountsFormset(prefix='accounts')
         context['requisitioner'] = Requisitioner.objects.get(user=self.request.user)
@@ -250,7 +257,6 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
             return self.form_invalid(form, purchase_request_items_formset, purchase_request_accounts_formset)
 
     def form_valid(self, form, purchase_request_items_formset, purchase_request_accounts_formset):
-        # form.instance.requisitioner = Requisitioner.objects.get(user = self.request.user)
         self.object = form.save(commit=False)
         self.object.save()
 
@@ -266,28 +272,8 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
             account.purchase_request = self.object
             account.save()
 
-        # # Set PR totals and update balance
+        # # Set PR totals and update balance (balance isn't functional)
         self.object.update_totals()
-        # ## Update/create balance and create transaction record
-        # account = purchase_request_accounts[0].accounts
-        # balance, _ = Balance.objects.get_or_create(
-        #     account = account,
-        #     defaults = {
-        #         'balance': 0,
-        #         'starting_balance': 0
-        #     }
-        # )
-        # transaction, _ = Transaction.objects.get_or_create(
-        #     balance = balance,
-        #     purchase_request = self.object,
-        #     total_value = -self.object.grand_total
-        # )
-
-        # balance.adjust_balance(transaction.total_value)
-
-        # return redirect(reverse_lazy("home"))
-
-        # redirect_url = reverse_lazy('purchaserequest_detail', kwargs={ 'slug': self.object.slug })
 
         return redirect(self.object)
 
@@ -301,12 +287,11 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
         )
 
 class PurchaseRequestUpdateView(UpdateView):
-    # permission_required = 'purchases.change_purchaserequest'
+    permission_required = 'purchases.change_purchaserequest'
     model = PurchaseRequest
     form_class = NewPRForm
     template_name = "purchases/purchaserequest_update.html"
     query_pk_and_slug = True
-    # success_url = reverse_lazy('purchaserequest_detail')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -318,14 +303,18 @@ class PurchaseRequestUpdateView(UpdateView):
             context['purchase_request_accounts_formset'] = PurchaseRequestAccountsFormset(instance=self.object, prefix='accounts')
         return context
 
-    def form_valid(self, form): #, purchase_request_items_formset, purchase_request_accounts_formset,purchase_request):
+    def form_valid(self, form):
         context = self.get_context_data()
-        # form.instance.requisitioner = Requisitioner.objects.get(user = self.request.user)
         self.object = form.save(commit=False)
         
         purchase_request_items_formset = context['purchase_request_items_formset']
         purchase_request_accounts_formset = context['purchase_request_accounts_formset']
 
+        if not purchase_request_items_formset.is_valid():
+            return self.form_invalid(form)
+        if not purchase_request_accounts_formset.is_valid():
+            return self.form_invalid(form)
+        
         purchase_request_items_formset.save(commit=True)
         purchase_request_accounts_formset.save(commit=True)
 
@@ -335,17 +324,17 @@ class PurchaseRequestUpdateView(UpdateView):
 
         return redirect(self.object)
 
-    def form_invalid(self, form, purchase_request_items_formset, purchase_request_accounts_formset):
+    def form_invalid(self, form):
+        context = self.get_context_data()
         return self.render_to_response(
             self.get_context_data(
                 form=form,
-                purchase_request_items_formset=purchase_request_items_formset,
-                purchase_request_accounts_formset=purchase_request_accounts_formset
+                purchase_request_items_formset=context['purchase_request_items_formset'],
+                purchase_request_accounts_formset=context['purchase_request_accounts_formset']
             )
         )
 
 def update_pr_status(request,slug,*args, **kwargs):
-    purchase_request = get_object_or_404(PurchaseRequest,slug=slug)
     new_status = request.GET['status']
 
     status_number = ''
@@ -360,13 +349,15 @@ def update_pr_status(request,slug,*args, **kwargs):
             status_number = '1'
         case 'received':
             status_number = '8'
+        case _:
+            status_number = None
 
     if status_number:
-        print("New Status: %s" % new_status)
-        purchase_request.status = status_number
-        purchase_request.save()
+        count = PurchaseRequest.objects.filter(slug=slug).update(status=status_number)
+        if count != 1:
+            return HttpResponseNotFound("Too many/few objects matched the slug.")
 
-    return redirect(purchase_request)
+    return redirect('purchaserequest_detail', slug = slug)
 
 def redirect_to_next(view, default_redirect='home'):
 
@@ -407,6 +398,26 @@ class VendorDeleteView(DeleteView):
 
         return redirect(redirect_url)
 
+class SimpleProductCopyView(UpdateView):
+    model = SimpleProduct
+    form_class = SimpleProductCopyForm
+    template_name = "purchases/simpleproduct_copy.html"
+
+    def form_valid(self, form) -> HttpResponse:
+        object = self.get_object()
+
+        object.purchase_request = form.cleaned_data.get('purchase_request')
+        object.quantity = form.cleaned_data.get('quantity')
+        object.unit_price = form.cleaned_data.get('unit_price')
+        object.name = form.cleaned_data.get('name')
+
+        object.pk = None
+        object._state.adding = True
+        object.save()
+        object.purchase_request.update_totals()
+
+        return redirect(object.purchase_request)
+
 @csrf_exempt
 @require_POST
 @non_atomic_requests
@@ -418,12 +429,12 @@ def tracking_webhook(request):
     else:
         secret = settings._17TRACK_KEY
         given_token = request.headers.get("sign","")
-        signature = generate_signature(secret,None)
-        # if not compare_digest(given_token,signature):
-        #     return HttpResponseForbidden(
-        #         "Incorrect token in header.",
-        #         content_type="text/plain"
-        #     )
+
+        if signature := get_generated_signature(request.body,secret) != given_token:
+            return HttpResponseForbidden(
+                "Inconsistency in response signature.",
+                content_type="text/plain"
+            )
 
         TrackingWebhookMessage.objects.filter(
             received_at__lte = timezone.now() - dt.timedelta(days=7)
@@ -447,78 +458,29 @@ def process_webhook_payload(payload):
     tracking_number = data.get('number')
     carrier_code = data.get('carrier')
     status = data['track_info']['latest_status']['status']
-    estimated_delivery_date = data['track_info']['time_metrics']['estimated_delivery_date']['from']
+    sub_status = data['track_info']['latest_status']['sub_status']
+    delivery_estimate = data['track_info']['time_metrics']['estimated_delivery_date']['from']
     last_update_date = data['track_info']['latest_event']['time_utc']
     events = data['track_info']['tracking']['providers'][0]['events']
+    events_hash = data['track_info']['tracking']['providers'][0]['events_hash']
 
     try:
         carrier = Carrier.objects.get(carrier_code=carrier_code)
         tracker, _ = Tracker.objects.get_or_create(tracking_number=tracking_number,carrier=carrier)
-    except:
-        raise
+    except ObjectDoesNotExist as err:
+        return
 
     if event_type == 'TRACKING_UPDATED':
-        tracker.status = status
-        tracker.delivery_estimate = estimated_delivery_date
-        tracker.events = events
-        tracker.save()
-
-        # Create events matching tracker
-        for event in events:
-            event_object, _ = TrackingEvent.objects.update_or_create(
-                tracker = tracker,
-                time_utc = event['time_utc'],
-                location = event['location'],
-                defaults= {
-                    'description': event['description'],
-                    'stage': event['stage']
-                }
-            )
+        fields = {
+            'status': status,
+            'sub_status': sub_status,
+            'delivery_estimate': delivery_estimate,
+            'events': events,
+            'events_hash': events_hash
+        }
+        update_tracker_fields(tracker,fields)
 
     return
-
-
-
-
-
-    trackings = payload.get('trackings')
-    for t in trackings:
-        # shipment = t.get('shipment')
-        tNumber = shipment.get('trackingNumbers')[0]['tn']
-        events = t.get('events')
-
-        shipment_id = shipment.get('shipmentId')
-        print("Tracking Number: " + tNumber)
-        print("Shipment ID: " + shipment_id)
-        # purchase_request = PurchaseRequest .objects.filter(tracker_id=tracker_id).first()
-        tracker = Tracker.objects.filter(shipment_id=shipment_id)[0]
-        if tracker:
-            print("Tracker ID: " + tracker.id)
-            tracker.events = events
-            tracker.tracking_number = tNumber
-            event_data = get_event_data(events[0])
-            tracker.status = event_data.get('event_status')
-            carrier = Carrier.objects.filter(slug=event_data.get('courier_code'))
-            if carrier:
-                tracker.carrier = carrier
-            else:
-                tracker.carrier = None
-            tracker.save()
-
-def generate_signature(secret,payload):
-    # # given_token = request.headers.get("aftership-hmac-sha256", "")
-    # # body = request.body
-    # token_byte = bytes(secret, 'UTF-8')
-    # hashBytes = hmac.new(token_byte, payload, digestmod=hashlib.sha256)
-    # hash = base64.b64encode(hashBytes.digest()).decode()
-
-    hash = "Bearer " + secret
-
-    return hash
-
-def get_tracker(request,instance):
-    # tracker_id = instance.tracker_id
-    pass
 
 def generate_pr_pdf(request,slug):
     purchase_request = PurchaseRequest.objects.get(slug=slug)
@@ -758,27 +720,6 @@ def item_rows(purchase_request:PurchaseRequest):
 def fill_pr_pdf(request,purchase_request:PurchaseRequest):
     pass
 
-# def add_item_modal(request):
-#     print("we did something ")
-#     return
-
-# class ItemCreateView(BSModalCreateView):
-#     template_name = 'purchases/item_create.html'
-#     form_class = ItemModalForm
-#     suggess_message = 'Success'
-#     success_url = reverse_lazy('new_pr')
-
-# class LedgersCreateView(CreateView):
-#     model = Transaction
-#     form_class = LedgersForm
-#     template_name = 'purchases/ledgers_create.html'
-#     success_url = reverse_lazy('balances_list')
-
-#     # def post(self, request):
-#         # self.success_url = redirect('balances_list')
-#         # super().post(self.request.POST)
-#         # return redirect('balances_list')
-
 class BalancesListView(ListView):
     model = Balance
     template_name = 'purchases/balances_list.html'
@@ -809,21 +750,65 @@ def update_balance(request, pk:int):
 
     return redirect('balances_list')
 
-# def autocomplete_list(request, model):
-#     model_object = apps.get_model(app_label='purchases',model_name='requisitioner')
-#     # if not q:
-#     object_list = model_object.objects.all()
-#     # else:
-#     #     object_list = model_object.objects.filter(user__full_name=q)
+class TrackerListView(ListView):
+    context_object_name = 'tracker'
+    paginate_by = '10'
+    paginate_orphans = '2'
+    # queryset = Tracker.objects.order_by('-purchase_request__number','tracking_number')
 
-#     choices = []
-#     for object in object_list:
-#         choices.append('{ "value": %s, "text": "%s" }' % (object.id,object.user.get_full_name()))
+    def get_queryset(self):
+        pr_slug = self.request.GET.get('purchase-request', '')
+        if pr_slug:
+            purchase_request = get_object_or_404(PurchaseRequest,slug=pr_slug)
+            return Tracker.objects.filter(purchase_request=purchase_request).order_by('tracking_number')
+        else:
+            return Tracker.objects.order_by('-purchase_request__number','tracking_number')
 
-#     response = JsonResponse(choices, safe=False)
-#     return response
+    def get(self, request, *args, **kwargs):
 
-# class AccountAutoResponseView(AutoResponseView):
+        if not self.queryset:
+            self.queryset = self.get_queryset()
+
+        changed,url = paginate(self,'tracker_list')
+
+        if changed:
+            return url
+        else:
+            return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_list'] = context['paginator'].get_elided_page_range(context['page_obj'].number,on_each_side=2,on_ends=1)
+        return context
+
+class TrackerCreateView(CreateView):
+    form_class = TrackerForm
+    template_name = 'purchases/tracker_create.html'
+
+class TrackerDetailView(DetailView):
+    model = Tracker
+    template_name = "purchases/tracker_detail.html"
+    query_pk_and_slug = True
+
+def update_tracker(request,pk,*args, **kwargs):
+    tracker = get_object_or_404(Tracker, pk=pk)
+    response = update_tracking_details(tracker.tracking_number, tracker.carrier.carrier_code)
     
-#     def get(request,*args,**kwargs):
-#         self.widget = self.get_widget_or_404()
+    if response.get('code') == 0:
+        status = response.get('status')
+        sub_status = response.get('sub_status')
+        delivery_estimate = response.get('delivery_estimate')
+        events = response.get('events')
+        events_hash = response.get('events_hash')
+
+        fields = {
+            'status': status,
+            'sub_status': sub_status,
+            'delivery_estimate': delivery_estimate,
+            'events': events,
+            'events_hash': events_hash
+        }
+
+        update_tracker_fields(tracker,fields)
+
+    return redirect(tracker)

@@ -1,4 +1,5 @@
 {% extends "purchases/list_page.html" %}
+{% load purchases_extras %}
 {% block title %}
 Home
 {% endblock %}
@@ -29,7 +30,7 @@ Home
                     <td><a href="{{ o.vendor.get_absolute_url }}">{{ o.vendor }}</a></td>
                     <td>{{ o.get_status_display }}</td>
                     <td>{{ o.grand_total }}</td>
-                    <td>{{ o.tracker.status }}</td>
+                    <td>{{ o.tracker_set.first.status|camel_case_split }}</td>
                     <td class="text-center">
                       <a href="{% url 'update_pr' slug=o.slug %}">
                         <i class="fa-solid fa-pencil"></i>

@@ -389,13 +389,24 @@
         <li><a href="{% url 'home' %}" class="nav-link px-2 link-secondary">Purchase Requests</a></li>
         <li><a href="{% url 'all_vendors' %}" class="nav-link px-2 link-dark">Vendors</a></li>
         <li><a href="{% url 'all_requisitioners' %}" class="nav-link px-2 link-dark">Requisitioners</a></li>
+        <li><a href="{% url 'tracker_list' %}" class="nav-link px-2 link-dark">Trackers</a></li>
+        <li><a href="{% url 'simpleproducts' %}" class="nav-link px-2 link-dark">Items</a></li>
         {% comment %} <li><a href="{% url 'home' %}" class="nav-link px-2 link-dark">Purchase Requests</a></li> {% endcomment %}
         {% comment %} <li><a href="{% url 'product_list' %}" class="nav-link px-2 link-dark">Products</a></li> {% endcomment %}
+        <li>
+          <a href="#" class="nav-link px-2 link-secondary dropdown-toggle" id="dropdownSetups" data-bs-toggle="dropdown" aria-expanded="false">
+            Part Setups
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="dropdownSetups">
+            <a href="{% url 'list_part' %}" class="nav-link px-2 link-dark">Parts</a>
+            <a href="{% url 'list_setupsheet' %}" class="nav-link px-2 link-dark">Setup Sheets</a>
+          </ul>
+        </li>
       </ul>
 
-      <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">
+      {% comment %} <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">
         <input type="search" class="form-control" placeholder="Search..." aria-label="Search">
-      </form>
+      </form> {% endcomment %}
 
       <div class="dropdown text-end">
         <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">

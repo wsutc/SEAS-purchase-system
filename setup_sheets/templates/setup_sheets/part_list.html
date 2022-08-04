@@ -1,0 +1,35 @@
+{% extends "purchases/list_page.html" %}
+{% block title %}
+All Parts
+{% endblock %}
+{% block header %}Parts{% endblock header %}
+{% block new_url %}{% url 'create_part' %}{% endblock new_url %}
+
+{% block page %}
+
+    {% if object_list %}
+    <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+                <th class="col-1 text-center">Part Number</th>
+                <th class="col">Name</th>
+                <th>Latest Revision</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for v in object_list %}
+            <tr>
+                <td class="text-center"><a href="{{ v.get_absolute_url }}">{{ v.number }}</a></td>
+                <td>{{ v.name }}</td>
+                <td>{{ v.partrevision_set.latest }}</td>
+            </tr>
+        {% endfor %}
+          </tbody>
+        </table>
+        </div>
+    </div>
+    {% else %}
+        <p>No vendors have been added. Use the <a href="{% url 'create_new_setup_sheet' %}">Add Setup Sheet</a> form</p>
+    {% endif %}
+{% endblock %}

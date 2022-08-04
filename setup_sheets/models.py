@@ -2,7 +2,7 @@ from tkinter import CASCADE
 from django.db import models
 # from psutil import users
 from django.contrib.auth.models import User
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MinValueValidator
 from django.urls import reverse
 from purchases.models.models_metadata import Manufacturer
 from django.utils.text import slugify
@@ -62,14 +62,57 @@ class Material(models.Model):
     def __str__(self):
         return self.name
 
+class Part(models.Model):
+    slug = models.SlugField(null=True,editable=False)
+    name = models.CharField(max_length=150)
+    number = models.CharField(max_length=50,unique=True)
+    material = models.ForeignKey(Material,on_delete=models.PROTECT)
+
+    class Meta:
+        ordering = ['number']
+    
+    def save(self, *args, **kwargs):
+        value = self.name
+        self.slug = slugify(value, allow_unicode=True)
+        super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        kwargs = {
+            'pk': self.id,
+            'slug': self.slug
+        }
+        return reverse('part_detail', kwargs=kwargs)
+
+    def __str__(self) -> str:
+        value = "{part_number} | {name}".format(part_number = self.number, name = self.name)
+        return value
+
+class PartRevision(models.Model):
+    part = models.ForeignKey(Part,on_delete=models.CASCADE)
+    revision = models.CharField(max_length=10,blank=True)
+
+    class Meta:
+        ordering = ['revision']
+        get_latest_by = ['revision']
+        constraints = [
+            models.UniqueConstraint(fields = ('part','revision'),name='unique_part_revision')
+        ]
+    
+    def get_absolute_url(self):
+        return reverse("partrevision_detail", kwargs={"revision": self.revision, "slug": self.part.slug, "pk": self.part.pk})
+    
+
+    def __str__(self) -> str:
+        value = "{part_number} | Rev {revision}".format(part_number=self.part.number,revision=self.revision)
+        return value
+
 class SetupSheet(models.Model):
     name = models.CharField("Setup Name",max_length=50)
     slug = models.SlugField(max_length=255, default='', editable=False)
-    part_number = models.CharField(max_length=15)
-    part_revision = models.CharField(max_length=10)
+    part = models.ForeignKey(Part,on_delete=models.PROTECT,null=True)
+    part_revision = models.ForeignKey(PartRevision,on_delete=models.PROTECT,blank=True,null=True)
     program_name = models.CharField(max_length=30)
     operation = models.CharField(max_length=30)
-    material = models.ForeignKey(Material,on_delete=models.SET_NULL,null=True)
     size = models.TextField("Stock Size")
     created_by = models.ForeignKey(User,on_delete=models.SET_NULL,null=True,blank=True)
     created_date = models.DateTimeField(auto_now_add=True)
@@ -78,6 +121,9 @@ class SetupSheet(models.Model):
     tools = models.ManyToManyField(Tool,through='SetupSheetTool')
     notes = models.TextField()
     fixture = models.ForeignKey(Fixture, on_delete=models.SET_NULL, null=True)
+
+    class Meta:
+        ordering = ['part__number','operation']
 
     def get_absolute_url(self):
         kwargs = {
@@ -90,6 +136,10 @@ class SetupSheet(models.Model):
         value = self.name
         self.slug = slugify(value, allow_unicode=True)
         super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        value = self.name
+        return value
 
 class SetupSheetTool(models.Model):
     setup_sheet = models.ForeignKey(SetupSheet,on_delete=models.CASCADE)

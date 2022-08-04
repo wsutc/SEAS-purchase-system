@@ -1,0 +1,54 @@
+{% extends 'purchases/layout.html' %}
+{% block title %}List{% endblock %}
+{% block content %}
+
+<div class="row mb-3">
+    <h1 class="wsu-c-heading col-sm">All <span class="header-em">{% block header %}{% endblock %}</span></h1>
+    <a href="{% block new_url %}{% endblock %}" class="save btn btn-primary col-2">New</a>
+</div>
+
+{% block page %}{% endblock %}
+
+{% block pagination %}
+    {% if page_obj.paginator.num_pages > 1 %}
+    <nav aria-label="Purchase request list pages">
+      <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+        {% else %}
+        <li class="page-item disabled">
+          <a class="page-link" href="#" aria-label="Previous">
+        {% endif %}
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+        {% for page in page_list %}
+          {% if page != page_obj.paginator.ELLIPSIS %}
+            {% if page != page_obj.number %}
+              <li class="page-item"><a class="page-link" href="?page={{ page }}">{{ page }}</a></li>
+            {% else %}
+              <li class="page-item active" aria-current="page">
+                <a class="page-link" href="?page={{ page }}">{{ page }}</a>
+              </li>
+            {% endif %}
+          {% else %}
+              <li class="page-item disabled"><a href="#" class="page-link">{{ page_obj.paginator.ELLIPSIS }}</a></li>
+          {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+        {% else %}
+        <li class="page-item disabled">
+          <a class="page-link" href="#" aria-label="Next">
+        {% endif %}
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    {% endif %}
+{% endblock pagination %}
+
+{% endblock content %}

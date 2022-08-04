@@ -6,17 +6,7 @@ from djmoney.models.fields import MoneyField
 
 from phonenumber_field.modelfields import PhoneNumberField
 
-class State(models.Model):
-    name = models.CharField(max_length=50,unique=True)
-    abbreviation = models.CharField(max_length=2,unique=True)
-
-    class Meta:
-        ordering = ['name']
-
-    def __str__(self):
-        return self.name
-
-class Manufacturer(models.Model):
+class Manufacturer(models.Model):           # still used in `setup_sheets`
     name = models.CharField("Name of Manufacturer",max_length=50)
     slug = models.SlugField(max_length=255, unique=True, default='', editable=False)
     website = models.URLField("URL of Manufacturer",blank=True)
@@ -41,6 +31,16 @@ class Manufacturer(models.Model):
         self.slug = slugify(value, allow_unicode=True)
         super().save(*args, **kwargs)
 
+class State(models.Model):
+    name = models.CharField(max_length=50,unique=True)
+    abbreviation = models.CharField(max_length=2,unique=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
 class Vendor(models.Model):
     name = models.CharField("Name of Vendor",max_length=50)
     slug = models.SlugField(max_length=255, unique=True, default='', editable=False)
@@ -52,7 +52,6 @@ class Vendor(models.Model):
     street1 = models.CharField("Address 1",max_length=50,blank=True)
     street2 = models.CharField("Address 2 (optional)",max_length=50,blank=True)
     city = models.CharField("City",max_length=50,blank=True)
-    # state = models.CharField("State",max_length=50,blank=True)
     state = models.ForeignKey("State",State,blank=True,null=True)
     zip = models.CharField("ZIP Code",max_length=10,blank=True)
     email = models.EmailField(max_length=60,blank=True,null=True)
@@ -74,55 +73,6 @@ class Vendor(models.Model):
 
     def __str__(self):
         return self.name
-
-class Product(models.Model):
-    FREE = 'buyers_choice'
-    STRICT = 'strict'
-    ASK = 'ask_before'
-    SUBSTITUTIONS = (
-        (FREE, 'Substitute with like product'),
-        (STRICT, 'No substitutions allowed'),
-        (ASK, 'Ask before substituting'),
-    )
-
-    name = models.CharField("Name of Product",max_length=40)
-    slug = models.SlugField(max_length=255, unique=True, default='', editable=False)
-    description = models.TextField("Description of product",max_length=255)
-    created_date = models.DateTimeField("Date Product Created",auto_now_add=True)
-    original_manufacturer = models.ForeignKey(Manufacturer,on_delete=models.PROTECT)
-    specification = models.TextField("Detailed Specifications (required if no specification sheet)",blank=True,null=True)
-    spec_sheet = models.FileField("Specification Sheet",upload_to='products',blank=True,null=True)
-    picture = models.ImageField("Product Image (optional)",upload_to='products',blank=True)
-    substitution = models.CharField(
-        "Product Replacement",
-        choices=SUBSTITUTIONS,
-        default='buyers_choice',
-        max_length=150,
-        blank="True"
-    )
-    approved_substitutes = models.ForeignKey('self',null=True,on_delete=models.PROTECT,blank=True)
-    approved_vendors = models.ForeignKey(Vendor,on_delete=models.CASCADE,null=True)
-    vendor_number = models.CharField("Vendor ID Number",max_length=30,blank=True,null=True)
-    last_price = MoneyField("Last Price",max_digits=14, decimal_places=2, default_currency='USD')
-    # last_price = models.DecimalField("Last Price",decimal_places=2,max_digits=10)
-    link = models.URLField("Direct Link",blank=True)
-    identifier = models.CharField("Unique Identifier (ASIN/UPC/PN/etc.)",max_length=50,blank=True)
-    tax_exempt = models.BooleanField("Tax Exempt?",default=False)
-
-    def get_absolute_url(self):
-        kwargs = {
-            'pk': self.id,
-            'slug': self.slug
-        }
-        return reverse('product_detail', kwargs=kwargs)  
-
-    def save(self, *args, **kwargs):
-        value = self.name
-        self.slug = slugify(value, allow_unicode=True)
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return "%s [%s] (%s)" % (self.name,self.original_manufacturer,self.identifier)
 
 class Carrier(models.Model):
     name = models.CharField("Name of Carrier",max_length=50)
@@ -171,7 +121,7 @@ class Accounts(models.Model):
 
     def __str__(self):
         if self.program_workday:
-            return "%s (%s)" % (self.program_workday,self.account_title)
+            return "{0.program_workday} ({0.account_title})".format(self)
         elif self.grant:
             return "%s (%s)" % (self.grant,self.account_title)
         elif self.gift:

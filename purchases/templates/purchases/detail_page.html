@@ -52,7 +52,52 @@
                 </div>
             </div>
         </div>
-    </div>
+    {% comment %} </div> {% endcomment %}
 {% endblock related_pr_table %}
+
+{% block related_simpleproduct_table %}
+<div class="col-12">
+    <div class="h2">Related Products</div>
+        <div class="bd-example-snippet bd-code-snippet">
+            <div class="bd-example">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Identifier</th>
+                            <th>Status</th>
+                            <th scope="col">Purchase Request</th>
+                            <th style="text-align: center;">Link</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in object.purchaserequest_set.all %}
+                            {% for product in row.simpleproduct_set.all %}
+                                <tr>
+                                    <td>{{ product.name }}</td>
+                                    <td>{{ product.identifier }}</td>
+                                    <td>{{ row.get_status_display }}</td>
+                                    <td><a href="{{ row.get_absolute_url }}">{{ row }}</a></td>
+                                    {% if product.link %}
+                                        <td style="text-align: center;">
+                                            <a href="{{ product.link }}" target="_blank" rel="noopener noreferrer">
+                                                <i class="fa-solid fa-up-right-from-square" ></i>
+                                            </a>
+                                        </td>
+                                    {% else %}
+                                        <td></td>
+                                    {% endif %}
+                                    <td><a href="{% url 'copy_simpleproduct' pk=product.pk %}"><i class="fa-solid fa-copy"></i></a></td>
+                                </tr>
+                            {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% comment %} </div> {% endcomment %}
+{% endblock related_simpleproduct_table %}
 
 {% endblock %}

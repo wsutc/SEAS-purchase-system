@@ -20,6 +20,7 @@
         <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=ordered">Ordered</a></li>
         <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=shipped">Shipped</a></li>
         <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=received">Received</a></li>
+        <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=test">test</a></li>
     </ul>
 </div>
 
@@ -98,10 +99,15 @@
                                                 {% endif %}
                                             </td>
                                             <td class="text-capitalize">
-                                                Status: {{ tracker.status }}
+                                                Status: {{ tracker.status|default_if_none:"(unknown)"|camel_case_split }}
                                             </td>
                                         </tr>
+                                    {% empty %}
+                                        <tr></tr>
                                     {% endfor %}
+                                    {% if object.tracker_set.count %}
+                                        <tr><td><a class="btn btn-secondary" href="{% url 'tracker_list' %}?purchase-request={{ object.slug }}">Show Trackers</a></td></tr>
+                                    {% endif %}
                                 </table>
                             </td>
                         </tr>
@@ -199,7 +205,7 @@
                     </tr>
                     <tr>
                         <td colspan="3"></td>
-                        <td colspan="3" class="text-end">Sales Tax ({{ object.sales_tax_rate|numeric2percent }})</td>
+                        <td colspan="3" class="text-end">Sales Tax ({{ object.sales_tax_rate|numeric2percent:2 }})</td>
                         <td align="right">{{ object.sales_tax }}</td>
                     </tr>
                     <tr>
@@ -224,6 +230,7 @@
 </div>
 
 {% block related_pr_table %}{% endblock related_pr_table %}
+{% block related_simpleproduct_table %}{% endblock related_simpleproduct_table %}
 {% comment %} <pre> {% filter force_escape %} {% debug %} {% endfilter %} </pre> {% endcomment %}
 
 {% endblock %}
