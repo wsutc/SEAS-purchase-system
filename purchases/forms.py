@@ -10,7 +10,7 @@ from purchases.models.models_data import (
 from django.forms.models import inlineformset_factory
 from django.db.models import FilteredRelation, Q
 
-from bootstrap_modal_forms.forms import BSModalForm
+# from bootstrap_modal_forms.forms import BSModalForm
 
 from phonenumber_field.formfields import PhoneNumberField
 
@@ -107,10 +107,10 @@ class NewPRForm(forms.ModelForm):
     #     super().__init__(*args,**kwargs)
     #     self.fields['requisitioner'].initial = self.user
 
-class VendorModelForm(BSModalForm):
-    class Meta:
-        model = Vendor
-        fields = '__all__'
+# class VendorModelForm(BSModalForm):
+#     class Meta:
+#         model = Vendor
+#         fields = '__all__'
 
 class SimpleProductForm(forms.ModelForm):
     class Meta:
