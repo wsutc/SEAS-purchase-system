@@ -23,7 +23,10 @@ from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from .forms import CreateUserForm, PurchaseRequestAccountsFormset, SimpleProductCopyForm, SimpleProductFormset, TrackerForm, VendorModelForm
+from .forms import (
+    CreateUserForm, PurchaseRequestAccountsFormset,
+    SimpleProductCopyForm, SimpleProductFormset, TrackerForm#, VendorModelForm
+)
 
 import datetime as dt
 import json
