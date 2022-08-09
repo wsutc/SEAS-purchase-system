@@ -1,0 +1,41 @@
+{% extends "purchases/layout.html" %}
+{% block title %}
+List of Balances
+{% endblock %}
+{% block content %}
+
+    {% comment %} <div> {% endcomment %}
+        <h1 class="wsu-c-heading">Account Balances</h1>
+        {% comment %} <div style=text-align:right><a href="{% url 'add_mfg' %}" class="save btn btn-primary">New</a></div> {% endcomment %}
+    {% comment %} </div> {% endcomment %}
+
+    {% if object_list %}
+    <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+                <th scope="col">Account</th>
+                <th scope="col">Workday</th>
+                <th scope="col">Balance</th>
+                <th scope="col">Last Updated</th>
+                <th class="text-center" scope="col">Update</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for o in object_list %}
+                <tr>
+                    <td><a href="{{ o.get_absolute_url }}">{{ o.account.account_title }}</a></td>
+                    <td>{{ o.account.program_workday }}</td>
+                    <td>{{ o.balance }}</td>
+                    <td>{{ o.updated_datetime }}</td>
+                    <td class="text-center"><a href="{% url 'update_balance' pk=o.pk %}"><i class="fa-solid fa-arrows-rotate"></i></a></td>
+                </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        </div>
+    </div>
+    {% else %}
+        <p>No accounts have been added.</p>
+    {% endif %}
+{% endblock %}

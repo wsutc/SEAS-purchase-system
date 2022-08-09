@@ -1,7 +1,7 @@
 from django.forms import formset_factory
 from django.shortcuts import render
 
-from purchases.forms import NewPRIForm
+# from purchases.forms import NewPRIForm
 from .models import Item
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
@@ -19,13 +19,13 @@ class ItemDetailView(DetailView):
 class ItemListView(ListView):
     model = Item
 
-def manage_items(request):
-    ItemFormSet = formset_factory(NewPRIForm)
-    if request.method == 'POST':
-        formset = ItemFormSet(request.POST, request.FILES)
-        if formset.is_valid():
+# def manage_items(request):
+#     ItemFormSet = formset_factory(NewPRIForm)
+#     if request.method == 'POST':
+#         formset = ItemFormSet(request.POST, request.FILES)
+#         if formset.is_valid():
 
-            pass
-        else:
-            formset = ItemFormSet()
-        return render(request, 'new_pr.html', {'formset': formset})
+#             pass
+#         else:
+#             formset = ItemFormSet()
+#         return render(request, 'new_pr.html', {'formset': formset})

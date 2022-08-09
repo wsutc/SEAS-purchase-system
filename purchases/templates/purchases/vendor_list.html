@@ -1,11 +1,11 @@
-{% extends "purchases/layout.html" %}
+{% extends "purchases/list_page.html" %}
 {% block title %}
 All Vendors
 {% endblock %}
+{% block header %}Vendors{% endblock header %}
+{% block new_url %}{% url 'add_vendor' %}{% endblock new_url %}
 
-{% block content %}
-
-    <h1 class="wsu-c-heading">All Vendors</h1>
+{% block page %}
 
     {% if object_list %}
     <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
@@ -13,7 +13,9 @@ All Vendors
           <thead>
           <tr>
             <th scope="col">Vendor</th>
-            <th scope="col">Website</th>
+            <th class="col-1">Website</th>
+            <th class="col-1"></th>
+            <th class="col-1"></th>
           </tr>
           </thead>
           <tbody>
@@ -25,6 +27,16 @@ All Vendors
                 {% else %}
                     <td></td>
                 {% endif %}
+                <td class="text-center">
+                    <a href="{% url 'update_vendor' slug=v.slug pk=v.pk %}">
+                        <i class="fa-solid fa-pencil"></i>
+                    </a>
+                </td>
+                <td>
+                    <a href="{% url 'delete_vendor' slug=v.slug pk=v.pk %}?next={{ request.get_full_path }}">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </a>
+                </td>
             </tr>
         {% endfor %}
           </tbody>

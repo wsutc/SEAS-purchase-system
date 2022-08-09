@@ -34,7 +34,7 @@
 		"scope": "html,django-html",
 		"prefix": "div",
 		"body": [
-			"<div class=\"${1:col}\">$0</div>"
+			"<div$1>$0</div>"
 		],
 		"description": "Standard div template"
 	},
@@ -42,7 +42,7 @@
 	"bracket": {
 		"scope": "html,django-html",
 		"prefix": "brack",
-		"body": "{{ $0 }}",
+		"body": "{{ $1 }}$0",
 		"description": "Brackets!"
 	}
 }

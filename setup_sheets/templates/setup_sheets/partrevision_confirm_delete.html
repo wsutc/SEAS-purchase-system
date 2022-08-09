@@ -1,0 +1,13 @@
+{% extends "purchases/layout.html" %}
+{% block title %}
+Delete {{ object }}
+{% endblock %}
+{% block content %}
+
+<form method="post">{% csrf_token %}
+    <p>Are you sure you want to delete "{{ object }}"?</p>
+    {{ form }}
+    <input class="btn btn-primary save" type="submit" value="Confirm">
+</form>
+
+{% endblock %}

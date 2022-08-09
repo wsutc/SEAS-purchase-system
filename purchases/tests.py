@@ -4,7 +4,7 @@ from django.test import TestCase, override_settings, Client
 from django.contrib.auth.models import User
 from django.urls import reverse
 from purchases import urls
-from purchases.models import Department, PurchaseOrder, PurchaseRequest, Product, Requisitioner, SpendCategory, TrackingWebhookMessage, Urgency, Vendor
+from purchases.models.models import Department, PurchaseOrder, PurchaseRequest, Product, Requisitioner, SpendCategory, TrackingWebhookMessage, Urgency, Vendor
 from model_bakery import baker
 from django.contrib.auth.models import Permission
 

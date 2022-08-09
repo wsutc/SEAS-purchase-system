@@ -6,7 +6,7 @@ from django.db import migrations, models
 import django.db.models.deletion
 import djmoney.models.fields
 import phonenumber_field.modelfields
-import purchases.models
+import purchases.models.models
 
 
 class Migration(migrations.Migration):
@@ -179,7 +179,7 @@ class Migration(migrations.Migration):
                 ('city', models.CharField(blank=True, max_length=50, verbose_name='City')),
                 ('zip', models.CharField(blank=True, max_length=10, verbose_name='ZIP Code')),
                 ('email', models.EmailField(blank=True, max_length=60, null=True)),
-                ('state', models.ForeignKey(blank=True, null=True, on_delete=purchases.models.State, to='purchases.state')),
+                ('state', models.ForeignKey(blank=True, null=True, on_delete=purchases.models.models_metadata.State, to='purchases.state')),
             ],
         ),
         migrations.CreateModel(
@@ -286,7 +286,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='purchaseorder',
             name='carrier',
-            field=models.ForeignKey(blank=True, null=True, on_delete=purchases.models.Carrier, to='purchases.carrier'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=purchases.models.models_metadata.Carrier, to='purchases.carrier'),
         ),
         migrations.AddField(
             model_name='purchaseorder',
@@ -306,7 +306,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='purchaseorder',
             name='vendor',
-            field=models.ForeignKey(on_delete=purchases.models.Vendor, to='purchases.vendor'),
+            field=models.ForeignKey(on_delete= purchases.models.models_metadata.Vendor, to='purchases.vendor'),
         ),
         migrations.AddField(
             model_name='product',

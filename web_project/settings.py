@@ -37,7 +37,7 @@ SECRET_KEY = 'django-insecure-=575&#l3pkg&6i%bmymmf+o@7$)tj8oxd=tvsn(n^0!3d8n013
 DEBUG = True
 TEMPLATE_DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1','d4e0-69-166-40-1.ngrok.io']
+ALLOWED_HOSTS = ['127.0.0.1','329d-69-166-40-1.ngrok.io']
 
 
 # Application definition
@@ -60,6 +60,8 @@ INSTALLED_APPS = [
     'setup_sheets',
     'inventory',
     'django_mysql',
+    'bootstrap_modal_forms',
+    'django_select2',
 ]
 
 MIDDLEWARE = [
@@ -193,3 +195,7 @@ AFTERSHIP_KEY = env('AFTERSHIP_KEY')
 AFTERSHIP_WEBHOOK_SECRET = env('AFTERSHIP_WEBHOOK_SECRET')
 SHIP24_KEY = env('SHIP24_KEY')
 SHIP24_WEBHOOK_SECRET = env('SHIP24_WEBHOOK_SECRET')
+
+SMARTSHEET_SHEET_NAME = env('SMARTSHEET_SHEET_NAME')
+
+_17TRACK_KEY = env('_17TRACK_KEY')

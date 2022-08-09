@@ -4,7 +4,8 @@ from django.utils.text import slugify
 
 from django.core.validators import MinValueValidator #, MaxValueValidator
 
-from purchases.models import Manufacturer, Product, PurchaseOrder
+from purchases.models.models_metadata import Manufacturer
+from purchases.models.models_data import PurchaseRequest#, PurchaseOrder
 
 # Create your models here.
 class Department(models.Model):
@@ -59,15 +60,16 @@ class Item(models.Model):
     room = models.ForeignKey(Room,on_delete=models.SET_NULL,blank=False,null=True)
     description = models.TextField(blank=False)
     manufacturer = models.ForeignKey(Manufacturer,on_delete=models.SET_NULL,blank=True,null=True)
-    product = models.ForeignKey(Product,on_delete=models.SET_NULL,blank=True,null=True)
+    # product = models.ForeignKey(Product,on_delete=models.SET_NULL,blank=True,null=True)
     accessory = models.ManyToManyField("self",through="EquipmentAccessory",through_fields=("item","accessory"))
     equipment_tag = models.CharField(max_length=30,blank=True,null=True)
     department = models.ForeignKey(Department,on_delete=models.PROTECT,blank=True)
     serial_number = models.CharField(max_length=50,blank=True,null=True)
     manufacture_date = models.DateField(blank=True,null=True)
     purchase_date = models.DateField(blank=True,null=True)
-    product = models.ForeignKey(Product,on_delete=models.SET_NULL,blank=True,null=True)
-    purchase_order = models.ForeignKey(PurchaseOrder,on_delete=models.SET_NULL,blank=True,null=True)
+    # product = models.ForeignKey(Product,on_delete=models.SET_NULL,blank=True,null=True)
+    # purchase_order = models.ForeignKey(PurchaseOrder,on_delete=models.SET_NULL,blank=True,null=True)
+    purchase_request = models.ForeignKey(PurchaseRequest,on_delete=models.SET_NULL,blank=True,null=True)
 
     ACCESSORY = 'accessory'
     CONSUMABLE = 'consumable'

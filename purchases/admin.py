@@ -1,32 +1,82 @@
-from django.contrib import admin
+from typing import Set
+from django.contrib import admin, messages
 
-from .models import Accounts, Carrier, Department, Manufacturer, PurchaseOrderItems, PurchaseRequestAccounts, Requisitioner, SpendCategory, Tracker, Urgency, Vendor, Product, PurchaseRequest, PurchaseOrder, State, PurchaseRequestItems, Unit
-from import_export.admin import ImportExportModelAdmin
+from purchases import tracking
+
+from .models.models_metadata import (
+    Accounts, Carrier, Department, DocumentNumber,
+    Urgency, Vendor, State, Unit
+)
+from .models.models_data import (
+    Balance, PurchaseRequest, Transaction,
+    PurchaseRequestAccounts, SimpleProduct,
+    SpendCategory, Requisitioner
+)
+from .models.models_apis import Tracker, TrackingEvent, create_events, update_tracker_fields
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-@admin.register(Manufacturer)
-class ManufacturerAdmin(admin.ModelAdmin):
-    list_display = ['name', 'website']
+class PurchaseRequestInline(admin.TabularInline):
+    model = PurchaseRequest
+    extra = 0
 
 @admin.register(Vendor)
 class VendorAdmin(admin.ModelAdmin):
     list_display = ['name', 'website', 'state']
-
-@admin.register(Product)
-class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'identifier', 'approved_vendors']
+    inlines = [PurchaseRequestInline]
 
 @admin.register(State)
 class StateAdmin(admin.ModelAdmin):
     list_display = ['name', 'abbreviation']
 
-class PurchaseRequestItemInline(admin.TabularInline):
-    model = PurchaseRequestItems
+class SimpleProductInline(admin.TabularInline):
+    model = SimpleProduct
+    extra = 0
+
+class PurchaseRequestAccountsInline(admin.TabularInline):
+    model = PurchaseRequestAccounts
+    extra = 0
+
+@admin.action(description="Change Selected to \'Awaiting Approval\'")
+def make_awaiting_approval(modeladmin, request, queryset):
+    queryset.update(status='1')
+
+@admin.action(description="Change Selected to \'Approved\'")
+def make_approved(modeladmin, request, queryset):
+    queryset.update(status='2')
+
+@admin.action(description="Change Selected to \'Ordered\'")
+def make_ordered(modeladmin, request, queryset):
+    queryset.update(status='6')
+
+@admin.action(description="Update Totals")
+def save_requests(modeladmin, request, queryset):
+    for r in queryset:
+        r.update_totals()
+        # r.update_transactions()
+
+class TrackerInline(admin.TabularInline):
+    model = Tracker
+    extra = 0
+    exclude = ['events','shipment_id']
 
 @admin.register(PurchaseRequest)
 class PurchaseRequestAdmin(admin.ModelAdmin):
-    list_display = ['requisitioner', 'number', 'slug']
-    inlines = [PurchaseRequestItemInline]
+    list_display = ['number', 'vendor', 'grand_total', 'status','requisitioner', 'slug']
+    inlines = [SimpleProductInline,PurchaseRequestAccountsInline,TrackerInline]
+    actions = [make_awaiting_approval,save_requests] #,update_trackers]
+
+    @admin.display(description='Tracking Status')
+    def get_tracker_status(self, obj):
+        if obj.tracker:
+            return obj.tracker.status
+        return
+
+    @admin.display(description='Update Tracker(s)')
+    def update_tracker(self, obj):
+        if obj.tracker:
+            tracking.update_tracking_details(obj.tracker)
+            return obj.tracker.status
+        return
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
@@ -34,18 +84,6 @@ class PurchaseRequestAdmin(admin.ModelAdmin):
     def save_related(self, request, form, formsets, change):
         super().save_related(request, form, formsets, change)
         form.instance.update_totals()
-
-@admin.register(PurchaseRequestItems)
-class PurchaseRequestItemsAdmin(admin.ModelAdmin):
-    list_display = ['product','price']
-
-class PurchaseOrderItemInline(admin.TabularInline):
-    model = PurchaseOrderItems
-
-@admin.register(PurchaseOrder)
-class PurchaseOrderAdmin(admin.ModelAdmin):
-    list_display = ['number','source_purchase_request','vendor']
-    inlines = [PurchaseOrderItemInline]
 
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
@@ -55,23 +93,35 @@ class RequisitionerInline(admin.StackedInline):
     model = Requisitioner
 
 class UserAdmin(BaseUserAdmin):
-    inlines = (RequisitionerInline,)
+    inlines = [RequisitionerInline]
+
+@admin.action(description="Save Selected")
+def save_requisitioners(modeladmin, request, queryset):
+    for q in queryset:
+        q.save()
 
 @admin.register(Requisitioner)
 class RequisitionerAdmin(admin.ModelAdmin):
     list_display = ['user','department']
+    actions = [save_requisitioners]
+    inlines = [PurchaseRequestInline]
+
+class PurchaseRequestAccountsInline(admin.TabularInline):
+    model = PurchaseRequestAccounts
+    extra = 0
 
 @admin.register(Accounts)
 class AccountsAdmin(admin.ModelAdmin):
-    list_display = ['account']
+    list_display = ['account','account_title','program_workday','grant','gift']
+    inlines = [PurchaseRequestAccountsInline]
 
 @admin.register(SpendCategory)
 class SpendCategoryAdmin(admin.ModelAdmin):
-    list_display = ['code','description']
+    list_display = ['code','description','object','subobject']
 
 @admin.register(PurchaseRequestAccounts)
 class PurchaseRequestAccountsAdmin(admin.ModelAdmin):
-    list_display = ['purchase_request']
+    list_display = ['accounts','purchase_request']
 
 @admin.register(Unit)
 class UnitsAdmin(admin.ModelAdmin):
@@ -81,10 +131,93 @@ class UnitsAdmin(admin.ModelAdmin):
 class UrgencyAdmin(admin.ModelAdmin):
     list_display = ['name','note']
 
+class HasTrackerListFilter(admin.SimpleListFilter):
+    title = 'Has Tracker'
+    parameter_name = 'has-tracker'
+
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes','Yes'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(tracker__isnull = False).distinct()
+
 @admin.register(Carrier)
 class CarrierAdmin(admin.ModelAdmin):
-    list_display = ['name']
+    list_display = ['name','carrier_code']
+    inlines = [TrackerInline]
+    search_fields = ['name']
+    list_filter = (HasTrackerListFilter,)
+
+class TrackingEventInline(admin.TabularInline):
+    model = TrackingEvent
+    extra = 0
+
+@admin.action(description="Update Tracker(s)")
+def update_selected_trackers(modeladmin, request, queryset):
+    list = []
+    for q in queryset:
+        d = (
+            q.tracking_number,
+            q.carrier.carrier_code
+        )
+        list.append(d)
+    updated_trackers = tracking.bulk_update_tracking_details(list)
+    tracker_objs = []
+    event_update_count = 0
+    for t in updated_trackers:
+        carrier = Carrier.objects.get(carrier_code=t.get('carrier_code'))
+        t_obj = Tracker.objects.get(tracking_number=t.get('tracking_number'),carrier=carrier)
+        t_obj.status = t.get('status')
+        t_obj.sub_status = t.get('sub_status')
+        t_obj.delivery_estimate = t.get('delivery_estimate')
+        t_obj.events = t.get('events')
+
+        events_hash = t.get('events_hash')
+
+        if t_obj.events_hash != str(events_hash):
+            event_update_count += 1
+            _,_ = create_events(t_obj,t.get('events'))
+            t_obj.events_hash = t.get('events_hash')
+
+        tracker_objs.append(t_obj)
+
+    update_count = Tracker.objects.bulk_update(tracker_objs,['status','sub_status','delivery_estimate','events','events_hash'])
+
+    if update_count == 0:
+        messages.add_message(request, messages.WARNING, "No objects found to update!")
+    elif update_count == 1:
+        messages.add_message(request, messages.SUCCESS, "{0:d} object updated.".format(update_count))
+    else:
+        messages.add_message(request, messages.SUCCESS, "{0:d} objects updated.".format(update_count))
+
+    messages.add_message(request, messages.SUCCESS, "{0} tracker(s) had updated events.".format(event_update_count))
 
 @admin.register(Tracker)
 class TrackerAdmin(admin.ModelAdmin):
-    list_display = ['id','shipment_id','status']
+    list_display = ['id','status','sub_status','carrier','purchase_request']
+    inlines = [TrackingEventInline]
+    actions = [update_selected_trackers]
+
+@admin.register(TrackingEvent)
+class TrackingEventAdmin(admin.ModelAdmin):
+    list_display = ['tracker','description']
+
+@admin.register(SimpleProduct)
+class SimpleProductAdmin(admin.ModelAdmin):
+    list_display = ['name','link','identifier','purchase_request']
+
+@admin.register(Balance)
+class BalancesAdmin(admin.ModelAdmin):
+    list_display = ['account','balance','updated_datetime']
+
+@admin.register(Transaction)
+class TransactionAdmin(admin.ModelAdmin):
+    list_display = ['balance','processed_datetime','purchase_request','total_value']
+
+@admin.register(DocumentNumber)
+class DocumentNumberAdmin(admin.ModelAdmin):
+    list_display = ['document','prefix','next_counter','last_number']

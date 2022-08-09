@@ -1,18 +1,34 @@
 {% extends 'purchases/detail_page.html' %}
+{% load purchases_extras %}
 {% block title %}Purchase Request {{ object.number }}{% endblock %}
 {% block header %}Purchase Request{% endblock %}
 {% block number %}{{ object.number }}{% endblock %}
 {% block previous %}{{ object.get_previous_by_created_date.get_absolute_url }}{% endblock %}
 {% block next %}{{ object.get_next_by_created_date.get_absolute_url }}{% endblock %}
+{% block edit %}{% url 'update_pr' slug=object.slug %}{% endblock %}
+{% block delete %}{% url 'delete_pr' slug=object.slug %}{% endblock delete %}
 {% block page %}
 
-<a href="{% url 'update_pr' slug=object.slug %}">Edit</a>
 
-<a href="{% url 'generate_pdf' slug=object.slug %}">PDF</a>
+<div class="dropdown align-right">
+    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        {{ object.get_status_display }}
+    </button>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=awaiting-approval">Submit</a></li>
+        <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=approved">Approved</a></li>
+        <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=ordered">Ordered</a></li>
+        <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=shipped">Shipped</a></li>
+        <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=received">Received</a></li>
+        <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=test">test</a></li>
+    </ul>
+</div>
+
+{% comment %} <a href="{% url 'generate_pdf' slug=object.slug %}">PDF</a> {% endcomment %}{% comment %}someday!!!{% endcomment %}
 
 <div class="row mb-3">
     <div class="col-4">
-        Created {{ object.created_date }}
+        Created {{ object.created_date|date:"DATE_FORMAT" }}
     </div>
     <div class="col-12">
         <div class="bd-example-snippet bd-code-snippet">
@@ -29,7 +45,7 @@
                                 {% endif %}
                             </td>
                             <td style="width: 10em" align="right">Requestor</td>
-                            <td>{{ object.requisitioner.user.get_full_name }}</td>
+                            <td><a href="{{ object.requisitioner.get_absolute_url }}">{{ object.requisitioner.user.get_full_name }}</a></td>
                         </tr>
                         <tr>
                             <td align="right">Vendor</td>
@@ -49,7 +65,7 @@
                                 {% endif %}
                             </td>
                             <td align="right">Phone</td>
-                            <td>{{ object.requisitioner.phone }}</td>
+                            <td>{{ object.requisitioner.phone|default_if_none:"" }}</td>
                         </tr>
                         <tr>
                             <td align="right">Department</td>
@@ -66,6 +82,34 @@
                         <tr>
                             <td align="right">Website</td>
                             <td><a href="{{ object.vendor.website }}" target="_blank" rel="noopener noreferrer">{{ object.vendor.website }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a></td>
+                        </tr>
+                        <tr>
+                            <td align="right">Shipping</td>
+                            <td>
+                                <table>
+                                    {% for tracker in object.tracker_set.all %}
+                                        <tr>
+                                            <td>
+                                                {% if tracker.get_tracking_link %}
+                                                    <a href="{{ tracker.get_tracking_link }}" target="_blank" rel="noopener noreferrer">
+                                                        {{ tracker.carrier }} {{ tracker.tracking_number }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i>
+                                                    </a>
+                                                {% else %}
+                                                    {{ tracker.carrier }} {{ tracker.tracking_number }}
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-capitalize">
+                                                Status: {{ tracker.status|default_if_none:"(unknown)"|camel_case_split }}
+                                            </td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr></tr>
+                                    {% endfor %}
+                                    {% if object.tracker_set.count %}
+                                        <tr><td><a class="btn btn-secondary" href="{% url 'tracker_list' %}?purchase-request={{ object.slug }}">Show Trackers</a></td></tr>
+                                    {% endif %}
+                                </table>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -94,10 +138,10 @@
                             <td>{{ budget.accounts.gift }}</td>
                             <td>{{ budget.accounts.grant }}</td>
                             <td>{{ budget.spend_category.code }}</td>
-                            {% if budget.distribution_amount %}
-                                <td>{{ budget.distribution_amount }}</td>
-                            {% else %}
-                                <td>{{ budget.distribution_percent }}%</td>
+                            {% if budget.distribution_type == 'percent' %}
+                                <td>{{ budget.distribution_input|percent:2 }}</td>
+                            {% elif budget.distribution_type == 'amount' %}
+                                <td>{{ budget.distribution_input|currency }}</td>
                             {% endif %}
                         </tr>
                     {% endfor %}
@@ -107,7 +151,7 @@
         </div>
     </div>
 
-    {% if debug %}<div>debug ->count:{{ object.purchaserequestitems_set.count }}</div>{% endif %}
+    {% if debug %}<div>debug ->count:{{ object.simpleproduct_set.count }}</div>{% endif %}
     <div class="col-12">
         <div class="bd-example-snippet bd-code-snippet">
             <div class="bd-example">
@@ -115,9 +159,9 @@
                 <thead>
                     <tr>
                         <th class="text-center" style="width: 40%;">Description</th>
-                        <th class="text-center" style="width:  5%;">Link</th>
-                        <th class="text-center" style="width: 10%;">Identifier</th>
-                        <th class="text-center" style="width: 10%;">Vendor ID</th>
+                        <th class="text-center" style="width: 10%;">Link</th>
+                        <th class="text-center" style="width: 15%;">Identifier</th>
+                        {% comment %} <th class="text-center" style="width: 10%;">Vendor ID</th> {% endcomment %}
                         <th class="text-center" style="width:  5%;">QTY</th>
                         <th class="text-center" style="width: 10%;">Unit</th>
                         <th class="text-center" style="width: 10%;">Unit Price</th>
@@ -125,20 +169,24 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in object.purchaserequestitems_set.all %}
+                    {% for item in object.simpleproduct_set.all %}
                         <tr>
-                            <td class="text-truncate"><a href="{{ item.product.get_absolute_url }}">{{ item.product.name }}</a></td>
-                            {% if item.product.link %}
-                                <td style="text-align: center;"><a href="{{ item.product.link }}" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-up-right-from-square" ></i></a></td>
+                            <td class="text-truncate">{{ item.name }}</td>
+                            {% if item.link %}
+                                <td style="text-align: center;">
+                                    <a href="{{ item.link }}" target="_blank" rel="noopener noreferrer">
+                                        <i class="fa-solid fa-up-right-from-square" ></i>
+                                    </a>
+                                </td>
                             {% else %}
                                 <td></td>
                             {% endif %}
-                            <td align="center">{{ item.product.identifier }}</td>
-                            <td align="center">{{ item.product.vendor_number|default_if_none:"" }}</td>
-                            <td align="right">{{ item.quantity }}</td>
+                            <td align="center">{{ item.identifier|default_if_none:"" }}</td>
+                            {% comment %} <td align="center">{{ item.vendor_number|default_if_none:"" }}</td> {% endcomment %}
+                            <td align="center">{{ item.quantity|floatformat }}</td>
                             <td align="center">{{ item.unit.unit }}</td>
-                            <td align="right">{{ item.price }}</td>
-                            <td align="right">{{ item.extend }}</td>
+                            <td align="right">{{ item.unit_price|currency }}</td>
+                            <td align="right">{{ item.extended_price }}</td>
                         </tr>
                     {% empty %}
                         <tr>Please edit Purchase Request to add items.</tr>
@@ -146,22 +194,22 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="4">&nbsp;</td>
+                        <td colspan="3">&nbsp;</td>
                         <td colspan="3" class="text-end">Subtotal</td>
                         <td align="right">{{ object.subtotal }}</td>
                     </tr>
                     <tr>
-                        <td colspan="4"></td>
+                        <td colspan="3"></td>
                         <td colspan="3" class="text-end">Shipping</td>
                         <td align="right">{{ object.shipping }}</td>
                     </tr>
                     <tr>
-                        <td colspan="4"></td>
-                        <td colspan="3" class="text-end">Sales Tax</td>
+                        <td colspan="3"></td>
+                        <td colspan="3" class="text-end">Sales Tax ({{ object.sales_tax_rate|numeric2percent:2 }})</td>
                         <td align="right">{{ object.sales_tax }}</td>
                     </tr>
                     <tr>
-                        <td colspan="4"></td>
+                        <td colspan="3"></td>
                         <td colspan="3" class="text-end">Grand Total</td>
                         <td align="right">{{ object.grand_total }}</td>
                     </tr>
@@ -181,7 +229,8 @@
     </div>
 </div>
 
-
+{% block related_pr_table %}{% endblock related_pr_table %}
+{% block related_simpleproduct_table %}{% endblock related_simpleproduct_table %}
 {% comment %} <pre> {% filter force_escape %} {% debug %} {% endfilter %} </pre> {% endcomment %}
 
 {% endblock %}
