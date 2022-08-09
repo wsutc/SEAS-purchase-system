@@ -2,7 +2,7 @@ import base64
 import hashlib
 import hmac
 import os
-import urllib3
+# import urllib3
 from http.client import HTTPResponse
 import io
 from itertools import product
