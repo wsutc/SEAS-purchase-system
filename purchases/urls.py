@@ -4,7 +4,7 @@ from purchases.views import (
     BalancesDetailView, BalancesListView, LedgersListView, PurchaseRequestDeleteView,
     PurchaseRequestListView, PurchaseRequestUpdateView, RequisitionerCreateView,
     RequisitionerDetailView, RequisitionerListView, SimpleProductCopyView,
-    SimpleProductListView, TrackerCreateView, TrackerDetailView, TrackerListView, VendorCreateView, VendorModalCreateView,
+    SimpleProductListView, TrackerCreateView, TrackerDetailView, TrackerListView, VendorCreateView,
     VendorDetailView, VendorListView, PurchaseRequestDetailView, VendorDeleteView,
     PurchaseRequestCreateView, VendorUpdateView, tracking_webhook
 )
@@ -18,7 +18,7 @@ urlpatterns = [
     path("vendor/<int:pk>-<str:slug>/", VendorDetailView.as_view(), name='vendor_detail'),
     path("vendor/<int:pk>-<str:slug>/update", VendorUpdateView.as_view(), name='update_vendor'),
     path("vendor/<int:pk>-<str:slug>/delete", VendorDeleteView.as_view(), name='delete_vendor'),
-    path("vendor/modal-new/", VendorModalCreateView.as_view(), name="modal_create_vendor"),
+    # path("vendor/modal-new/", VendorModalCreateView.as_view(), name="modal_create_vendor"),
     path("new-purchase-request/", PurchaseRequestCreateView.as_view(), name="new_pr"),
     path("purchase-request/<slug:slug>", PurchaseRequestDetailView.as_view(), name="purchaserequest_detail"),
     path("purchase-request/<slug:slug>/update", PurchaseRequestUpdateView.as_view(), name="update_pr"),

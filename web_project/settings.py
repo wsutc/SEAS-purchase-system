@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 import environ
 import os
 from pathlib import Path
+from django.contrib.messages import constants as message_constants
 
 env = environ.Env(
     DEBUG=(bool, False)
@@ -199,3 +200,11 @@ LOGIN_REDIRECT_URL = '/'
 # SMARTSHEET_SHEET_NAME = env('SMARTSHEET_SHEET_NAME')
 
 _17TRACK_KEY = env('_17TRACK_KEY')
+
+MESSAGE_TAGS = {
+    message_constants.SUCCESS: 'alert alert-success',
+    message_constants.ERROR: 'alert alert-danger',
+    message_constants.WARNING: 'alert alert-warning',
+    message_constants.INFO: 'alert alert-info',
+    message_constants.DEBUG: 'alert alert-light',
+}

@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib import messages
+from django.http import HttpResponse
 from django.urls import reverse
 from django.utils.text import slugify
 
@@ -42,6 +43,10 @@ class Tracker(models.Model):
 
     def save(self, *args, **kwargs):
         if self._state.adding:          # only register as new tracker if this is a new tracker
+            # No post-save get tracking info signal or otherwise
+            # is run because it won't be available right away with a
+            # newly created tracker. Wait for webhook or manually
+            # update if required.
 
             n,c,m,r = register_tracker(self.tracking_number, self.carrier.carrier_code)
 
@@ -54,8 +59,15 @@ class Tracker(models.Model):
                 )
                 self.tracking_number = n
                 self.id = n
+                # messages.add_message(self.request, messages.SUCCESS, "Tracker {} successfully registered.".format(self.tracking_number.capitalize()))
             else:
-                raise KeyError('No valid trackers created. Is the tracker already registered?')
+                raise HttpResponse("Unable to create a tracker.")
+                # messages.add_message(
+                #     self.request,
+                #     messages.ERROR,
+                #     "Tracker {} not able to register, please make sure it's not already registered."
+                #     .format(self.tracking_number.capitalize())
+                # )
 
         super().save(*args, **kwargs)
 
