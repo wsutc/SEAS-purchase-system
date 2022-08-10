@@ -8,7 +8,7 @@ from purchases.models.models_data import (
     Vendor, SimpleProduct
 )
 from django.forms.models import inlineformset_factory
-from django.db.models import FilteredRelation, Q
+# from django.db.models import FilteredRelation, Q
 
 from bootstrap_modal_forms.forms import BSModalForm
 
@@ -118,6 +118,7 @@ class SimpleProductForm(forms.ModelForm):
         fields = (
             'name',
             'identifier',
+            'manufacturer',
             'link',
             'unit_price',
             'quantity',
@@ -126,6 +127,7 @@ class SimpleProductForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'style':'width:100%'}),
             'identifier': forms.TextInput(attrs={'style':'width:100%'}),
+            'manufacturer': forms.TextInput(attrs={'style':'width:100%'}),
             'link': forms.URLInput(attrs={'style':'width:100%'}),
             'unit_price': forms.NumberInput(attrs={'class':'currency'}),
             'quantity': forms.NumberInput(attrs={'class':'quantity'})
@@ -184,6 +186,7 @@ class SimpleProductCopyForm(forms.ModelForm):
             'purchase_request',
             'name',
             'identifier',
+            'manufacturer',
             'link',
             'quantity',
             'unit_price'
@@ -204,6 +207,7 @@ class SimpleProductCopyForm(forms.ModelForm):
         )
         self.fields['link'].disabled
         self.fields['identifier'].disabled
+        self.fields['manufacturer'].disabled
 
     def clean(self):
         purchase_request = self.cleaned_data.get('purchase_request')

@@ -386,11 +386,22 @@
       </a>
 
       <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
-        <li><a href="{% url 'home' %}" class="nav-link px-2 link-secondary">Purchase Requests</a></li>
+        <li>
+          <a href="#" class="nav-link px-2 link-secondary dropdown-toggle" id="dropdownPurchaseRequests" data-bs-toggle="dropdown" aria-expanded="false">
+            Purchase Requests
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="dropdownPurchaseRequests">
+            <a href="{% url 'new_pr' %}" class="nav-link px-2 link-dark">New</a>
+            <a href="{% url 'home' %}" class="nav-link px-2 link-dark">List</a>
+            <a href="{% url 'tracker_list' %}" class="nav-link px-2 link-dark">Trackers</a>
+            <a href="{% url 'simpleproducts' %}" class="nav-link px-2 link-dark">Items</a>
+          </ul>
+        </li>
+        {% comment %} <li><a href="{% url 'home' %}" class="nav-link px-2 link-secondary">Purchase Requests</a></li> {% endcomment %}
         <li><a href="{% url 'all_vendors' %}" class="nav-link px-2 link-dark">Vendors</a></li>
         <li><a href="{% url 'all_requisitioners' %}" class="nav-link px-2 link-dark">Requisitioners</a></li>
-        <li><a href="{% url 'tracker_list' %}" class="nav-link px-2 link-dark">Trackers</a></li>
-        <li><a href="{% url 'simpleproducts' %}" class="nav-link px-2 link-dark">Items</a></li>
+        {% comment %} <li><a href="{% url 'tracker_list' %}" class="nav-link px-2 link-dark">Trackers</a></li> {% endcomment %}
+        {% comment %} <li><a href="{% url 'simpleproducts' %}" class="nav-link px-2 link-dark">Items</a></li> {% endcomment %}
         {% comment %} <li><a href="{% url 'home' %}" class="nav-link px-2 link-dark">Purchase Requests</a></li> {% endcomment %}
         {% comment %} <li><a href="{% url 'product_list' %}" class="nav-link px-2 link-dark">Products</a></li> {% endcomment %}
         <li>
@@ -486,3 +497,15 @@
 		</nav>
 	</footer>
 </div>
+
+{% comment %} <script>
+  $('.toast').toast();
+
+  window.onload = function() {
+    var toastElList = [].slice.call(document.querySelectorAll('.toast'))
+    var toastList = toastElList.map(function(toastEl) {
+      return new bootstrap.Toast(toastEl)
+    })
+    toastList.forEach(toast => toast.show())
+  }
+</script> {% endcomment %}

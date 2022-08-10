@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import DetailView,CreateView,ListView,DeleteView
 from purchases.views import paginate
-from setup_sheets.forms import PartRevisionForm
+from setup_sheets.forms import PartRevisionForm, SetupSheetForm
 from setup_sheets.models import Part, SetupSheet, PartRevision
 # from django import views,forms
 
@@ -15,19 +15,21 @@ class SetupSheetDetailView(DetailView):
 
 class SetupSheetCreateView(CreateView):
     model = SetupSheet
-    fields = [
-        'name',
-        'part',
-        'part_revision',
-        'program_name',
-        'operation',
-        'size',
-        'created_by',
-        'revision',
-        'revision_date',
-        # 'tools',
-        'notes'
-        ]
+    form_class = SetupSheetForm
+    template_name = "setup_sheets/setupsheet_form.html"
+    # fields = [
+    #     'name',
+    #     'part',
+    #     'part_revision',
+    #     'program_name',
+    #     'operation',
+    #     'size',
+    #     'created_by',
+    #     'revision',
+    #     'revision_date',
+    #     # 'tools',
+    #     'notes'
+    #     ]
 
     # success_url = reverse('setup_sheet_detail_view')
 

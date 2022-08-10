@@ -1,6 +1,7 @@
 import os
 from http.client import HTTPResponse
 import io
+import re
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.http import FileResponse, HttpResponse, HttpResponseForbidden, HttpResponseNotFound
@@ -8,6 +9,7 @@ from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
+from django.contrib import messages
 
 from purchases.tracking import get_generated_signature, update_tracking_details
 from .models.models_metadata import (
@@ -92,7 +94,7 @@ class SimpleProductListView(ListView):
         context['page_list'] = context['paginator'].get_elided_page_range(context['page_obj'].number,on_each_side=2,on_ends=1)
         return context
 
-def paginate(self:ListView,url:str) -> tuple[bool,HTTPResponse]:
+def paginate(self:ListView,url:str,**kwargs) -> tuple[bool,HTTPResponse]:
     """Validate incoming page number and create redirect if outside bounds or invalid
 
     Arguments:\n
@@ -111,15 +113,28 @@ def paginate(self:ListView,url:str) -> tuple[bool,HTTPResponse]:
     except:
         return (False,'')
 
-    page_new = paginator.get_page(page)
+    # kwargs = self.request.GET.dict()
+
+    path = self.request.get_full_path() 
+    # p = re.compile('(?[?&]page=)([^?&]+)')
+
     try:
-        page_int = int(page)
-        if page_int != page_new.number:
-            redirect_url = reverse_lazy(url) + "?page=" + str(page_new.number)
+        page_new = paginator.get_page(page)
+    except Exception as err:
+        messages.add_message(self.request,level=messages.ERROR,message='unable to get page; {}'.format(err))
+        return (True,redirect(url))
+    try:
+        page_new_str = str(page_new.number)
+        messages.add_message(self.request,level=messages.SUCCESS,message="Success!")
+        # page_int = int(page)
+        if page != page_new_str:
+            new = re.sub('([?&]page=)[^?&]+', r'\g<1>' + str(page_new.number),path)
+            return (True,redirect(new))
         else:
             return (False,'')
     except:
-        redirect_url = reverse_lazy(url) + "?page=" + str(page_new.number)
+        messages.add_message(self.request,level=messages.WARNING,message='Warning: Error trying to fix page number.')
+        return (True,redirect(url))
     
     return (True,redirect(redirect_url))
 
@@ -127,24 +142,29 @@ class PurchaseRequestListView(ListView):
     context_object_name = 'purchaserequests'
     paginate_by = '10'
     paginate_orphans = '2'
-    # queryset = PurchaseRequest.objects.order_by('-created_date')
+    queryset = PurchaseRequest.objects.order_by('-created_date')
 
     def get_queryset(self):
         requisitioner_value = self.request.GET.get('requisitioner', '')
         if requisitioner_value != '':
             requisitioner = get_object_or_404(Requisitioner,slug=requisitioner_value)
-            return PurchaseRequest.objects.filter(requisitioner = requisitioner).order_by('-created_date')
+            qs = PurchaseRequest.objects.filter(requisitioner = requisitioner).order_by('-created_date')
+            return qs
         else:
-            return PurchaseRequest.objects.order_by('-created_date')
+            # qs = PurchaseRequest.objects.order_by('-created_date')
+            return self.queryset
 
     def get(self, request, *args, **kwargs):
+        self.queryset = self.get_queryset()
 
         changed,url = paginate(self,'home')
+
+        # get =        
 
         if changed:
             return url
         else:
-            return super().get(request, *args, **kwargs)
+            return super().get(request, *args, **kwargs) 
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -161,6 +181,10 @@ class PurchaseRequestDetailView(DetailView):
     template_name = "purchases/purchaserequest_detail.html"
     context_object_name = 'purchaserequest'
     query_pk_and_slug = True
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
 
 class RequisitionerCreateView(CreateView):
     form_class = CreateUserForm
@@ -699,13 +723,23 @@ def appendAsList(data:list[list:str], list:list[list:str]):
 
     return data
 
+def truncate_string(input:str, num_char:int, postfix:str = '...'):
+    if len(input) > num_char:
+        string_length = num_char - len(postfix)
+        new_string = input[:string_length]
+        while new_string[-1:].isspace():
+            new_string = new_string[:-1]
+        return "{}{}".format(new_string,postfix)
+    else:
+        return input
+
 def item_rows(purchase_request:PurchaseRequest):
     """ Create nested list of items to be used in a table """
     items = purchase_request.simpleproduct_set.all()
     rows = []
     for i in items:
         row = [
-            i.name,
+            truncate_string(i.name,40),
             i.identifier,
             "",
             i.quantity,
@@ -758,9 +792,15 @@ class TrackerListView(ListView):
 
     def get_queryset(self):
         pr_slug = self.request.GET.get('purchase-request', '')
+        carrier = self.request.GET.get('carrier','')
+        kwargs = {}
         if pr_slug:
-            purchase_request = get_object_or_404(PurchaseRequest,slug=pr_slug)
-            return Tracker.objects.filter(purchase_request=purchase_request).order_by('tracking_number')
+            kwargs['purchase_request'] = get_object_or_404(PurchaseRequest,slug=pr_slug)
+        if carrier:
+            kwargs['carrier'] = get_object_or_404(Carrier,name=carrier)
+
+        if kwargs:
+            return Tracker.objects.filter(**kwargs).order_by('tracking_number')
         else:
             return Tracker.objects.order_by('-purchase_request__number','tracking_number')
 
@@ -774,11 +814,13 @@ class TrackerListView(ListView):
         if changed:
             return url
         else:
-            return super().get(request, *args, **kwargs)
+            get = super().get(request, *args, **kwargs)
+            return get
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['page_list'] = context['paginator'].get_elided_page_range(context['page_obj'].number,on_each_side=2,on_ends=1)
+        # context['kwargs'] = context['view'].request.GET.dict()
         return context
 
 class TrackerCreateView(CreateView):

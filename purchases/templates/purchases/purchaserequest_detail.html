@@ -161,6 +161,7 @@
                         <th class="text-center" style="width: 40%;">Description</th>
                         <th class="text-center" style="width: 10%;">Link</th>
                         <th class="text-center" style="width: 15%;">Identifier</th>
+                        <th class="text-center">Manufacturer</th>
                         {% comment %} <th class="text-center" style="width: 10%;">Vendor ID</th> {% endcomment %}
                         <th class="text-center" style="width:  5%;">QTY</th>
                         <th class="text-center" style="width: 10%;">Unit</th>
@@ -182,6 +183,7 @@
                                 <td></td>
                             {% endif %}
                             <td align="center">{{ item.identifier|default_if_none:"" }}</td>
+                            <td>{{ item.manufacturer|default_if_none:"" }}</td>
                             {% comment %} <td align="center">{{ item.vendor_number|default_if_none:"" }}</td> {% endcomment %}
                             <td align="center">{{ item.quantity|floatformat }}</td>
                             <td align="center">{{ item.unit.unit }}</td>
@@ -194,22 +196,22 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="3">&nbsp;</td>
+                        <td colspan="4">&nbsp;</td>
                         <td colspan="3" class="text-end">Subtotal</td>
                         <td align="right">{{ object.subtotal }}</td>
                     </tr>
                     <tr>
-                        <td colspan="3"></td>
+                        <td colspan="4"></td>
                         <td colspan="3" class="text-end">Shipping</td>
                         <td align="right">{{ object.shipping }}</td>
                     </tr>
                     <tr>
-                        <td colspan="3"></td>
+                        <td colspan="4"></td>
                         <td colspan="3" class="text-end">Sales Tax ({{ object.sales_tax_rate|numeric2percent:2 }})</td>
                         <td align="right">{{ object.sales_tax }}</td>
                     </tr>
                     <tr>
-                        <td colspan="3"></td>
+                        <td colspan="4"></td>
                         <td colspan="3" class="text-end">Grand Total</td>
                         <td align="right">{{ object.grand_total }}</td>
                     </tr>

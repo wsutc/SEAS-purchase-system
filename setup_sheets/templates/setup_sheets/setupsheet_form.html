@@ -4,6 +4,14 @@
 
 {% block content %}
 
+{{ form.media.css }}
+
+<style>
+  .select-input {
+    width: 25em
+  }
+</style>
+
 <div class="container mt-4">
   <form method="post">
     {% csrf_token %}
@@ -23,5 +31,8 @@
     </div>
   </form>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+{{ form.media.js }}
 
 {% endblock %}

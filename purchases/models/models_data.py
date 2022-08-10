@@ -219,6 +219,7 @@ class PurchaseRequest(models.Model):
 class SimpleProduct(models.Model):
     name = models.CharField(max_length=100)
     purchase_request = models.ForeignKey(PurchaseRequest,on_delete=models.CASCADE)
+    manufacturer = models.CharField("Manufacturer (optional)",max_length=50,blank=True,null=True)
     identifier = models.CharField("Part Number/ASIN/etc.",max_length=50,blank=True,null=True)
     link = models.URLField(blank=True,null=True)
     unit_price = models.DecimalField(max_digits=14,decimal_places=2)

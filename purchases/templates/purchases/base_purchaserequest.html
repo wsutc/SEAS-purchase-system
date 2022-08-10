@@ -48,11 +48,11 @@
                 {{ purchase_request_accounts_formset.management_form }}
                 <table id="account-table" class="table table-striped">
                     <thead class="text-bg-secondary text-center">
-                        <td>Account</td>
-                        <td>Spend Category</td>
-                        <td class="col-2">Dist Type</td>
-                        <td class="col-1">Distribution</td>
-                        <td>Delete</td>
+                        <td>{{ purchase_request_accounts_formset.form.accounts.label }}</td>
+                        <td>{{ purchase_request_accounts_formset.form.spend_category.label }}</td>
+                        <td class="col-2">{{ purchase_request_accounts_formset.form.distribution_type.label }}</td>
+                        <td class="col-1">{{ purchase_request_accounts_formset.form.distribution_input.label }}</td>
+                        <td>{{ purchase_request_accounts_formset.form.DELETE.label }}</td>
                     </thead>
                     <tbody id="account-table-body" class="{{ purchase_request_accounts_formset.prefix }}">
                         {% for account in purchase_request_accounts_formset %}
@@ -84,13 +84,14 @@
                 {{ purchase_request_items_formset.management_form }}
                 <table id="item-table" class="table table-striped">
                     <thead class="text-bg-secondary">
-                        <td>Name/Description</td>
-                        <td class="col-2">Identifier</td>
-                        <td class="col-3">Link</td>
-                        <td class="col-1">Unit Price</td>
-                        <td class="col-1">Quantity</td>
-                        <td class="col-1">Unit</td>
-                        <td>Delete</td>
+                        <td>{{ purchase_request_items_formset.form.name.label }}</td>
+                        <td class="col-1">{{ purchase_request_items_formset.form.identifier.label }}</td>
+                        <td class="col-2">{{ purchase_request_items_formset.form.link.label }}</td>
+                        <td class="col-2">{{ purchase_request_items_formset.form.manufacturer.label }}</td>
+                        <td class="col-1">{{ purchase_request_items_formset.form.unit_price.label }}</td>
+                        <td class="col-1">{{ purchase_request_items_formset.form.quantity.label }}></td>
+                        <td class="col-1">{{ purchase_request_items_formset.form.unit.label }}</td>
+                        <td>{{ purchase_request_items_formset.form.DELETE.label }}</td>
                     </thead>
                     <tbody id="item-table-body" class="{{ purchase_request_items_formset.prefix }}">
                         {% for item in purchase_request_items_formset %}
@@ -100,6 +101,7 @@
                                 <td>{{ item.name.errors }}{{ item.name }}</td>
                                 <td>{{ item.identifier.errors }}{{ item.identifier }}</td>
                                 <td>{{ item.link.errors }}{{ item.link }}</td>
+                                <td>{{ item.manufacturer.errors }}{{ item.manufacturer }}</td>
                                 <td>{{ item.unit_price.errors }}{{ item.unit_price }}</td>
                                 <td>{{ item.quantity.errors }}{{ item.quantity }}</td>
                                 <td>{{ item.unit.errors }}{{ item.unit }}</td>
@@ -114,6 +116,7 @@
                         <td>{{ purchase_request_items_formset.empty_form.name }}</td>
                         <td>{{ purchase_request_items_formset.empty_form.identifier }}</td>
                         <td>{{ purchase_request_items_formset.empty_form.link }}</td>
+                        <td>{{ purchase_request_items_formset.empty_form.manufacturer }}</td>
                         <td>{{ purchase_request_items_formset.empty_form.unit_price }}</td>
                         <td>{{ purchase_request_items_formset.empty_form.quantity }}</td>
                         <td>{{ purchase_request_items_formset.empty_form.unit }}</td>
@@ -184,5 +187,7 @@
         rowCopyTarget.append(copyEmptyRow)
     }
 </script>
+
+<div id="django-debug"><pre>{% debug %}</pre></div>
 
 {% endblock %}

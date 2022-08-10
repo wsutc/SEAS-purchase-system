@@ -2,6 +2,14 @@
 {% block title %}List{% endblock %}
 {% block content %}
 
+{% if messages %}
+<ul class="messages">
+  {% for message in messages %}
+  <li{% if message.tags %} class="{{ message.tags }}{% endif %}>{{ message }}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+
 <div class="row mb-3">
     <h1 class="wsu-c-heading col-sm">All <span class="header-em">{% block header %}{% endblock %}</span></h1>
     <a href="{% block new_url %}{% endblock %}" class="save btn btn-primary col-2">New</a>
