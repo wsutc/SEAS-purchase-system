@@ -253,6 +253,15 @@ def register_tracker(tracking_number:str, carrier_code:str = None) -> tuple[str,
 
     return tuple
 
+REQUEST_METHODS = (
+    'REGISTER',
+    'GETLIST',
+    'GET',
+)
+
+def tracking(request_method:REQUEST_METHODS ):
+    pass
+
 def get_tracker(tracking_number:str, carrier_code:str = None):
     conn = http.client.HTTPSConnection("api.17track.net")
 

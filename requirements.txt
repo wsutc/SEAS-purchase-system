@@ -1,11 +1,11 @@
 Django>=4.0.3
 django-phonenumber-field>=6.1.0
 phonenumberslite>=8.12.45
-django-widget-tweaks>=1.4.12
+# django-widget-tweaks>=1.4.12
 django-money>=2.1.1
 django-import-export>=2.8.0
-django-crispy-forms>=1.14.0
-django-constance>=2.9.0
+# django-crispy-forms>=1.14.0
+# django-constance>=2.9.0
 django-environ>=0.8.1
 coverage>=6.4.1
 # django-mysql==4.7.0

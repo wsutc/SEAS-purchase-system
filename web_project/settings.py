@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 import environ
 import os
 from pathlib import Path
+from django.contrib.messages import constants as message_constants
 
 env = environ.Env(
     DEBUG=(bool, False)
@@ -21,9 +22,11 @@ env = environ.Env(
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-print(os.path.join(BASE_DIR, '.env'))
+env_path = os.path.join(BASE_DIR, '.env')
 
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+print(env_path)
+
+environ.Env.read_env(env_path)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
@@ -50,15 +53,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'crispy_forms',
+    # 'crispy_forms',
     'phonenumber_field',
     'djmoney',
-    'widget_tweaks',
+    # 'widget_tweaks',
     'purchases',
     'setup_sheets',
     'inventory',
     'django_mysql',
-    'bootstrap_modal_forms',
+    # 'bootstrap_modal_forms',
     'django_select2',
 ]
 
@@ -189,11 +192,19 @@ LOGIN_REDIRECT_URL = '/'
 
 
 # EASYPOST_KEY = env('EASYPOST_KEY')
-AFTERSHIP_KEY = env('AFTERSHIP_KEY')
-AFTERSHIP_WEBHOOK_SECRET = env('AFTERSHIP_WEBHOOK_SECRET')
-SHIP24_KEY = env('SHIP24_KEY')
-SHIP24_WEBHOOK_SECRET = env('SHIP24_WEBHOOK_SECRET')
+# AFTERSHIP_KEY = env('AFTERSHIP_KEY')
+# AFTERSHIP_WEBHOOK_SECRET = env('AFTERSHIP_WEBHOOK_SECRET')
+# SHIP24_KEY = env('SHIP24_KEY')
+# SHIP24_WEBHOOK_SECRET = env('SHIP24_WEBHOOK_SECRET')
 
-SMARTSHEET_SHEET_NAME = env('SMARTSHEET_SHEET_NAME')
+# SMARTSHEET_SHEET_NAME = env('SMARTSHEET_SHEET_NAME')
 
 _17TRACK_KEY = env('_17TRACK_KEY')
+
+MESSAGE_TAGS = {
+    message_constants.SUCCESS: 'alert alert-success',
+    message_constants.ERROR: 'alert alert-danger',
+    message_constants.WARNING: 'alert alert-warning',
+    message_constants.INFO: 'alert alert-info',
+    message_constants.DEBUG: 'alert alert-light',
+}

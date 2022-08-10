@@ -25,7 +25,11 @@ from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from .forms import CreateUserForm, PurchaseRequestAccountsFormset, SimpleProductCopyForm, SimpleProductFormset, TrackerForm, VendorModelForm
+from .forms import (
+    CreateUserForm, PurchaseRequestAccountsFormset,
+    SimpleProductCopyForm, SimpleProductFormset, TrackerForm#, VendorModelForm
+)
+from django.contrib import messages
 
 import datetime as dt
 import json
@@ -47,7 +51,7 @@ from functools import partial
 
 # from fdfgen import forge_fdf
 
-from bootstrap_modal_forms.generic import BSModalCreateView
+# from bootstrap_modal_forms.generic import BSModalCreateView
 
 from .forms import AddVendorForm, NewPRForm
 
@@ -248,10 +252,10 @@ class VendorCreateView(CreateView):
     form_class = AddVendorForm
     template_name = 'purchases/add_vendor.html'
 
-class VendorModalCreateView(BSModalCreateView):
-    template_name = 'purchases/vendor_create_modal.html'
-    form_class = VendorModelForm
-    success_message = 'Success: New Vendor created.'
+# class VendorModalCreateView(BSModalCreateView):
+#     template_name = 'purchases/vendor_create_modal.html'
+#     form_class = VendorModelForm
+#     success_message = 'Success: New Vendor created.'
 
 class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
     permission_required = 'purchases.add_purchaserequest'
@@ -377,9 +381,15 @@ def update_pr_status(request,slug,*args, **kwargs):
             status_number = None
 
     if status_number:
-        count = PurchaseRequest.objects.filter(slug=slug).update(status=status_number)
+        qs = PurchaseRequest.objects.filter(slug=slug)
+        count = qs.count()
         if count != 1:
-            return HttpResponseNotFound("Too many/few objects matched the slug.")
+            messages.add_message(request, messages.ERROR, message="Slug returned too many results: {}; no records updated.".format(count))
+        else:
+            qs.update(status=status_number)
+            messages.add_message(request, messages.SUCCESS, message="{}'s status updated to {}.".format(qs.first(), new_status.title().replace('-',' ')))
+    else:
+        messages.add_message(request,messages.WARNING,message="Chosen status '{}' not valid. Contact admin for help.".format(new_status.title().replace('-',' ')))
 
     return redirect('purchaserequest_detail', slug = slug)
 
@@ -826,6 +836,45 @@ class TrackerListView(ListView):
 class TrackerCreateView(CreateView):
     form_class = TrackerForm
     template_name = 'purchases/tracker_create.html'
+
+    def post(self, request, *args, **kwargs) -> HTTPResponse:
+        self.object = None
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    # def form_valid(self, form, purchase_request_items_formset, purchase_request_accounts_formset):
+    #     self.object = form.save(commit=False)
+    #     self.object.save()
+
+    #     ## Add Items
+    #     purchase_request_items = purchase_request_items_formset.save(commit=False)
+    #     for item in purchase_request_items:
+    #         item.purchase_request = self.object
+    #         item.save()
+        
+    #     ## Add Accounts
+    #     purchase_request_accounts = purchase_request_accounts_formset.save(commit=False)
+    #     for account in purchase_request_accounts:
+    #         account.purchase_request = self.object
+    #         account.save()
+
+    #     # # Set PR totals and update balance (balance isn't functional)
+    #     self.object.update_totals()
+
+    #     return redirect(self.object)
+
+    # def form_invalid(self, form, purchase_request_items_formset, purchase_request_accounts_formset):
+    #     return self.render_to_response(
+    #         self.get_context_data(
+    #             form = form,
+    #             purchase_request_items_formset = purchase_request_items_formset,
+    #             purchase_request_accounts_formset = purchase_request_accounts_formset
+    #         )
+    #     )
 
 class TrackerDetailView(DetailView):
     model = Tracker
