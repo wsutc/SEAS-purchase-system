@@ -4,19 +4,19 @@ import io
 import re
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
-from django.http import FileResponse, HttpResponse, HttpResponseForbidden, HttpResponseNotFound
+from django.http import FileResponse, HttpRequest, HttpResponse, HttpResponseForbidden, HttpResponseNotFound
 from django.shortcuts import redirect
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib import messages
 
-from purchases.tracking import get_generated_signature, update_tracking_details
+from purchases.tracking import update_tracking_details, get_generated_signature #, update_tracking_details
 from .models.models_metadata import (
     Carrier, Vendor
 )
 from .models.models_data import (
-    Balance, SimpleProduct, Transaction, PurchaseRequest, Requisitioner
+    Balance, SimpleProduct, Transaction, PurchaseRequest, Requisitioner, PURCHASE_REQUEST_STATUSES, status_reverse
 )
 from .models.models_apis import (
     Tracker, TrackingWebhookMessage, update_tracker_fields
@@ -112,35 +112,37 @@ def paginate(self:ListView,url:str,**kwargs) -> tuple[bool,HTTPResponse]:
     e.g. (True,redirect('home'))
     """
     paginator = self.get_paginator(self.queryset,self.paginate_by,self.paginate_orphans)
-    try:
-        page = self.request.GET['page']
-    except:
-        return (False,'')
+    # try:
+    #     page = self.request.GET['page',None]
+    # except:
+    #     return (False,'')
 
-    # kwargs = self.request.GET.dict()
+    page = self.request.GET.get('page',None)
 
-    path = self.request.get_full_path() 
-    # p = re.compile('(?[?&]page=)([^?&]+)')
+    if not page:
+        return (False, '')
+
+    path = self.request.get_full_path()
 
     try:
         page_new = paginator.get_page(page)
     except Exception as err:
-        messages.add_message(self.request,level=messages.ERROR,message='unable to get page; {}'.format(err))
-        return (True,redirect(url))
+        messages.error(self.request,message='unable to get page; {}'.format(err))
+        new = re.sub('[?&]+.*', '', path)
+        return (True,redirect(new))
+
     try:
         page_new_str = str(page_new.number)
-        messages.add_message(self.request,level=messages.SUCCESS,message="Success!")
-        # page_int = int(page)
         if page != page_new_str:
             new = re.sub('([?&]page=)[^?&]+', r'\g<1>' + str(page_new.number),path)
+            messages.info(self.request, "Page '{og}' not valid, changed to '{new}.'".format(og=page,new=page_new.number))
             return (True,redirect(new))
         else:
+            messages.debug(self.request, "Page '{og}' was valid; no change made.".format(og=page))
             return (False,'')
     except:
-        messages.add_message(self.request,level=messages.WARNING,message='Warning: Error trying to fix page number.')
+        messages.warning(self.request,message='Warning: Error trying to fix page number.')
         return (True,redirect(url))
-    
-    return (True,redirect(redirect_url))
 
 class PurchaseRequestListView(ListView):
     context_object_name = 'purchaserequests'
@@ -186,8 +188,23 @@ class PurchaseRequestDetailView(DetailView):
     context_object_name = 'purchaserequest'
     query_pk_and_slug = True
 
+    # def get_object(self, queryset = ...):
+    #     return super().get_object(queryset)
+    # def get_object(self, queryset = ...):
+    #     object = super().get_object(queryset)
+
+    #     return object
+
+    def get_queryset(self):
+        return super().get_queryset()
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        context['simpleproduct_set'] = SimpleProduct.objects.filter(purchase_request=self.get_object())
+
+        print(context['simpleproduct_set'][1])
+
         return context
 
 class RequisitionerCreateView(CreateView):
@@ -244,7 +261,7 @@ class VendorDeleteView(DeleteView):
         object = self.get_object()
         object.delete()
         
-        redirect_url = redirect_to_next(self, 'all_vendors')
+        redirect_url = redirect_to_next(self.request, 'all_vendors')
 
         return redirect(redirect_url)
 
@@ -266,7 +283,7 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context['purchase_request_items_formset'] = SimpleProductFormset(prefix='items')
         context['purchase_request_accounts_formset'] = PurchaseRequestAccountsFormset(prefix='accounts')
-        context['requisitioner'] = Requisitioner.objects.get(user=self.request.user)
+        # context['requisitioner'] = Requisitioner.objects.get(user=self.request.user)
         return context
 
     def post(self, request, *args, **kwargs):
@@ -362,44 +379,43 @@ class PurchaseRequestUpdateView(UpdateView):
             )
         )
 
-def update_pr_status(request,slug,*args, **kwargs):
-    new_status = request.GET['status']
+def update_pr_status(request:HttpRequest, slug:str, *args, **kwargs) -> HttpResponse:
+    new_status = request.GET.get('status', None)
 
-    status_number = ''
-    match new_status:
-        case 'approved':
-            status_number = '2'
-        case 'shipped':
-            status_number = '7'
-        case 'ordered':
-            status_number = '6'
-        case 'awaiting-approval':
-            status_number = '1'
-        case 'received':
-            status_number = '8'
-        case _:
-            status_number = None
+    redirect_url = redirect_to_next(request, 'purchaserequest_detail', slug= slug)
+    return_redirect = redirect(redirect_url)
 
-    if status_number:
-        qs = PurchaseRequest.objects.filter(slug=slug)
-        count = qs.count()
-        if count != 1:
-            messages.add_message(request, messages.ERROR, message="Slug returned too many results: {}; no records updated.".format(count))
-        else:
-            qs.update(status=status_number)
-            messages.add_message(request, messages.SUCCESS, message="{}'s status updated to {}.".format(qs.first(), new_status.title().replace('-',' ')))
+    if not new_status:
+        return return_redirect
+
+    try:
+        status_number,status = status_reverse(new_status)
+    except TypeError as err:
+        messages.warning(request, "Invalid status parameter provided '{}'.".format(new_status))
+        messages.debug(request, "From exception: {}".format(err))
+
+        return return_redirect
+
+    qs = PurchaseRequest.objects.filter(slug=slug)
+    count = qs.count()
+    if count != 1:
+        messages.add_message(request, messages.ERROR, message="Slug returned too many/too few results: {}; no records updated.".format(count))
     else:
-        messages.add_message(request,messages.WARNING,message="Chosen status '{}' not valid. Contact admin for help.".format(new_status.title().replace('-',' ')))
+        qs.update(status=status_number)
+        messages.add_message(request, messages.SUCCESS, message="{pr}'s status updated to '{status}.'".format(pr=qs.first(), status=status))
 
-    return redirect('purchaserequest_detail', slug = slug)
+    return return_redirect
 
-def redirect_to_next(view, default_redirect='home'):
+def redirect_to_next(request:HttpRequest, default_redirect='home', **kwargs) -> HTTPResponse:
 
-    next = view.request.GET.get('next',None)
+    next = request.GET.get('next',None)
     if next:
         return next
     else:
-        redirect_url = reverse_lazy(default_redirect)
+        if 'slug' in kwargs:
+            redirect_url = reverse(default_redirect, kwargs = {'slug': kwargs.get('slug')})
+        else:
+            redirect_url = reverse(default_redirect)
 
         return redirect_url
 
@@ -408,9 +424,12 @@ class PurchaseRequestDeleteView(DeleteView):
 
     def form_valid(self, *args, **kwargs):
         object = self.get_object()
+
+        messages.success(self.request, "{pr} successfully deleted.".format(object.number))
+
         object.delete()
 
-        redirect_url = redirect_to_next(self)
+        redirect_url = redirect_to_next(self.request)
 
         return redirect(redirect_url)
 
@@ -428,7 +447,7 @@ class VendorDeleteView(DeleteView):
         object = self.get_object()
         object.delete()
         
-        redirect_url = redirect_to_next(self, 'all_vendors')
+        redirect_url = redirect_to_next(self.request, 'all_vendors')
 
         return redirect(redirect_url)
 
@@ -501,8 +520,8 @@ def process_webhook_payload(payload):
     try:
         carrier = Carrier.objects.get(carrier_code=carrier_code)
         tracker, _ = Tracker.objects.get_or_create(tracking_number=tracking_number,carrier=carrier)
-    except ObjectDoesNotExist as err:
-        return
+    except ObjectDoesNotExist:
+        raise
 
     if event_type == 'TRACKING_UPDATED':
         fields = {
@@ -798,7 +817,6 @@ class TrackerListView(ListView):
     context_object_name = 'tracker'
     paginate_by = '10'
     paginate_orphans = '2'
-    # queryset = Tracker.objects.order_by('-purchase_request__number','tracking_number')
 
     def get_queryset(self):
         pr_slug = self.request.GET.get('purchase-request', '')
@@ -830,67 +848,51 @@ class TrackerListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['page_list'] = context['paginator'].get_elided_page_range(context['page_obj'].number,on_each_side=2,on_ends=1)
-        # context['kwargs'] = context['view'].request.GET.dict()
         return context
 
 class TrackerCreateView(CreateView):
     form_class = TrackerForm
     template_name = 'purchases/tracker_create.html'
 
-    def post(self, request, *args, **kwargs) -> HTTPResponse:
-        self.object = None
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        if form.is_valid():
-            return self.form_valid(form)
-        else:
-            return self.form_invalid(form)
+    def form_valid(self, form):
+        if hasattr(form, 'message'):
+            messages.info(self.request, form.message)
 
-    # def form_valid(self, form, purchase_request_items_formset, purchase_request_accounts_formset):
-    #     self.object = form.save(commit=False)
-    #     self.object.save()
-
-    #     ## Add Items
-    #     purchase_request_items = purchase_request_items_formset.save(commit=False)
-    #     for item in purchase_request_items:
-    #         item.purchase_request = self.object
-    #         item.save()
-        
-    #     ## Add Accounts
-    #     purchase_request_accounts = purchase_request_accounts_formset.save(commit=False)
-    #     for account in purchase_request_accounts:
-    #         account.purchase_request = self.object
-    #         account.save()
-
-    #     # # Set PR totals and update balance (balance isn't functional)
-    #     self.object.update_totals()
-
-    #     return redirect(self.object)
-
-    # def form_invalid(self, form, purchase_request_items_formset, purchase_request_accounts_formset):
-    #     return self.render_to_response(
-    #         self.get_context_data(
-    #             form = form,
-    #             purchase_request_items_formset = purchase_request_items_formset,
-    #             purchase_request_accounts_formset = purchase_request_accounts_formset
-    #         )
-    #     )
+        return super().form_valid(form)
 
 class TrackerDetailView(DetailView):
     model = Tracker
     template_name = "purchases/tracker_detail.html"
     query_pk_and_slug = True
 
+class TrackerDeleteView(DeleteView):
+    model = Tracker
+    success_url = reverse_lazy('tracker_list')
+
+    def form_valid(self, *args, **kwargs):
+        object = self.get_object()
+        object.delete()
+        
+        redirect_url = redirect_to_next(self.request, 'tracker_list')
+
+        return redirect(redirect_url)
+
 def update_tracker(request,pk,*args, **kwargs):
     tracker = get_object_or_404(Tracker, pk=pk)
-    response = update_tracking_details(tracker.tracking_number, tracker.carrier.carrier_code)
-    
-    if response.get('code') == 0:
-        status = response.get('status')
-        sub_status = response.get('sub_status')
-        delivery_estimate = response.get('delivery_estimate')
-        events = response.get('events')
-        events_hash = response.get('events_hash')
+
+    try:
+        response = update_tracking_details([(tracker.tracking_number, tracker.carrier.carrier_code)])
+        
+        data = next(iter(response or []), None)
+    except Exception as err:
+        messages.error(request, "{}".format(err))
+
+    if data.get('code') == 0:
+        status = data.get('status')
+        sub_status = data.get('sub_status')
+        delivery_estimate = data.get('delivery_estimate')
+        events = data.get('events')
+        events_hash = data.get('events_hash')
 
         fields = {
             'status': status,
@@ -900,6 +902,14 @@ def update_tracker(request,pk,*args, **kwargs):
             'events_hash': events_hash
         }
 
-        update_tracker_fields(tracker,fields)
+        tracker_str = tracker.tracking_number.upper()
+
+        count = update_tracker_fields(tracker,fields)
+        if count:
+            messages.success(request, "Tracker '{}' updated with new information.".format(tracker_str))
+        elif status == 'NotFound':
+            messages.warning(request, "Tracker '{}' was not found, please check the tracking number and carrier ({}).".format(tracker_str,tracker.carrier.name))
+        else:
+            messages.info(request, "Tracker '{}' was already up to date.".format(tracker_str))
 
     return redirect(tracker)

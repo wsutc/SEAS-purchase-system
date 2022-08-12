@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils.text import slugify
 
 from purchases.models.models_data import PurchaseRequest
-from purchases.tracking import register_tracker
+# from purchases.tracking import register_tracker
 
 
 from .models_metadata import Carrier
@@ -29,7 +29,6 @@ class Tracker(models.Model):
         constraints = [
             models.UniqueConstraint(fields = ('tracking_number','carrier'),name='unique_tracking_number_carrier')
         ]
-        # ordering = ['-purchase_request','status','id']
 
     def get_absolute_url(self):
         kwargs = {
@@ -37,39 +36,10 @@ class Tracker(models.Model):
         }
         return reverse('tracker_detail', kwargs=kwargs)
 
-    # def get_previous_by_sort_order(self):
-    #     qs = Tracker.objects.all().order_by('-purchase_request__number','status','id')
-    #     return qs.first()
-
     def save(self, *args, **kwargs):
-        if self._state.adding:          # only register as new tracker if this is a new tracker
-            # No post-save get tracking info signal or otherwise
-            # is run because it won't be available right away with a
-            # newly created tracker. Wait for webhook or manually
-            # update if required.
-
-            n,c,m,r = register_tracker(self.tracking_number, self.carrier.carrier_code)
-
-            if r:
-                self.carrier, _ = Carrier.objects.get_or_create(
-                    carrier_code = c,
-                    defaults={
-                        'name': c
-                    }
-                )
-                self.tracking_number = n
-                self.id = n
-                # messages.add_message(self.request, messages.SUCCESS, "Tracker {} successfully registered.".format(self.tracking_number.capitalize()))
-            else:
-                raise HttpResponse("Unable to create a tracker.")
-                # messages.add_message(
-                #     self.request,
-                #     messages.ERROR,
-                #     "Tracker {} not able to register, please make sure it's not already registered."
-                #     .format(self.tracking_number.capitalize())
-                # )
-
-        super().save(*args, **kwargs)
+        if self._state.adding:
+            self.id = self.tracking_number
+            super().save(*args, **kwargs)
 
     def get_tracking_link(self):
         if stub := self.carrier.tracking_link:
@@ -126,7 +96,7 @@ def create_events(tracker:Tracker, events) -> tuple[list[TrackingEvent], list[Tr
 
     return (created_events,updated_events)
 
-def update_tracker_fields(tracker:Tracker,fields:dict):
+def update_tracker_fields(tracker:Tracker,fields:dict) -> str:
     """Updates <tracker> using <fields>"""
     qs = Tracker.objects.filter(pk=tracker.pk)          # using `queryset.update` prevents using `model.save`, therefore, no `post_save` signal
 
@@ -150,3 +120,6 @@ def update_tracker_fields(tracker:Tracker,fields:dict):
 
     if len(update_fields):
         qs.update(**update_fields)
+        return 1
+    else:
+        return None

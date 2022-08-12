@@ -14,6 +14,7 @@ class SetupSheetToolInline(admin.TabularInline):
 class SetupSheetAdmin(admin.ModelAdmin):
     list_display = ['name','part_number','program_name','user_full_name']
     inlines = [SetupSheetToolInline]
+    search_fields = ['name','part__number','program_name','created_by__first_name','created_by__last_name']
 
     def user_full_name(self, obj):
         return obj.created_by.get_full_name()

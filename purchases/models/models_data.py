@@ -1,4 +1,5 @@
 import decimal
+from xml.dom import NotFoundErr
 from django.conf import settings
 from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
@@ -17,11 +18,8 @@ from .models_metadata import DocumentNumber, Vendor, Accounts, Carrier, Unit, Ur
 class Requisitioner(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     wsu_id = models.CharField("WSU ID",max_length=50,blank=True,null=True)
-    # first_name = models.CharField("First Name",max_length=50,blank=False)
-    # last_name = models.CharField("Last Name",max_length=50,blank=False)
     slug = models.SlugField(null=True)
     phone = PhoneNumberField("Phone Number",max_length=25,blank=True,null=True)
-    # email = models.EmailField("Email",max_length=50,blank=False)
     department = models.ForeignKey(Department,on_delete=models.PROTECT)
 
     class Meta:
@@ -81,13 +79,24 @@ PURCHASE_REQUEST_STATUSES = (
     (RT, 'Returned (please resubmit)')
 )
 
+def status_reverse(code:str) -> tuple[str,str]:
+    """Return key and value from status list given two-character code."""
+    global_vars = globals()
+    key = global_vars.get(code.upper(),None)
+    if not key:
+        return None
+
+    statuses_dict = dict(PURCHASE_REQUEST_STATUSES)
+    value = statuses_dict.get(key)
+
+    return (key, value)
+
 class PurchaseRequest(models.Model):
     id = models.AutoField(primary_key=True,editable=False)
     slug = models.SlugField(max_length=255, default='', editable=False)
     requisitioner = models.ForeignKey(Requisitioner,on_delete=models.PROTECT)
     number = models.CharField(max_length=10,blank=True)
     vendor = models.ForeignKey(Vendor,on_delete=models.PROTECT,null=True)
-    # items = models.ManyToManyField(Product,through='PurchaseRequestItems')
     created_date = models.DateTimeField("Created Date",auto_now_add=True)
     need_by_date = models.DateField("Date Required (optional)",blank=True,null=True)
     tax_exempt = models.BooleanField("Tax Exempt?",default=False)
@@ -103,9 +112,6 @@ class PurchaseRequest(models.Model):
         "Special Instructions",
         default=settings.DEFAULT_INSTRUCTIONS,
     )
-    # carrier = models.ForeignKey("Carrier",Carrier,blank=True,null=True)
-    # tracking_number = models.CharField(max_length=55,blank=True,null=True)
-    # tracker = models.ForeignKey(Tracker,on_delete=models.SET_NULL,blank=True,null=True)
 
     class Meta:
         ordering = ['-created_date']
@@ -179,11 +185,11 @@ class PurchaseRequest(models.Model):
         percent = self.sales_tax_rate * 100
         return "%s" % percent
 
-    def update_tracking(self, events):
-        last_event = events[0]
-        self.shipping_status = last_event.get('status')
-        self.shipping_status_datetime = last_event.get('datetime')
-        self.save()
+    # def update_tracking(self, events):
+    #     last_event = events[0]
+    #     self.shipping_status = last_event.get('status')
+    #     self.shipping_status_datetime = last_event.get('datetime')
+    #     self.save()
         
     def update_transactions(self):
         if self.purchaserequestaccounts_set.first():

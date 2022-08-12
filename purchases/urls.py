@@ -4,7 +4,7 @@ from purchases.views import (
     BalancesDetailView, BalancesListView, LedgersListView, PurchaseRequestDeleteView,
     PurchaseRequestListView, PurchaseRequestUpdateView, RequisitionerCreateView,
     RequisitionerDetailView, RequisitionerListView, SimpleProductCopyView,
-    SimpleProductListView, TrackerCreateView, TrackerDetailView, TrackerListView, VendorCreateView,
+    SimpleProductListView, TrackerCreateView, TrackerDeleteView, TrackerDetailView, TrackerListView, VendorCreateView,
     VendorDetailView, VendorListView, PurchaseRequestDetailView, VendorDeleteView,
     PurchaseRequestCreateView, VendorUpdateView, tracking_webhook
 )
@@ -30,6 +30,7 @@ urlpatterns = [
     path("trackers/new/", TrackerCreateView.as_view(), name="create_tracker"),
     path("trackers/<slug:pk>/", TrackerDetailView.as_view(), name="tracker_detail"),
     path("trackers/<slug:pk>/update-tracker/", views.update_tracker, name="update_tracker"),
+    path("trackers/<slug:pk>/delete/", TrackerDeleteView.as_view(), name="tracker_delete"),
     path("account-transactions/<int:pk>/", LedgersListView.as_view(), name="ledger_list"), 
     path("account-balances/", BalancesListView.as_view(), name="balances_list"),
     path("account-balances/<int:pk>/", BalancesDetailView.as_view(), name="balances_detail"),

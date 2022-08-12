@@ -37,6 +37,7 @@ SECRET_KEY = 'django-insecure-=575&#l3pkg&6i%bmymmf+o@7$)tj8oxd=tvsn(n^0!3d8n013
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 TEMPLATE_DEBUG = True
+MESSAGE_LEVEL = message_constants.DEBUG
 
 ALLOWED_HOSTS = ['127.0.0.1','329d-69-166-40-1.ngrok.io']
 
@@ -206,5 +207,5 @@ MESSAGE_TAGS = {
     message_constants.ERROR: 'alert alert-danger',
     message_constants.WARNING: 'alert alert-warning',
     message_constants.INFO: 'alert alert-info',
-    message_constants.DEBUG: 'alert alert-light',
+    message_constants.DEBUG: 'alert alert-secondary',
 }

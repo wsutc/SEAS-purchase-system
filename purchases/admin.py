@@ -64,6 +64,7 @@ class PurchaseRequestAdmin(admin.ModelAdmin):
     list_display = ['number', 'vendor', 'grand_total', 'status','requisitioner', 'slug']
     inlines = [SimpleProductInline,PurchaseRequestAccountsInline,TrackerInline]
     actions = [make_awaiting_approval,save_requests] #,update_trackers]
+    search_fields = ['number','vendor__name','requisitioner__user__first_name','requisitioner__user__last_name']
 
     @admin.display(description='Tracking Status')
     def get_tracker_status(self, obj):
@@ -165,36 +166,42 @@ def update_selected_trackers(modeladmin, request, queryset):
             q.carrier.carrier_code
         )
         list.append(d)
-    updated_trackers = tracking.bulk_update_tracking_details(list)
-    tracker_objs = []
-    event_update_count = 0
-    for t in updated_trackers:
-        carrier = Carrier.objects.get(carrier_code=t.get('carrier_code'))
-        t_obj = Tracker.objects.get(tracking_number=t.get('tracking_number'),carrier=carrier)
-        t_obj.status = t.get('status')
-        t_obj.sub_status = t.get('sub_status')
-        t_obj.delivery_estimate = t.get('delivery_estimate')
-        t_obj.events = t.get('events')
 
-        events_hash = t.get('events_hash')
+    try:
+        updated_trackers = tracking.update_tracking_details(list)
+    except ValueError as err:
+        messages.error(request, "{}".format(err))
 
-        if t_obj.events_hash != str(events_hash):
-            event_update_count += 1
-            _,_ = create_events(t_obj,t.get('events'))
-            t_obj.events_hash = t.get('events_hash')
+    if updated_trackers:
+        tracker_objs = []
+        event_update_count = 0
+        for t in updated_trackers:
+            carrier = Carrier.objects.get(carrier_code=t.get('carrier_code'))
+            t_obj = Tracker.objects.get(tracking_number=t.get('tracking_number'),carrier=carrier)
+            t_obj.status = t.get('status')
+            t_obj.sub_status = t.get('sub_status')
+            t_obj.delivery_estimate = t.get('delivery_estimate')
+            t_obj.events = t.get('events')
 
-        tracker_objs.append(t_obj)
+            events_hash = t.get('events_hash')
 
-    update_count = Tracker.objects.bulk_update(tracker_objs,['status','sub_status','delivery_estimate','events','events_hash'])
+            if t_obj.events_hash != str(events_hash):
+                event_update_count += 1
+                _,_ = create_events(t_obj,t.get('events'))
+                t_obj.events_hash = t.get('events_hash')
 
-    if update_count == 0:
-        messages.add_message(request, messages.WARNING, "No objects found to update!")
-    elif update_count == 1:
-        messages.add_message(request, messages.SUCCESS, "{0:d} object updated.".format(update_count))
-    else:
-        messages.add_message(request, messages.SUCCESS, "{0:d} objects updated.".format(update_count))
+            tracker_objs.append(t_obj)
 
-    messages.add_message(request, messages.SUCCESS, "{0} tracker(s) had updated events.".format(event_update_count))
+        update_count = Tracker.objects.bulk_update(tracker_objs,['status','sub_status','delivery_estimate','events','events_hash'])
+
+        if update_count == 0:
+            messages.add_message(request, messages.WARNING, "No objects found to update!")
+        elif update_count == 1:
+            messages.add_message(request, messages.SUCCESS, "{0:d} object updated.".format(update_count))
+        else:
+            messages.add_message(request, messages.SUCCESS, "{0:d} objects updated.".format(update_count))
+
+        messages.add_message(request, messages.SUCCESS, "{0} tracker(s) had updated events.".format(event_update_count))
 
 @admin.register(Tracker)
 class TrackerAdmin(admin.ModelAdmin):

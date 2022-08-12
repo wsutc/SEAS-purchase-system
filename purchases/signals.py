@@ -9,7 +9,7 @@ from .models.models_metadata import Department
 from .models.models_apis import Tracker, create_events, update_tracker_fields
 from .models.models_data import Requisitioner, PurchaseRequest
 
-from .tracking import build_payload, update_tracking_details
+# from .tracking import build_payload #, update_tracking_details
 from purchases import tracking
 
 @receiver(post_save, sender=User)
@@ -20,36 +20,36 @@ def create_requisitioner(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=User)
 def save_requisitioner(sender, instance, **kwargs):
-    instance.requisitioner.save() 
+    instance.requisitioner.save()
 
 # @receiver(post_save, sender=Tracker)
-def post_save_tracker_update(sender, instance, created, **kwargs):
-    # webhook = kwargs.get('webhook',None)
+# def post_save_tracker_update(sender, instance, created, **kwargs):
+#     # webhook = kwargs.get('webhook',None)
 
-    # updating = instance.getattr('_updating',False)
+#     # updating = instance.getattr('_updating',False)
 
-    # if updating:
-    #     return
+#     # if updating:
+#     #     return
 
-    # tracker = Tracker.objects.get(id=instance.id)
-    response = update_tracking_details(instance.tracking_number, instance.carrier.carrier_code)
+#     # tracker = Tracker.objects.get(id=instance.id)
+#     response = update_tracking_details(instance.tracking_number, instance.carrier.carrier_code)
     
-    if response.get('code') == 0:
-        status = response.get('status')
-        sub_status = response.get('sub_status')
-        delivery_estimate = response.get('delivery_estimate')
-        events = response.get('events')
-        events_hash = response.get('events_hash')
+#     if response.get('code') == 0:
+#         status = response.get('status')
+#         sub_status = response.get('sub_status')
+#         delivery_estimate = response.get('delivery_estimate')
+#         events = response.get('events')
+#         events_hash = response.get('events_hash')
 
-        fields = {
-            'status': status,
-            'sub_status': sub_status,
-            'delivery_estimate': delivery_estimate,
-            'events': events,
-            'events_hash': events_hash
-        }
+#         fields = {
+#             'status': status,
+#             'sub_status': sub_status,
+#             'delivery_estimate': delivery_estimate,
+#             'events': events,
+#             'events_hash': events_hash
+#         }
 
-        update_tracker_fields(instance,fields)
+#         update_tracker_fields(instance,fields)
 
     # instance_changed = False
 

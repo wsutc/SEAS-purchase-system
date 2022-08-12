@@ -33,8 +33,13 @@ Trackers
                         </a>
                     {% endif %}
                 </td>
-                <td>{{ o.status }}</td>
+                <td>{{ o.status|default_if_none:"" }}</td>
                 <td><a href="{{ o.purchase_request.get_absolute_url }}">{{ o.purchase_request }}</a></td>
+                <td>
+                    <a href="{% url 'tracker_delete' pk=o.pk %}?next={{ request.get_full_path }}">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </a>
+                </td>
             </tr>
         {% endfor %}
           </tbody>

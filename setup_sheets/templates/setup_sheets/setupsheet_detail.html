@@ -32,7 +32,7 @@
                         <td>{{ object.part.number }} / {{ object.part_revision.revision }}</td>
                         {% comment %} <td>{{ object.description }}</td> {% endcomment %}
                         <td>{{ object.program_name }}</td>
-                        <td>{{ object.revision }}</td>
+                        <td>{{ object.revision }} / {{ object.revision_date|date:"Y-m-d" }}</td>
                         <td>{{ object.fixture }} - {{ object.fixture.part_number }}</td>
                     </tr>
                 </tbody>

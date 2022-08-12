@@ -60,8 +60,10 @@ def numeric2percent(value:float, decimal_places:int = None):
     return return_value
 
 @register.filter
-def camel_case_split(value:str):
+def camel_case_split(value:str) -> str:
     """Split camel case word into multiple strings"""
+    if not value:
+        return ''
     split_strings = re.findall(r'[A-Z](?:[a-z]+|[A-Z]*(?=[A-Z]|$))', value)
 
     new_string = ""

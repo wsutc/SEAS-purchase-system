@@ -7,6 +7,13 @@ Home
 {% block new_url %}{% url 'new_pr' %}{% endblock new_url %}
 {% block page %}
 
+<style>
+  .inline {
+    --bs-btn-padding-y: 0rem
+}
+
+</style>
+
     {% if object_list %}
     <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
         <table class="table table-striped">
@@ -15,7 +22,7 @@ Home
             <th scope="col">Requisitioner</th>
             <th scope="col">Number</th>
             <th>Vendor</th>
-            <th>Status</th>
+            <th class="col-1 text-center">Status</th>
             <th>Total</th>
             <th>Shipping Status</th>
             <th class="text-center"></th>
@@ -28,7 +35,20 @@ Home
                     <td>{{ o.requisitioner }}</td>
                     <td><a href="{{ o.get_absolute_url }}">{{ o.number }}</a></td>
                     <td><a href="{{ o.vendor.get_absolute_url }}">{{ o.vendor }}</a></td>
-                    <td>{{ o.get_status_display }}</td>
+                    <td class="dropdown align-right">
+                      <button class="btn w-100 inline dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                          {{ o.get_status_display }}
+                      </button>
+                      <ul class="dropdown-menu">
+                          <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=wl&&next={{ request.get_full_path }}">Create</a></li>
+                          <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=aa&&next={{ request.get_full_path }}">Submit</a></li>
+                          <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=ap&&next={{ request.get_full_path }}">Approve</a></li>
+                          <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=or&&next={{ request.get_full_path }}">Order</a></li>
+                          <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=sh&&next={{ request.get_full_path }}">Ship</a></li>
+                          <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=rc&&next={{ request.get_full_path }}">Receive</a></li>
+                      </ul>
+                    </td>
+                    {% comment %} <td>{{ o.get_status_display }}</td> {% endcomment %}
                     <td>{{ o.grand_total }}</td>
                     <td>{{ o.tracker_set.first.status|camel_case_split }}</td>
                     <td class="text-center">

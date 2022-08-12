@@ -17,6 +17,14 @@
     </div>
 {% endblock navigation %}
 
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
 {% block page %}{% endblock %}
 
 {% block related_pr_table %}
@@ -76,7 +84,7 @@
                             {% for product in row.simpleproduct_set.all %}
                                 <tr>
                                     <td>{{ product.name }}</td>
-                                    <td>{{ product.identifier }}</td>
+                                    <td>{{ product.identifier|default_if_none:"" }}</td>
                                     <td>{{ row.get_status_display }}</td>
                                     <td><a href="{{ row.get_absolute_url }}">{{ row }}</a></td>
                                     {% if product.link %}
