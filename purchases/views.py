@@ -1,7 +1,7 @@
 import os
 from http.client import HTTPResponse
 import io
-import re
+# import re
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.http import FileResponse, HttpRequest, HttpResponse, HttpResponseForbidden, HttpResponseNotFound
@@ -29,7 +29,6 @@ from .forms import (
     CreateUserForm, PurchaseRequestAccountsFormset,
     SimpleProductCopyForm, SimpleProductFormset, TrackerForm#, VendorModelForm
 )
-from django.contrib import messages
 
 import datetime as dt
 import json
@@ -49,6 +48,10 @@ from reportlab.platypus.paragraph import Paragraph
 from reportlab.platypus.frames import Frame
 from functools import partial
 
+from furl import furl
+
+from web_project.helpers import paginate, redirect_to_next
+
 # from fdfgen import forge_fdf
 
 # from bootstrap_modal_forms.generic import BSModalCreateView
@@ -66,7 +69,7 @@ class VendorListView(ListView):
 
     def get(self, request, *args, **kwargs):
 
-        changed,url = paginate(self,'all_vendors')
+        changed,url = paginate(self)
 
         if changed:
             return url
@@ -86,7 +89,7 @@ class SimpleProductListView(ListView):
 
     def get(self, request, *args, **kwargs):
 
-        changed,url = paginate(self,'simpleproducts')
+        changed,url = paginate(self)
 
         if changed:
             return url
@@ -97,52 +100,6 @@ class SimpleProductListView(ListView):
         context = super().get_context_data(**kwargs)
         context['page_list'] = context['paginator'].get_elided_page_range(context['page_obj'].number,on_each_side=2,on_ends=1)
         return context
-
-def paginate(self:ListView,url:str,**kwargs) -> tuple[bool,HTTPResponse]:
-    """Validate incoming page number and create redirect if outside bounds or invalid
-
-    Arguments:\n
-    self -- a ListView with a paginator defined
-
-    url -- the name of a URL defined in urls.py
-
-    Returns:
-    A tuple with a boolean describing whether the URL is changed/needs to redirect and
-    the url to redirect to, if required.
-    e.g. (True,redirect('home'))
-    """
-    paginator = self.get_paginator(self.queryset,self.paginate_by,self.paginate_orphans)
-    # try:
-    #     page = self.request.GET['page',None]
-    # except:
-    #     return (False,'')
-
-    page = self.request.GET.get('page',None)
-
-    if not page:
-        return (False, '')
-
-    path = self.request.get_full_path()
-
-    try:
-        page_new = paginator.get_page(page)
-    except Exception as err:
-        messages.error(self.request,message='unable to get page; {}'.format(err))
-        new = re.sub('[?&]+.*', '', path)
-        return (True,redirect(new))
-
-    try:
-        page_new_str = str(page_new.number)
-        if page != page_new_str:
-            new = re.sub('([?&]page=)[^?&]+', r'\g<1>' + str(page_new.number),path)
-            messages.info(self.request, "Page '{og}' not valid, changed to '{new}.'".format(og=page,new=page_new.number))
-            return (True,redirect(new))
-        else:
-            messages.debug(self.request, "Page '{og}' was valid; no change made.".format(og=page))
-            return (False,'')
-    except:
-        messages.warning(self.request,message='Warning: Error trying to fix page number.')
-        return (True,redirect(url))
 
 class PurchaseRequestListView(ListView):
     context_object_name = 'purchaserequests'
@@ -163,7 +120,7 @@ class PurchaseRequestListView(ListView):
     def get(self, request, *args, **kwargs):
         self.queryset = self.get_queryset()
 
-        changed,url = paginate(self,'home')
+        changed,url = paginate(self)
 
         # get =        
 
@@ -203,7 +160,7 @@ class PurchaseRequestDetailView(DetailView):
 
         context['simpleproduct_set'] = SimpleProduct.objects.filter(purchase_request=self.get_object())
 
-        print(context['simpleproduct_set'][1])
+        # print(context['simpleproduct_set'][0])
 
         return context
 
@@ -234,7 +191,7 @@ class RequisitionerListView(ListView):
 
     def get(self, request, *args, **kwargs):
 
-        changed,url = paginate(self,'all_requisitioners')
+        changed,url = paginate(self)
 
         if changed:
             return url
@@ -406,30 +363,17 @@ def update_pr_status(request:HttpRequest, slug:str, *args, **kwargs) -> HttpResp
 
     return return_redirect
 
-def redirect_to_next(request:HttpRequest, default_redirect='home', **kwargs) -> HTTPResponse:
-
-    next = request.GET.get('next',None)
-    if next:
-        return next
-    else:
-        if 'slug' in kwargs:
-            redirect_url = reverse(default_redirect, kwargs = {'slug': kwargs.get('slug')})
-        else:
-            redirect_url = reverse(default_redirect)
-
-        return redirect_url
-
 class PurchaseRequestDeleteView(DeleteView):
     model = PurchaseRequest
 
     def form_valid(self, *args, **kwargs):
         object = self.get_object()
 
-        messages.success(self.request, "{pr} successfully deleted.".format(object.number))
+        messages.success(self.request, "{pr} successfully deleted.".format(pr=object.number))
 
         object.delete()
 
-        redirect_url = redirect_to_next(self.request)
+        redirect_url = redirect_to_next(self.request, 'home')
 
         return redirect(redirect_url)
 
@@ -837,7 +781,7 @@ class TrackerListView(ListView):
         if not self.queryset:
             self.queryset = self.get_queryset()
 
-        changed,url = paginate(self,'tracker_list')
+        changed,url = paginate(self)
 
         if changed:
             return url

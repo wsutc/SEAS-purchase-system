@@ -103,9 +103,16 @@ def save_requisitioners(modeladmin, request, queryset):
 
 @admin.register(Requisitioner)
 class RequisitionerAdmin(admin.ModelAdmin):
-    list_display = ['user','department']
+    list_display = ['user_full_name','user_email','department']
     actions = [save_requisitioners]
     inlines = [PurchaseRequestInline]
+
+    def user_full_name(self, obj):
+        return obj.user.get_full_name()
+
+    @admin.display(description="Email Address")    
+    def user_email(self, obj):
+        return obj.user.email
 
 class PurchaseRequestAccountsInline(admin.TabularInline):
     model = PurchaseRequestAccounts

@@ -1,13 +1,15 @@
 from django.db.models.signals import post_save, pre_save
 from django.contrib.auth.models import User
 from django.dispatch import receiver
-import http.client, json
+# import http.client, json
 from django.conf import settings
 from django.contrib.auth.models import User
 
+from purchases.vendor_linking import link_from_identifier
+
 from .models.models_metadata import Department
 from .models.models_apis import Tracker, create_events, update_tracker_fields
-from .models.models_data import Requisitioner, PurchaseRequest
+from .models.models_data import Requisitioner, PurchaseRequest, SimpleProduct
 
 # from .tracking import build_payload #, update_tracking_details
 from purchases import tracking
@@ -21,6 +23,11 @@ def create_requisitioner(sender, instance, created, **kwargs):
 @receiver(post_save, sender=User)
 def save_requisitioner(sender, instance, **kwargs):
     instance.requisitioner.save()
+
+@receiver(pre_save, sender=SimpleProduct)
+def create_link(sender, instance, **kwargs):
+    if not instance.link:
+        instance.link = link_from_identifier(instance.identifier, instance.purchase_request.vendor)
 
 # @receiver(post_save, sender=Tracker)
 # def post_save_tracker_update(sender, instance, created, **kwargs):

@@ -1,14 +1,11 @@
 from django.contrib import admin
-from purchases.models.models_metadata import Manufacturer
+# from purchases.models.models_metadata import Manufacturer
 
 from setup_sheets.models import Material, Part, PartRevision, SetupSheet, SetupSheetTool, Tool, ToolComponents, Fixture
 
 # Register your models here.
 class SetupSheetToolInline(admin.TabularInline):
     model = SetupSheetTool
-
-# class FixtureInline(admin.TabularInline):
-#     model = Fixture
 
 @admin.register(SetupSheet)
 class SetupSheetAdmin(admin.ModelAdmin):
@@ -18,17 +15,12 @@ class SetupSheetAdmin(admin.ModelAdmin):
 
     def user_full_name(self, obj):
         return obj.created_by.get_full_name()
-    # inlines = [FixtureInline]
 
     def part_number(self, obj):
         if part := obj.part:
             return part.number
         else:
             return None
-
-# @admin.register(Manufacturer)
-# class ManufacturerAdmin(admin.ModelAdmin):
-#     list_display = ['name']
 
 class PartRevisionInline(admin.TabularInline):
     model = PartRevision
@@ -37,16 +29,6 @@ class PartRevisionInline(admin.TabularInline):
 class SetupSheetInline(admin.TabularInline):
     model = SetupSheet
     extra = 0
-    # fields = (
-    #     'name',
-    #     'part_revision',
-    #     'operation',
-    #     'size',
-    #     'created_by'
-    # )
-
-    # def user_full_name(self, obj):
-    #     return obj.created_by.get_full_name()
 
 @admin.register(Part)
 class PartAdmin(admin.ModelAdmin):

@@ -2,6 +2,7 @@ import decimal
 from xml.dom import NotFoundErr
 from django.conf import settings
 from django.db import models
+from django.shortcuts import get_object_or_404
 from phonenumber_field.modelfields import PhoneNumberField
 from django.contrib.auth.models import User
 from django.dispatch import receiver
@@ -11,6 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
 from django.db.models import Avg,Sum
+from purchases.vendor_linking import Amazon, Tormach
 
 from .models_metadata import DocumentNumber, Vendor, Accounts, Carrier, Unit, Urgency, SpendCategory, Department
 # from .models_apis import Tracker
@@ -39,24 +41,6 @@ class Requisitioner(models.Model):
 
     def __str__(self):
         return self.user.get_full_name()
-
-# class SmartsheetRows(models.Model):
-#     row_id = models.CharField(max_length=50,primary_key=True,editable=False)
-#     number = models.CharField(max_length=30,editable=False)
-#     status = models.CharField(max_length=50)
-#     requestor = models.ForeignKey(Requisitioner,on_delete=models.PROTECT)
-#     required_approver = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
-#     required_approver_approval = models.CharField(max_length=50,null=True)
-
-#     def create(self, *args, **kwargs):
-#         sheet = SmartsheetSheet(name=settings.SMARTSHEET_SHEET_NAME)
-#         data = [{'Status':'Created'}]
-#         response = sheet.add_sheet_rows(data)
-#         row = response.data[0]
-#         row_id = row.id
-#         cells = row.cells
-#         number = cells[sheet.columns['Request Number']]
-#         self.row_id = row_id
 
 WL = '0'
 AA = '1'
@@ -184,12 +168,6 @@ class PurchaseRequest(models.Model):
     def sales_tax_display(self):
         percent = self.sales_tax_rate * 100
         return "%s" % percent
-
-    # def update_tracking(self, events):
-    #     last_event = events[0]
-    #     self.shipping_status = last_event.get('status')
-    #     self.shipping_status_datetime = last_event.get('datetime')
-    #     self.save()
         
     def update_transactions(self):
         if self.purchaserequestaccounts_set.first():
@@ -244,6 +222,7 @@ class SimpleProduct(models.Model):
 
     def save(self, *args, **kwargs):
         self.extended_price = self.extend_price()
+
         super().save(*args, **kwargs)
 
     @property
@@ -262,8 +241,6 @@ class PurchaseRequestAccounts(models.Model):
     accounts = models.ForeignKey(Accounts,on_delete=models.PROTECT)
 
     spend_category = models.ForeignKey(SpendCategory,on_delete=models.PROTECT)
-    # distribution_amount = MoneyField("Distribution",max_digits=14,decimal_places=2,default_currency='USD',blank=True,null=True)
-    # distribution_percent = models.FloatField(default=0)
 
     PERCENT = 'percent'
     AMOUNT = 'amount'
@@ -305,7 +282,6 @@ class Balance(models.Model):
 
     def recalculate_balance(self):
         transactions_sum = Transaction.objects.filter(balance = self).aggregate(Sum('total_value'))
-        # SimpleProduct.objects.filter(purchase_request_id=self.id).aggregate(Sum('extended_price'))
         if total_sum := transactions_sum.get('total_value__sum'):
             new_balance = self.starting_balance.amount + total_sum
         else:
@@ -330,11 +306,7 @@ class Transaction(models.Model):
     processed_datetime = models.DateTimeField(auto_now_add=True)
     total_value = MoneyField(max_digits=14,decimal_places=2,default_currency='USD')
 
-    # objects = models.Manager()
-    # balance_objects = TransactionManager()
-
     class Meta:
-        # verbose_name_plural = "Ledgers"
         ordering = ['-processed_datetime']
 
     def __init__(self, *args, **kwargs):

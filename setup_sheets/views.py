@@ -1,12 +1,9 @@
-# from django.shortcuts import render
-from audioop import reverse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import DetailView,CreateView,ListView,DeleteView
-from purchases.views import paginate
+from web_project.helpers import paginate
 from setup_sheets.forms import PartRevisionForm, SetupSheetForm
 from setup_sheets.models import Part, SetupSheet, PartRevision
-# from django import views,forms
 
 # Create your views here.
 class SetupSheetDetailView(DetailView):
