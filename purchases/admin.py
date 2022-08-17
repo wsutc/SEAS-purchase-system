@@ -62,9 +62,11 @@ class TrackerInline(admin.TabularInline):
 @admin.register(PurchaseRequest)
 class PurchaseRequestAdmin(admin.ModelAdmin):
     list_display = ['number', 'vendor', 'grand_total', 'status','requisitioner', 'slug']
+    list_editable = ['status']
     inlines = [SimpleProductInline,PurchaseRequestAccountsInline,TrackerInline]
     actions = [make_awaiting_approval,save_requests] #,update_trackers]
     search_fields = ['number','vendor__name','requisitioner__user__first_name','requisitioner__user__last_name']
+    date_hierarchy = 'created_date'
 
     @admin.display(description='Tracking Status')
     def get_tracker_status(self, obj):
@@ -235,3 +237,4 @@ class TransactionAdmin(admin.ModelAdmin):
 @admin.register(DocumentNumber)
 class DocumentNumberAdmin(admin.ModelAdmin):
     list_display = ['document','prefix','next_counter','last_number']
+    list_editable = ['next_counter']

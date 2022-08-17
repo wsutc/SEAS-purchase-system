@@ -12,7 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
 from django.db.models import Avg,Sum
-from purchases.vendor_linking import Amazon, Tormach
+# from purchases.vendor_linking import Amazon, Tormach
 
 from .models_metadata import DocumentNumber, Vendor, Accounts, Carrier, Unit, Urgency, SpendCategory, Department
 # from .models_apis import Tracker

@@ -7,7 +7,7 @@ from purchases.views import (
     RequisitionerDetailView, RequisitionerListView, SimpleProductCopyView,
     SimpleProductListView, TrackerCreateView, TrackerDeleteView, TrackerDetailView, TrackerListView, VendorCreateView,
     VendorDetailView, VendorListView, PurchaseRequestDetailView, VendorDeleteView,
-    PurchaseRequestCreateView, VendorUpdateView, tracking_webhook, update_balance, update_tracker,
+    PurchaseRequestCreateView, VendorUpdateView, CustomPurchaseRequestCreateView, tracking_webhook, update_balance, update_tracker,
     update_pr_status, generate_pr_pdf
 )
 from django.conf.urls.static import static
@@ -22,7 +22,8 @@ urlpatterns = [
     path("vendor/<int:pk>-<str:slug>/update", VendorUpdateView.as_view(), name='update_vendor'),
     path("vendor/<int:pk>-<str:slug>/delete", VendorDeleteView.as_view(), name='delete_vendor'),
     # path("vendor/modal-new/", VendorModalCreateView.as_view(), name="modal_create_vendor"),
-    path("new-purchase-request/", PurchaseRequestCreateView.as_view(), name="new_pr"),
+    path("purchase-request/new/", PurchaseRequestCreateView.as_view(), name="new_pr"),
+    path("purchase-request/new-custom/", CustomPurchaseRequestCreateView.as_view(), name="custom_new_pr"),
     path("purchase-request/<slug:slug>", PurchaseRequestDetailView.as_view(), name="purchaserequest_detail"),
     path("purchase-request/<slug:slug>/update", PurchaseRequestUpdateView.as_view(), name="update_pr"),
     path("purchase-request/<slug:slug>/update-status", update_pr_status, name="update_pr_status"),

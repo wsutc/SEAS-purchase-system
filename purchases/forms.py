@@ -17,7 +17,7 @@ from phonenumber_field.formfields import PhoneNumberField
 
 from django_select2 import forms as s2forms
 
-from purchases.models.models_metadata import Carrier, Department
+from purchases.models.models_metadata import Carrier, Department, Urgency
 from purchases.tracking import register_trackers
 
 class RequisitionerWidget(s2forms.Select2Widget):
@@ -100,7 +100,7 @@ class NewPRForm(forms.ModelForm):
             # 'sales_tax_rate': PercentInput(),
             'requisitioner': RequisitionerWidget(attrs={'class':'select-input'}),
             'vendor': VendorWidget(attrs={'class':'select-input'}),
-            'carrier': CarrierWidget(attrs={'class':'select-input'})
+            # 'carrier': CarrierWidget(attrs={'class':'select-input'})
         }
         exclude = ['created_date','number','items','subtotal','sales_tax','grand_total','accounts','tracker','carrier','tracking_number']
 
@@ -108,6 +108,29 @@ class NewPRForm(forms.ModelForm):
     #     self.user = kwargs.pop('user')
     #     super().__init__(*args,**kwargs)
     #     self.fields['requisitioner'].initial = self.user
+
+# class CustomPurchaseRequestForm(forms.Form):
+#     number = forms.CharField(label="Purchase Request Number", max_length=35)
+#     requisitioner = RequisitionerWidget(attrs='class':'select-input')
+#     vendor = VendorWidget(attrs={'class':'select-input'})
+#     urgency = forms.ModelChoiceField(Urgency)
+#     justification = forms.Textarea(attrs={'rows':2})
+#     instruction = forms.Textarea(attrs={'rows':2})
+
+class CustomPurchaseRequestForm(forms.ModelForm):
+    class Meta:
+        model = PurchaseRequest
+        # name = 'this is a test'
+        widgets = {
+            'justification': forms.Textarea(attrs={'rows':2}),
+            'instruction': forms.Textarea(attrs={'rows':2}),
+            # 'requisitioner': forms.TextInput(),
+            # 'sales_tax_rate': PercentInput(),
+            'requisitioner': RequisitionerWidget(attrs={'class':'select-input'}),
+            'vendor': VendorWidget(attrs={'class':'select-input'}),
+            # 'carrier': CarrierWidget(attrs={'class':'select-input'})
+        }
+        exclude = ['created_date','items','subtotal','sales_tax','grand_total','accounts','tracker','carrier','tracking_number']
 
 # class VendorModelForm(BSModalForm):
 #     class Meta:

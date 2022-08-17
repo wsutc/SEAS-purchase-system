@@ -1,0 +1,73 @@
+{% extends "purchases/list_page.html" %}
+{% load purchases_extras %}
+{% block title %}
+Home
+{% endblock %}
+{% block header %}Holders{% endblock header %}
+{% block new_url %}{% endblock new_url %}
+{% block page %}
+
+<style>
+  .inline {
+    --bs-btn-padding-y: 0rem
+}
+
+</style>
+
+    {% if object_list %}
+    <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
+        <table class="table table-striped">
+          <thead>
+          <tr>
+            <th scope="col">Requisitioner</th>
+            <th scope="col">Number</th>
+            <th>Vendor</th>
+            <th class="col-1 text-center">Status</th>
+            <th>Total</th>
+            <th>Shipping Status</th>
+            <th class="text-center"></th>
+            <th></th>
+          </tr>
+          </thead>
+          <tbody>
+            {% for o in object_list %}
+                <tr>
+                    <td>{{ o.requisitioner }}</td>
+                    <td><a href="{{ o.get_absolute_url }}">{{ o.number }}</a></td>
+                    <td><a href="{{ o.vendor.get_absolute_url }}">{{ o.vendor }}</a></td>
+                    <td class="dropdown align-right">
+                      <button class="btn w-100 inline dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                          {{ o.get_status_display }}
+                      </button>
+                      <ul class="dropdown-menu">
+                          <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=wl&&next={{ request.get_full_path }}">Create</a></li>
+                          <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=aa&&next={{ request.get_full_path }}">Submit</a></li>
+                          <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=ap&&next={{ request.get_full_path }}">Approve</a></li>
+                          <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=or&&next={{ request.get_full_path }}">Order</a></li>
+                          <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=sh&&next={{ request.get_full_path }}">Ship</a></li>
+                          <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=rc&&next={{ request.get_full_path }}">Receive</a></li>
+                      </ul>
+                    </td>
+                    {% comment %} <td>{{ o.get_status_display }}</td> {% endcomment %}
+                    <td>{{ o.grand_total }}</td>
+                    <td>{{ o.tracker_set.first.status|camel_case_split }}</td>
+                    <td class="text-center">
+                      <a href="{% url 'update_pr' slug=o.slug %}">
+                        <i class="fa-solid fa-pencil"></i>
+                      </a>
+                    </td>
+                    <td>
+                      <a href="{% url 'delete_pr' slug=o.slug %}?next={{ request.get_full_path }}">
+                        <i class="fa-solid fa-trash-can"></i>
+                      </a>
+                    </td>
+                </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+    </div>
+
+    {% else %}
+        <p>No manufacturers have been added. Use the <a href="{% url 'new_pr' %}">Add Purchase Request</a> form</p>
+    {% endif %}
+{% endblock %}

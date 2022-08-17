@@ -15,6 +15,8 @@ def link_from_identifier(identifier:str, vendor:Vendor) -> str:
             link = Tormach.link_from_identifier(identifier)
         case 'CDW-G':
             link = CDWG.link_from_identifier(identifier)
+        case 'McMaster-Carr':
+            link = McMaster.link_from_identifier(identifier)
         case _:
             link = None
 
@@ -37,11 +39,7 @@ class Amazon(VendorBaseClass):
 
         url /= identifier
 
-        response = requests.get(url)
-        print(response.status_code)
-        print(response.url)
-
-        return response.url
+        return url
 
 class Tormach(VendorBaseClass):
     """Define any methods related to connections to Tormach's website.
@@ -56,13 +54,9 @@ class Tormach(VendorBaseClass):
         url = Tormach.base_url
 
         url /= 'search'
-        url.args['q'] = identifier        
+        url.args['q'] = identifier
 
-        response = requests.get(url)
-        print(response.status_code)
-        print(response.url)
-
-        return response.url
+        return url
 
 class CDWG(VendorBaseClass):
     """Define any methods related to connections to CDW-G's website.
@@ -77,10 +71,22 @@ class CDWG(VendorBaseClass):
         url = CDWG.base_url
 
         url /= 'search/'
-        url.args['key'] = identifier        
+        url.args['key'] = identifier
 
-        response = requests.get(url)
-        print(response.status_code)
-        print(response.url)
+        return url
 
-        return response.url
+class McMaster(VendorBaseClass):
+    """Define any methods related to connections to CDW-G's website.
+    Unfortunately, it doesn't appear that Tormach has an easy way to determine this.
+    Use their search URL instead.
+    """
+    base_url = furl('https://www.mcmaster.com/')
+
+    def link_from_identifier(identifier:str) -> str:
+        """Returns a query based on the number. Often redirects to product page."""
+
+        url = McMaster.base_url
+
+        url /= identifier
+
+        return url
