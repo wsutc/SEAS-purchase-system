@@ -42,10 +42,14 @@ class Tracker(models.Model):
             super().save(*args, **kwargs)
 
     def get_tracking_link(self):
-        if stub := self.carrier.tracking_link:
-            return "%s%s" % (stub,self.tracking_number)
-        else:
+        try:
+            return "%s%s" % (self.carrier.tracking_link, self.tracking_number)
+        except:
             return None
+        # if stub := self.carrier.tracking_link:
+        #     return "%s%s" % (stub,self.tracking_number)
+        # else:
+        #     return None
 
     def __str__(self):
         value = "{0} {1}".format(self.carrier,self.tracking_number)
@@ -117,6 +121,9 @@ def update_tracker_fields(tracker:Tracker,fields:dict) -> str:
 
         update_fields['events'] = fields.get('events')
         update_fields['events_hash'] = events_hash
+
+    if 'carrier' in fields:
+        update_fields['carrier'] = fields.get('carrier')
 
     if len(update_fields):
         qs.update(**update_fields)

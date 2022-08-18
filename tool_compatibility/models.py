@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.urls import reverse
 from django.utils.text import slugify
 
 # Create your models here.
@@ -9,6 +10,10 @@ class Manufacturer(models.Model):
     website = models.URLField(blank=True, null=True)
     created_date = models.DateTimeField(auto_now_add=True, editable=False)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+
+    def get_absolute_url(self):
+        return reverse("manufacturer_detail", kwargs={"pk": self.pk, "slug": self.slug})
+    
 
     def save(self, *args, **kwargs) -> None:
         if self._state.adding:
@@ -89,8 +94,8 @@ class Shape(models.Model):
 
 class Tool(models.Model):
     manufacturer = models.ForeignKey(Manufacturer, on_delete=models.PROTECT, blank=True, null=True)
-    part_number = models.CharField(help_text="Manufacturer or Vendor Number", max_length=50, unique=True, blank=True, null=True)
-    description = models.TextField(blank=False)
+    part_number = models.CharField(help_text="Manufacturer or Vendor Number", max_length=50, blank=True)
+    description = models.CharField(max_length=100, blank=False)
     slug = models.SlugField(editable=False)
     website = models.URLField(blank=True, null=True)
     created_date = models.DateTimeField(auto_now_add=True)
@@ -98,6 +103,14 @@ class Tool(models.Model):
 
     class Meta:
         ordering = ['part_number']
+        constraints = [
+            models.UniqueConstraint(fields = ('manufacturer','part_number'),name='unique_tool')
+        ]        
+
+    def get_absolute_url(self):
+
+        return reverse("tool_detail", kwargs={"pk": self.pk, "slug": self.slug})
+    
 
     def save(self, *args, **kwargs) -> None:
         if self._state.adding:

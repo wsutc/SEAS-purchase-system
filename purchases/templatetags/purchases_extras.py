@@ -1,4 +1,6 @@
 from django import template
+from django.utils.html import mark_safe, conditional_escape
+from django.template.defaultfilters import stringfilter
 from django.contrib.humanize.templatetags.humanize import intcomma
 import re
 
@@ -60,6 +62,7 @@ def numeric2percent(value:float, decimal_places:int = None):
     return return_value
 
 @register.filter
+@stringfilter
 def camel_case_split(value:str) -> str:
     """Split camel case word into multiple strings"""
     if not value:
@@ -73,3 +76,25 @@ def camel_case_split(value:str) -> str:
     new_string = new_string[:-1]    #remove final space because of for loop
 
     return new_string
+
+@register.filter(needs_autoescape=True)
+@stringfilter
+def urlizespecify(value:str, href:str, autoescape=True) -> str:
+    """Similar to Django's `urlize` but allows for custom text."""
+    if autoescape:
+        value = conditional_escape(value)
+
+    tag = '<a href="{href}">{text}</a>'.format(text=value, href=href)
+
+    return mark_safe(tag)
+
+@register.filter(needs_autoescape=True)
+@stringfilter
+def urlizespecifyblank(value:str, href:str, autoescape=True) -> str:
+    """Similar to Django's `urlize` but allows for custom text."""
+    if autoescape:
+        value = conditional_escape(value)
+
+    tag = '<a href="{href}" target="_blank" rel="noopener noreferrer">{text}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a>'.format(text=value, href=href)
+
+    return mark_safe(tag)

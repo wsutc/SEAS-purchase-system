@@ -1,0 +1,91 @@
+{% extends './detail_page.html' %}
+{% load purchases_extras %}
+{% block header %}{% endblock %}
+{% block title %}{{ object.name }}{% endblock title %}
+
+{% block navigation %}{% endblock navigation %}
+
+{% block page %}
+
+<div class="container mt-4">
+    <div class="card col">
+      <div class="card-header">
+        <h4 class="header-em">{{ object.name }}</h4>
+      </div>
+      <div class="card-body">
+        <table>
+            <tr>
+                <td class="pe-2 fw-bold">Website</td>
+                <td>{{ object.website|urlize }}</td>
+            </tr>
+        </table>
+      </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block related_tool_table %}
+{% if debug %}<div>debug ->count:{{ object.holder_set.count }}</div>{% endif %}
+    <div class="col-12">
+        <div class="h2">Holders</div>
+            <div class="bd-example-snippet bd-code-snippet">
+                <div class="bd-example">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Part Number</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in object.holder_set.all %}
+                                <tr>
+                                    <td>{{ row.description|urlizespecify:row.get_absolute_url }}</td>
+                                    <td>
+                                        {% if row.website %}
+                                            {{ row.part_number|urlizespecifyblank:row.website }}
+                                        {% else %}
+                                            {{ row.part_number }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+{% if debug %}<div>debug ->count:{{ object.insert_set.count }}</div>{% endif %}
+<div class="col-12">
+    <div class="h2">Inserts</div>
+        <div class="bd-example-snippet bd-code-snippet">
+            <div class="bd-example">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Part Number</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in object.insert_set.all %}
+                            <tr>
+                                <td>{{ row.description|urlizespecify:row.get_absolute_url }}</td>
+                                <td>
+                                    {% if row.website %}
+                                        {{ row.part_number|urlizespecifyblank:row.website }}
+                                    {% else %}
+                                        {{ row.part_number }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% comment %} </div> {% endcomment %}
+{% endblock related_tool_table %}

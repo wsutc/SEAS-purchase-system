@@ -14,7 +14,7 @@ from purchases.models.model_helpers import requisitioner_from_user
 
 from purchases.tracking import update_tracking_details, get_generated_signature #, update_tracking_details
 from .models.models_metadata import (
-    Carrier, Vendor
+    Accounts, Carrier, Vendor
 )
 from .models.models_data import (
     Balance, SimpleProduct, Transaction, PurchaseRequest, Requisitioner, PURCHASE_REQUEST_STATUSES, status_reverse
@@ -22,9 +22,10 @@ from .models.models_data import (
 from .models.models_apis import (
     Tracker, TrackingWebhookMessage, update_tracker_fields
 )
-from django.views.generic import ListView
+from django.views.generic import ListView, View
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic.list import MultipleObjectMixin
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from .forms import (
     CreateUserForm, PurchaseRequestAccountsFormset,
@@ -63,6 +64,26 @@ from .forms import AddVendorForm, NewPRForm
 
 # Create your views here.
 
+class PaginatedListMixin(MultipleObjectMixin, View):
+    paginate_by = '10'
+    paginate_orphans = '2'
+
+    def get(self, request, *args, **kwargs):
+        self.queryset = self.get_queryset()
+
+        changed,url = paginate(self)      
+
+        if changed:
+            return url
+        else:
+            return super().get(request, *args, **kwargs) 
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_list'] = context['paginator'].get_elided_page_range(context['page_obj'].number,on_each_side=2,on_ends=1)
+
+        return context
+
 class VendorListView(ListView):
     context_object_name = 'vendors'
     paginate_by = '10'
@@ -85,23 +106,7 @@ class VendorListView(ListView):
 
 class SimpleProductListView(ListView):
     context_object_name = 'simpleproduct'
-    paginate_by = '10'
-    paginate_orphans = '2'
     queryset = SimpleProduct.objects.order_by('purchase_request__vendor','name')
-
-    def get(self, request, *args, **kwargs):
-
-        changed,url = paginate(self)
-
-        if changed:
-            return url
-        else:
-            return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['page_list'] = context['paginator'].get_elided_page_range(context['page_obj'].number,on_each_side=2,on_ends=1)
-        return context
 
 class PurchaseRequestListView(ListView):
     context_object_name = 'purchaserequests'
@@ -149,8 +154,10 @@ class PurchaseRequestDetailView(DetailView):
 
     # def get_object(self, queryset = ...):
     #     return super().get_object(queryset)
-    # def get_object(self, queryset = ...):
+    # def get_object(self, queryset = None):
     #     object = super().get_object(queryset)
+
+    #     # object.account_names = [self.accounts.program_workday, self.accounts.gift, self.accounts.grant]
 
     #     return object
 
@@ -160,9 +167,17 @@ class PurchaseRequestDetailView(DetailView):
     # def get_context_data(self, **kwargs):
     #     context = super().get_context_data(**kwargs)
 
-    #     context['simpleproduct_set'] = SimpleProduct.objects.filter(purchase_request=self.get_object())
+    #     for account in context['object'].purchaserequestaccounts_set:
+    #         types = []
+    #         types.append(account.program_workday)
+    #         types.append(account.gift)
+    #         types.append(account.grant)
 
-    #     # print(context['simpleproduct_set'][0])
+    # #     # context['simpleproduct_set'] = SimpleProduct.objects.filter(purchase_request=self.get_object())
+
+    # #     # print(context['simpleproduct_set'][0])
+
+    # #     context['account_names'] = [self.object.accounts.program_workday, self.object.accounts.gift, self.object.accounts.grant]
 
     #     return context
 
@@ -404,6 +419,10 @@ class PurchaseRequestUpdateView(UpdateView):
                 purchase_request_accounts_formset=context['purchase_request_accounts_formset']
             )
         )
+
+class AccountDetailView(DetailView):
+    model = Accounts
+    template_name = "purchases/account_detail_simple.html"
 
 def update_pr_status(request:HttpRequest, slug:str, *args, **kwargs) -> HttpResponse:
     new_status = request.GET.get('status', None)
@@ -894,34 +913,49 @@ def update_tracker(request,pk,*args, **kwargs):
     tracker = get_object_or_404(Tracker, pk=pk)
 
     try:
-        response = update_tracking_details([(tracker.tracking_number, tracker.carrier.carrier_code)])
+        if tracker.carrier:
+            response = update_tracking_details([(tracker.tracking_number, tracker.carrier.carrier_code)])
+        else:
+            response = update_tracking_details([(tracker.tracking_number, None)])
         
         data = next(iter(response or []), None)
     except Exception as err:
         messages.error(request, "{}".format(err))
 
     if data.get('code') == 0:
-        status = data.get('status')
-        sub_status = data.get('sub_status')
-        delivery_estimate = data.get('delivery_estimate')
-        events = data.get('events')
-        events_hash = data.get('events_hash')
+        fields = {}
+        fields['status'] = data.get('status')
+        fields['sub_status'] = data.get('sub_status')
+        fields['delivery_estimate'] = data.get('delivery_estimate')
+        fields['events'] = data.get('events')
+        fields['events_hash'] = data.get('events_hash')
 
-        fields = {
-            'status': status,
-            'sub_status': sub_status,
-            'delivery_estimate': delivery_estimate,
-            'events': events,
-            'events_hash': events_hash
-        }
+        if not tracker.carrier or tracker.carrier.carrier_code != data.get('carrier_code'):
+             carrier_code = data.get('carrier_code')
+             fields['carrier'], _ = Carrier.objects.get_or_create(
+                carrier_code = carrier_code,
+                defaults={
+                    'name': carrier_code,
+                }
+             )
+
+
+
+        # fields = {
+        #     'status': status,
+        #     'sub_status': sub_status,
+        #     'delivery_estimate': delivery_estimate,
+        #     'events': events,
+        #     'events_hash': events_hash
+        # }
 
         tracker_str = tracker.tracking_number.upper()
 
         count = update_tracker_fields(tracker,fields)
         if count:
             messages.success(request, "Tracker '{}' updated with new information.".format(tracker_str))
-        elif status == 'NotFound':
-            messages.warning(request, "Tracker '{}' was not found, please check the tracking number and carrier ({}).".format(tracker_str,tracker.carrier.name))
+        elif fields['status'] == 'NotFound':
+            messages.warning(request, "Tracker '{}' was not found, please check the tracking number and carrier ({}).".format(tracker_str,fields['carrier'].name))
         else:
             messages.info(request, "Tracker '{}' was already up to date.".format(tracker_str))
 

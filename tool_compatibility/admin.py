@@ -1,6 +1,7 @@
 from urllib import request
 from django.contrib import admin
 from django.contrib.auth.models import User
+from django.urls import reverse_lazy
 
 from .models import Coating, Grade, Holder, Insert, Manufacturer, Shape, Tool
 
@@ -44,6 +45,18 @@ class ToolBaseAdminClass(admin.ModelAdmin):
         obj.created_by = request.user
 
         super().save_model(request, obj, form, change)
+
+    def response_add(self, request, obj, post_url_continue = ...):
+        url = reverse_lazy(obj)
+        
+        return url
+
+    def response_change(self, request, obj, post_url_continue = ...):
+        url = reverse_lazy(obj)
+
+        url = super().response_change(request, obj)
+        
+        return url
 
 # Register your models here.
 @admin.register(Manufacturer)

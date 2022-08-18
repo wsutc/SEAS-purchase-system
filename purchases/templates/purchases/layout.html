@@ -413,6 +413,15 @@
             <a href="{% url 'list_setupsheet' %}" class="nav-link px-2 link-dark">Setup Sheets</a>
           </ul>
         </li>
+        <li>
+          <a href="#" class="nav-link px-2 link-secondary dropdown-toggle" id="dropdownTools" data-bs-toggle="dropdown" aria-expanded="false">
+            Tools
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="dropdownTools">
+            <a href="{% url 'holder_list' %}" class="nav-link px-2 link-dark">Holders</a>
+            {% comment %} <a href="{% url 'list_setupsheet' %}" class="nav-link px-2 link-dark">Setup Sheets</a> {% endcomment %}
+          </ul>
+        </li>
       </ul>
 
       {% comment %} <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">

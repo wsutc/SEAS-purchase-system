@@ -31,7 +31,7 @@
             </tr>
             <tr>
                 <td class="pe-2 fw-bold">Email</td>
-                <td><a href="mailto:{{ object.user.email }}">{{ object.user.email }}</a></td>
+                <td>{{ object.user.email|urlize }}</td>
             </tr>
           </table>
         </div>

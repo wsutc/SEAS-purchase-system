@@ -1,0 +1,51 @@
+{% extends "purchases/list_page.html" %}
+{% load purchases_extras %}
+{% block title %}
+Home
+{% endblock %}
+{% block header %}Insertss{% endblock header %}
+{% block new_url %} {% url 'admin:tool_compatibility_insert_add' %} {% endblock new_url %}
+{% block page %}
+
+<style>
+  .inline {
+    --bs-btn-padding-y: 0rem
+}
+
+</style>
+
+<div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
+  <table class="table table-striped">
+    <thead>
+    <tr>
+      <th>Description</th>
+      <th>Part Number</th>
+      <th>Manufacturer</th>
+      <th>Designation</th>
+      <th></th>
+    </tr>
+    </thead>
+    <tbody>
+      {% for o in object_list %}
+        <tr>
+          <td>{{ o.description|urlizespecify:o.get_absolute_url }}</td>
+          <td>
+            <a href="{{ o.website }}" target="_blank" rel="noopener noreferrer">
+              {{ o.part_number }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i>
+            </a>
+          </td>
+          <td>{{ o.manufacturer|urlizespecify:o.manufacturer.get_absolute_url }}</td>
+          <td>{{ o.designation.abbreviation }}</td>
+          <td>
+            <a href="{% url 'admin:tool_compatibility_insert_history' o.pk %}"><i class="fa-solid fa-clock-rotate-left"></i></a>
+            <a href="{% url 'admin:tool_compatibility_insert_change' o.pk %}"><i class="fa-solid fa-pencil"></i></a>
+            <a href="{% url 'admin:tool_compatibility_insert_delete' o.pk %}"><i class="fa-solid fa-trash-can"></i></a>
+          </td>
+        </tr>
+      {% empty %}
+        <tr>Please add a holder <a href="{% url 'admin:tool_compatibility_insert_add' %}">here</a>.</tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

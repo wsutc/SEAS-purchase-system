@@ -264,7 +264,10 @@ class TrackerForm(forms.ModelForm):
 
     def clean(self):
         tracking_number = self.cleaned_data.get('tracking_number')
-        carrier_code = self.cleaned_data.get('carrier').carrier_code
+        if self.data.get('carrier'):
+            carrier_code = self.cleaned_data.get('carrier').carrier_code
+        else:
+            carrier_code = None
 
         tracker_list = [(tracking_number, carrier_code)]
         try:
@@ -290,12 +293,15 @@ class TrackerForm(forms.ModelForm):
                 raise forms.ValidationError(rejected_response['message'],rejected_response['code'])
 
         # get carrier by code; on the off chance that there's an unrecognized code, create a new carrier
-        self.carrier, _ = Carrier.objects.get_or_create(
-                    carrier_code = response_dict['carrier_code'],
-                    defaults={
-                        'name': response_dict['carrier_code']
-                    }
-                )
+        if carrier_code:
+            self.carrier, _ = Carrier.objects.get_or_create(
+                        carrier_code = response_dict['carrier_code'],
+                        defaults={
+                            'name': response_dict['carrier_code']
+                        }
+                    )
+        else:
+            self.carrier = None
         self.tracking_number = response_dict['number']
 
         return super().clean()

@@ -133,9 +133,13 @@
                 <tbody>
                     {% for budget in object.purchaserequestaccounts_set.all %}
                         <tr>
-                            <td>{{ budget.accounts.program_workday }}</td>
+                            {% url 'accounts_detail' budget.accounts.pk as account_reverse %}
+                                <td><a href="{{ account_reverse }}">{{ budget.accounts.program_workday }}</a></td>
+                                <td><a href="{{ account_reverse }}">{{ budget.accounts.gift }}</a></td>
+                                <td><a href="{{ account_reverse }}">{{ budget.accounts.grant }}</a></td>
+                            {% comment %} <td><a href="{% url 'accounts_detail' budget.accounts.pk %}">{{ budget.accounts.program_workday }}</a></td>
                             <td>{{ budget.accounts.gift }}</td>
-                            <td>{{ budget.accounts.grant }}</td>
+                            <td>{{ budget.accounts.grant }}</td> {% endcomment %}
                             <td>{{ budget.spend_category.code }}</td>
                             {% if budget.distribution_type == 'percent' %}
                                 <td>{{ budget.distribution_input|percent:2 }}</td>
@@ -232,6 +236,13 @@
 
 {% block related_pr_table %}{% endblock related_pr_table %}
 {% block related_simpleproduct_table %}{% endblock related_simpleproduct_table %}
-{% comment %} <pre> {% filter force_escape %} {% debug %} {% endfilter %} </pre> {% endcomment %}
+
+{% comment %} <script>
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+      })
+</script> {% endcomment %}
+
+<pre> {% filter force_escape %} {% debug %} {% endfilter %} </pre>
 
 {% endblock %}

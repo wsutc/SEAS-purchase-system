@@ -1,4 +1,5 @@
 {% extends "purchases/list_page.html" %}
+{% load purchases_extras %}
 {% block title %}
 All Requisitioners
 {% endblock %}
@@ -15,20 +16,20 @@ All Requisitioners
             <th class="col-3">User</th>
             <th>Email</th>
             <th>Phone</th>
-            <th class="col-1"></th>
+            {% comment %} <th class="col-1"></th> {% endcomment %}
           </tr>
           </thead>
           <tbody>
             {% for v in object_list %}
             <tr>
-                <td><a href="{{ v.get_absolute_url }}">{{ v.user.get_full_name }}</a></td>
-                <td><a href="mailto:{{ object.requisitioner.user.email }}">{{ v.user.email }}</a></td>
+                <td>{{ v.user.get_full_name|urlizespecify:v.get_absolute_url }}</td>
+                <td>{{ v.user.email|urlize }}</td>
                 <td>{{ v.phone|default_if_none:"" }}</td>
-                <td class="text-center">
+                {% comment %} <td class="text-center">
                     <a href="#">
                         <i class="fa-solid fa-pencil"></i>
                     </a>
-                </td>
+                </td> {% endcomment %}
             </tr>
         {% endfor %}
           </tbody>
