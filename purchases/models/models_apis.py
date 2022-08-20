@@ -1,4 +1,7 @@
+from datetime import datetime
+from time import strptime
 from django.db import models
+from django.db.models import Min
 from django.contrib import messages
 from django.http import HttpResponse
 from django.urls import reverse
@@ -9,6 +12,13 @@ from purchases.models.models_data import PurchaseRequest
 
 
 from .models_metadata import Carrier
+
+class TrackerManager(models.Manager):
+    def get_queryset(self):
+        # first_event_time=Min('trackingevent__time_utc')
+        qs = super().get_queryset().annotate(time_utc=Min('trackingevent__time_utc')).order_by('-time_utc')
+        # does_exist = qs.exists()
+        return qs
 
 class Tracker(models.Model):
     id = models.CharField(max_length=100, primary_key=True, editable=False,null=False)
@@ -22,6 +32,9 @@ class Tracker(models.Model):
     delivery_estimate = models.DateTimeField(blank=True,null=True)
     purchase_request = models.ForeignKey(PurchaseRequest,on_delete=models.CASCADE,null=True)
 
+    objects_ordered = TrackerManager()
+    objects = models.Manager()
+
     class Meta:
         indexes = [
             models.Index(fields=['id'])
@@ -29,6 +42,7 @@ class Tracker(models.Model):
         constraints = [
             models.UniqueConstraint(fields = ('tracking_number','carrier'),name='unique_tracking_number_carrier')
         ]
+        # ordering = ['-trackingevent_set__time_utc_first']
 
     def get_absolute_url(self):
         kwargs = {
@@ -39,7 +53,7 @@ class Tracker(models.Model):
     def save(self, *args, **kwargs):
         if self._state.adding:
             self.id = self.tracking_number
-            super().save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     def get_tracking_link(self):
         try:
@@ -67,9 +81,9 @@ class TrackingWebhookMessage(models.Model):
 class TrackingEvent(models.Model):
     tracker = models.ForeignKey(Tracker,on_delete=models.CASCADE)
     time_utc = models.DateTimeField()
-    description = models.TextField(max_length=150,null=True)
-    location = models.CharField(max_length=100,null=True)
-    stage = models.CharField(max_length=50, blank=True, null=True)
+    description = models.TextField(null=True)
+    location = models.CharField(max_length=100, blank=True)
+    stage = models.CharField(max_length=50, blank=True)
 
     class Meta:
         ordering = ['-time_utc']
@@ -100,7 +114,7 @@ def create_events(tracker:Tracker, events) -> tuple[list[TrackingEvent], list[Tr
 
     return (created_events,updated_events)
 
-def update_tracker_fields(tracker:Tracker,fields:dict) -> str:
+def update_tracker_fields(tracker:Tracker,fields:dict) -> int:
     """Updates <tracker> using <fields>"""
     qs = Tracker.objects.filter(pk=tracker.pk)          # using `queryset.update` prevents using `model.save`, therefore, no `post_save` signal
 
@@ -111,22 +125,28 @@ def update_tracker_fields(tracker:Tracker,fields:dict) -> str:
     if tracker.sub_status != (sub_status := fields.get('sub_status')):
         update_fields['sub_status'] = sub_status
 
-    if tracker.delivery_estimate != (delivery_estimate := fields.get('delivery_estimate')):
+    if delivery_estimate := fields.get('delivery_estimate'):
+        delivery_estimate = datetime.fromisoformat(delivery_estimate)
+    else:
+        delivery_estimate = None
+
+    if tracker.delivery_estimate != delivery_estimate:
         update_fields['delivery_estimate'] = delivery_estimate
 
     events_hash = str(fields.get('events_hash'))
 
     if tracker.events_hash != events_hash:
-        _,_ = create_events(tracker,fields.get('events'))
+        _, _ = create_events(tracker,fields.get('events'))
 
-        update_fields['events'] = fields.get('events')
+        update_fields['events'] = fields.get('events')      # This is the JSON field, *not* the TrackingEvent model
         update_fields['events_hash'] = events_hash
 
     if 'carrier' in fields:
         update_fields['carrier'] = fields.get('carrier')
 
     if len(update_fields):
-        qs.update(**update_fields)
-        return 1
+        count = qs.update(**update_fields)
+        # qs.update(status=status)
+        return count
     else:
         return None

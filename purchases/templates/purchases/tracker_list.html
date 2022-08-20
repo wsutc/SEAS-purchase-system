@@ -17,7 +17,9 @@ Trackers
                 <th>Tracking Number</th>
                 <th class="col-1">Track</th>
                 <th class="col">Status</th>
+                <th>Delivery Estimate</th>
                 <th class="col-2">Purchase Request</th>
+                <th>Vendor</th>
                 <th></th>
             </tr>
           </thead>
@@ -33,9 +35,14 @@ Trackers
                         </a>
                     {% endif %}
                 </td>
-                <td>{{ o.status|default_if_none:"" }}</td>
+                <td>{{ o.status|default_if_none:""|camel_case_split }}</td>
+                <td>{{ o.delivery_estimate|date:"SHORT_DATETIME_FORMAT" }}</td>
+                {% comment %} <td>{{ o.trackingevent_set.earliest.time_utc }}</td> {% endcomment %}
                 <td><a href="{{ o.purchase_request.get_absolute_url }}">{{ o.purchase_request }}</a></td>
+                <td>{{ o.purchase_request.vendor.name|urlizespecify:o.purchase_request.vendor.get_absolute_url }}</td>
                 <td>
+                    <a href="{% url 'update_tracker' o.pk %}"><i class="fa-solid fa-arrows-rotate"></i></a>
+                    <a href="{% url 'admin:purchases_tracker_change' o.pk %}"><i class="fa-solid fa-pencil"></i></a>
                     <a href="{% url 'tracker_delete' pk=o.pk %}?next={{ request.get_full_path }}">
                         <i class="fa-solid fa-trash-can"></i>
                     </a>
@@ -49,6 +56,4 @@ Trackers
     {% else %}
         <p>No trackers created</p>
     {% endif %}
-
-<div>{{ kwargs.page }}</div>
 {% endblock %}

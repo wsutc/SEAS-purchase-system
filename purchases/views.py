@@ -20,7 +20,7 @@ from .models.models_data import (
     Balance, SimpleProduct, Transaction, PurchaseRequest, Requisitioner, PURCHASE_REQUEST_STATUSES, status_reverse
 )
 from .models.models_apis import (
-    Tracker, TrackingWebhookMessage, update_tracker_fields
+    Tracker, TrackingWebhookMessage, create_events, update_tracker_fields
 )
 from django.views.generic import ListView, View
 from django.views.generic.detail import DetailView
@@ -53,7 +53,7 @@ from functools import partial
 
 from furl import furl
 
-from web_project.helpers import paginate, redirect_to_next
+from web_project.helpers import fragment_filters, get_new_page_fragment, paginate, redirect_to_next
 
 # from fdfgen import forge_fdf
 
@@ -61,86 +61,70 @@ from web_project.helpers import paginate, redirect_to_next
 
 from .forms import AddVendorForm, NewPRForm
 
-
 # Create your views here.
 
 class PaginatedListMixin(MultipleObjectMixin, View):
     paginate_by = '10'
     paginate_orphans = '2'
 
-    def get(self, request, *args, **kwargs):
-        self.queryset = self.get_queryset()
-
-        changed,url = paginate(self)      
-
-        if changed:
-            return url
-        else:
-            return super().get(request, *args, **kwargs) 
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['page_list'] = context['paginator'].get_elided_page_range(context['page_obj'].number,on_each_side=2,on_ends=1)
+        page_obj = context['page_obj']
+        if page_obj.has_previous():
+            previous_page = page_obj.previous_page_number()
+            context['previous_page_fragment'] = get_new_page_fragment(self, previous_page)
+        if page_obj.has_next():
+            next_page = page_obj.next_page_number()
+            context['next_page_fragment'] = get_new_page_fragment(self, next_page)
+        simple_page_list = context['paginator'].get_elided_page_range(context['page_obj'].number,on_each_side=2,on_ends=1)
+
+        page_fragments = []
+        for page in simple_page_list:
+            if page != '...':
+                fragment = (page, get_new_page_fragment(self, page))
+                page_fragments.append(fragment)
+            else:
+                page_fragments.append(page, '')
+
+        context['page_list'] = page_fragments
 
         return context
 
-class VendorListView(ListView):
+class VendorListView(PaginatedListMixin, ListView):
     context_object_name = 'vendors'
-    paginate_by = '10'
-    paginate_orphans = '2'
     queryset = Vendor.objects.order_by('name')
 
-    def get(self, request, *args, **kwargs):
-
-        changed,url = paginate(self)
-
-        if changed:
-            return url
-        else:
-            return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['page_list'] = context['paginator'].get_elided_page_range(context['page_obj'].number,on_each_side=2,on_ends=1)
-        return context
-
-class SimpleProductListView(ListView):
+class SimpleProductListView(PaginatedListMixin, ListView):
     context_object_name = 'simpleproduct'
     queryset = SimpleProduct.objects.order_by('purchase_request__vendor','name')
 
-class PurchaseRequestListView(ListView):
+
+
+class PurchaseRequestListViewBase(PaginatedListMixin, ListView):
     context_object_name = 'purchaserequests'
-    paginate_by = '10'
-    paginate_orphans = '2'
     queryset = PurchaseRequest.objects.order_by('-created_date')
 
+    class Meta:
+        abstract = True
+    
     def get_queryset(self):
-        requisitioner_value = self.request.GET.get('requisitioner', '')
-        if requisitioner_value != '':
-            requisitioner = get_object_or_404(Requisitioner,slug=requisitioner_value)
-            qs = PurchaseRequest.objects.filter(requisitioner = requisitioner).order_by('-created_date')
-            return qs
-        else:
-            # qs = PurchaseRequest.objects.order_by('-created_date')
-            return self.queryset
+        qs = super().get_queryset()
 
-    def get(self, request, *args, **kwargs):
-        self.queryset = self.get_queryset()
+        qs = fragment_filters(self.request, qs)
 
-        changed,url = paginate(self)
+        return qs
 
-        # get =        
+class PurchaseRequestListView(PurchaseRequestListViewBase):
+    pass
 
-        if changed:
-            return url
-        else:
-            return super().get(request, *args, **kwargs) 
+class RequisitionerPurchaseRequestListView(PurchaseRequestListViewBase):
+    def get_queryset(self):
+        self.requisitioner = get_object_or_404(Requisitioner, slug=self.kwargs['requisitioner'])
+        qs = PurchaseRequest.objects.filter(requisitioner = self.requisitioner).order_by('-created_date')
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['page_list'] = context['paginator'].get_elided_page_range(context['page_obj'].number,on_each_side=2,on_ends=1)
+        qs = fragment_filters(self.request, qs)
 
-        return context
+        return qs
 
 class VendorDetailView(DetailView):
     model = Vendor
@@ -151,35 +135,6 @@ class PurchaseRequestDetailView(DetailView):
     template_name = "purchases/purchaserequest_detail.html"
     context_object_name = 'purchaserequest'
     query_pk_and_slug = True
-
-    # def get_object(self, queryset = ...):
-    #     return super().get_object(queryset)
-    # def get_object(self, queryset = None):
-    #     object = super().get_object(queryset)
-
-    #     # object.account_names = [self.accounts.program_workday, self.accounts.gift, self.accounts.grant]
-
-    #     return object
-
-    # def get_queryset(self):
-    #     return super().get_queryset()
-
-    # def get_context_data(self, **kwargs):
-    #     context = super().get_context_data(**kwargs)
-
-    #     for account in context['object'].purchaserequestaccounts_set:
-    #         types = []
-    #         types.append(account.program_workday)
-    #         types.append(account.gift)
-    #         types.append(account.grant)
-
-    # #     # context['simpleproduct_set'] = SimpleProduct.objects.filter(purchase_request=self.get_object())
-
-    # #     # print(context['simpleproduct_set'][0])
-
-    # #     context['account_names'] = [self.object.accounts.program_workday, self.object.accounts.gift, self.object.accounts.grant]
-
-    #     return context
 
 class RequisitionerCreateView(CreateView):
     form_class = CreateUserForm
@@ -199,27 +154,10 @@ class RequisitionerDetailView(DetailView):
     template_name = "purchases/requisitioner_detail.html"
     query_pk_and_slug = True
 
-class RequisitionerListView(ListView):
+class RequisitionerListView(PaginatedListMixin, ListView):
     context_object_name = 'requisitioners'
-    paginate_by = '10'
-    paginate_orphans = '2'
     admin_user = User.objects.filter(username='admin').first()
     queryset = Requisitioner.objects.exclude(user=admin_user).order_by('user')
-
-    def get(self, request, *args, **kwargs):
-
-        changed,url = paginate(self)
-
-        if changed:
-            return url
-        else:
-            return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['page_list'] = context['paginator'].get_elided_page_range(context['page_obj'].number,on_each_side=2,on_ends=1)
-
-        return context
 
 class RequisitionerUpdateView(UpdateView):
     model = Requisitioner
@@ -560,9 +498,12 @@ def process_webhook_payload(payload):
             'status': status,
             'sub_status': sub_status,
             'delivery_estimate': delivery_estimate,
-            'events': events,
-            'events_hash': events_hash
+            'events_hash': events_hash,
         }
+
+        if tracker.events_hash != str(events_hash):
+            _, _ = create_events(tracker, events)
+
         update_tracker_fields(tracker,fields)
 
     return
@@ -835,7 +776,7 @@ class BalancesDetailView(DetailView):
 class LedgersDetailView(DetailView):
     model = Transaction
 
-class LedgersListView(ListView):
+class LedgersListView(PaginatedListMixin, ListView):
     model = Transaction
     template_name = 'purchases/ledgers_list.html'
 
@@ -845,10 +786,8 @@ def update_balance(request, pk:int):
 
     return redirect('balances_list')
 
-class TrackerListView(ListView):
+class TrackerListView(PaginatedListMixin, ListView):
     context_object_name = 'tracker'
-    paginate_by = '10'
-    paginate_orphans = '2'
 
     def get_queryset(self):
         pr_slug = self.request.GET.get('purchase-request', '')
@@ -860,27 +799,9 @@ class TrackerListView(ListView):
             kwargs['carrier'] = get_object_or_404(Carrier,name=carrier)
 
         if kwargs:
-            return Tracker.objects.filter(**kwargs).order_by('tracking_number')
+            return Tracker.objects_ordered.filter(**kwargs)
         else:
-            return Tracker.objects.order_by('-purchase_request__number','tracking_number')
-
-    def get(self, request, *args, **kwargs):
-
-        if not self.queryset:
-            self.queryset = self.get_queryset()
-
-        changed,url = paginate(self)
-
-        if changed:
-            return url
-        else:
-            get = super().get(request, *args, **kwargs)
-            return get
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['page_list'] = context['paginator'].get_elided_page_range(context['page_obj'].number,on_each_side=2,on_ends=1)
-        return context
+            return Tracker.objects_ordered.all()
 
 class TrackerCreateView(CreateView):
     form_class = TrackerForm
@@ -930,7 +851,7 @@ def update_tracker(request,pk,*args, **kwargs):
         fields['events'] = data.get('events')
         fields['events_hash'] = data.get('events_hash')
 
-        if not tracker.carrier or tracker.carrier.carrier_code != data.get('carrier_code'):
+        if not tracker.carrier or tracker.carrier.carrier_code != str(data.get('carrier_code')):
              carrier_code = data.get('carrier_code')
              fields['carrier'], _ = Carrier.objects.get_or_create(
                 carrier_code = carrier_code,
@@ -938,16 +859,6 @@ def update_tracker(request,pk,*args, **kwargs):
                     'name': carrier_code,
                 }
              )
-
-
-
-        # fields = {
-        #     'status': status,
-        #     'sub_status': sub_status,
-        #     'delivery_estimate': delivery_estimate,
-        #     'events': events,
-        #     'events_hash': events_hash
-        # }
 
         tracker_str = tracker.tracking_number.upper()
 

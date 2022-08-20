@@ -225,7 +225,7 @@ class SimpleProductCopyForm(forms.ModelForm):
         vendor = self.instance.purchase_request.vendor
 
         # Reduce list of purchase requests to only those that are the same
-        # vendor but exclude those that already include this item
+        # vendor and exclude those that already include this item
         self.fields['purchase_request'].queryset = (
             PurchaseRequest.objects.filter(vendor=vendor)
             .exclude(simpleproduct__identifier=self.instance.identifier)

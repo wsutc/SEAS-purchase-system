@@ -2,6 +2,12 @@
 {% block title %}test{% endblock %}
 {% block content %}
 
+<style>
+    .inline {
+      --bs-btn-padding-y: 0rem
+  }
+</style>
+
 {% block navigation %}
     <div class="row mb-3">
         <h1 class="wsu-c-heading col-sm">{% block header %}{% endblock %} <span class="header-em">{% block number %}{% endblock %}</span></h1>
@@ -29,38 +35,9 @@
 
 {% block related_pr_table %}
 {% if debug %}<div>debug ->count:{{ object.purchaserequest_set.count }}</div>{% endif %}
-    <div class="col-12">
-        <div class="h2">Related Purchase Requests</div>
-            <div class="bd-example-snippet bd-code-snippet">
-                <div class="bd-example">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th scope="col">Purchase Request</th>
-                                <th>Vendor</th>
-                                <th>User</th>
-                                <th scope="col">Date</th>
-                                <th>Status</th>
-                                <th scope="col">Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for row in object.purchaserequest_set.all %}
-                                <tr>
-                                    <td><a href="{{ row.get_absolute_url }}">{{ row }}</a></td>
-                                    <td><a href="{{ row.vendor.get_absolute_url }}">{{ row.vendor }}</a></td>
-                                    <td><a href="{{ row.requisitioner.get_absolute_url }}">{{ row.requisitioner.user.get_full_name }}</a></td>
-                                    <td>{{ row.created_date|date:"DATE_FORMAT" }}</td>
-                                    <td>{{ row.get_status_display }}
-                                    <td>{{ row.grand_total }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    {% comment %} </div> {% endcomment %}
+
+{% include "purchases/purchaserequest_list_table.html" with object_list=object.purchaserequest_set.all %}
+
 {% endblock related_pr_table %}
 
 {% block related_simpleproduct_table %}

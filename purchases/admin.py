@@ -1,5 +1,6 @@
 from typing import Set
 from django.contrib import admin, messages
+from django.shortcuts import redirect
 
 from purchases import tracking
 
@@ -141,6 +142,34 @@ class UnitsAdmin(admin.ModelAdmin):
 class UrgencyAdmin(admin.ModelAdmin):
     list_display = ['name','note']
 
+class CarrierListFilterBase(admin.SimpleListFilter):
+    title = 'Carrier'
+    parameter_name = 'carrier'
+
+    class Meta:
+        abstract = True
+
+    def lookups(self, request, model_admin):
+        carriers = []
+        for carrier in Carrier.objects.filter(tracker__isnull = False).distinct():
+            carriers.append((carrier.pk, carrier.name))
+
+        return carriers
+
+class EventCarrierListFilter(CarrierListFilterBase):
+    def queryset(self, request, queryset):
+        if value := self.value():
+            return queryset.filter(tracker__carrier__id = value).distinct()
+        else:
+            return queryset
+
+class TrackerCarrierListFilter(CarrierListFilterBase):
+    def queryset(self, request, queryset):
+        if value := self.value():
+            return queryset.filter(carrier__id = value).distinct()
+        else:
+            return queryset
+
 class HasTrackerListFilter(admin.SimpleListFilter):
     title = 'Has Tracker'
     parameter_name = 'has-tracker'
@@ -217,14 +246,31 @@ class TrackerAdmin(admin.ModelAdmin):
     list_display = ['id','status','sub_status','carrier','purchase_request']
     inlines = [TrackingEventInline]
     actions = [update_selected_trackers]
+    list_filter = [TrackerCarrierListFilter]
+
+    def response_change(self, request, obj, post_url_continue = ...):
+        url = redirect('tracker_detail', pk=obj.pk)
+
+        # url = super().response_change(request, obj)
+        
+        return url
 
 @admin.register(TrackingEvent)
 class TrackingEventAdmin(admin.ModelAdmin):
     list_display = ['tracker','description']
+    search_fields = ['tracker__carrier__name']
+    date_hierarchy = 'time_utc'
+    list_filter = [EventCarrierListFilter]
 
 @admin.register(SimpleProduct)
 class SimpleProductAdmin(admin.ModelAdmin):
     list_display = ['name','link','identifier','purchase_request']
+    search_fields = [
+        'purchase_request',
+        'purchase_request__requisitioner__user__first_name',
+        'purchase_request__requisitioner__user__last_name',
+        'purchase_request__vendor__name'
+    ]
 
 @admin.register(Balance)
 class BalancesAdmin(admin.ModelAdmin):

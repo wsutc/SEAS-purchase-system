@@ -6,6 +6,9 @@ from http.client import HTTPResponse
 from django.contrib import messages
 from django.shortcuts import redirect
 
+from purchases.models.models_data import status_reverse
+from purchases.models.models_metadata import Vendor
+
 def paginate(view:ListView,**kwargs) -> tuple[bool,HTTPResponse]:
     """Validate incoming page number and create redirect if outside bounds or invalid
 
@@ -22,7 +25,7 @@ def paginate(view:ListView,**kwargs) -> tuple[bool,HTTPResponse]:
     page = view.request.GET.get('page',None)
 
     if not page:
-        return (False, '')
+        return (False, redirect(view.request.get_full_path()))
 
     fragment = furl(view.request.get_full_path())
     new_fragment = fragment.copy()
@@ -43,7 +46,7 @@ def paginate(view:ListView,**kwargs) -> tuple[bool,HTTPResponse]:
             return (True,redirect(new_fragment.url))
         else:
             messages.debug(view.request, "Page '{og}' was valid; no change made.".format(og=page))
-            return (False,'')
+            return (False,redirect(new_fragment.url))
     except:
         messages.warning(view.request,message='Warning: Error trying to fix page number.')
         # new = path.copy()
@@ -64,3 +67,39 @@ def redirect_to_next(request:HttpRequest, default_redirect, **kwargs) -> HTTPRes
             redirect_url = reverse(default_redirect)
 
         return redirect_url
+
+def get_new_page_fragment(view:ListView, new_page:int) -> str:
+    """A helper that replaces the 'page' parameter of a path with <new_path>.
+    
+    Useful for defining context for pagination links when using other parameters in a list view.
+    """
+    request_path = furl(view.request.get_full_path())
+    new_path = request_path.copy()
+    new_path.args['page'] = new_page
+
+    return new_path.url
+
+def fragment_filters(request:HttpRequest, queryset):
+    fragment = furl(request.get_full_path())
+
+    if 'status' in fragment.args:
+        key, _ = status_reverse(fragment.args['status'])
+
+        queryset = queryset.filter(status=key)
+
+    if 'vendor' in fragment.args:
+        slug = fragment.args['vendor']
+        vendor = Vendor.objects.filter(slug=slug)
+        if vendor.exists():
+            queryset = queryset.filter(vendor=vendor.first())
+        else:
+            messages.warning(request,"'vendor={}' not found, check that it is typed correctly in address bar.".format(slug))
+
+    if 'sort-by' in fragment.args:
+        sort_by = fragment.args['sort-by']
+        try:
+            queryset = queryset.order_by(sort_by)
+        except:
+            messages.error(request,"Cannot sort by '{}'. Sort ignored.".format(sort_by))
+
+    return queryset

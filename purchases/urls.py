@@ -4,7 +4,7 @@ from django.views.generic import RedirectView
 from purchases.views import (
     AccountDetailView, BalancesDetailView, BalancesListView, LedgersListView, PurchaseRequestDeleteView,
     PurchaseRequestListView, PurchaseRequestUpdateView, RequisitionerCreateView,
-    RequisitionerDetailView, RequisitionerListView, SimpleProductCopyView,
+    RequisitionerDetailView, RequisitionerListView, RequisitionerPurchaseRequestListView, SimpleProductCopyView,
     SimpleProductListView, TrackerCreateView, TrackerDeleteView, TrackerDetailView, TrackerListView, VendorCreateView,
     VendorDetailView, VendorListView, PurchaseRequestDetailView, VendorDeleteView,
     PurchaseRequestCreateView, VendorUpdateView, CustomPurchaseRequestCreateView, tracking_webhook, update_balance, update_tracker,
@@ -14,6 +14,7 @@ from django.conf.urls.static import static
 from django.conf import settings
 
 urlpatterns = [
+    path("", RedirectView.as_view(url = "purchases/")),
     path("purchases/", PurchaseRequestListView.as_view(), name="home"),
     path("purchases/purchase-request/", RedirectView.as_view(pattern_name="home", permanent=False)),
     path("purchases/new-vendor", VendorCreateView.as_view(), name='add_vendor'),
@@ -46,4 +47,5 @@ urlpatterns = [
     path("purchases/simple-products/copy/<int:pk>", SimpleProductCopyView.as_view(), name="copy_simpleproduct"),
     path("purchases/simple-products/", SimpleProductListView.as_view(), name="simpleproducts"),
     path("purchases/select2/", include("django_select2.urls")),
+    path("purchases/<requisitioner>/", RequisitionerPurchaseRequestListView.as_view(), name="req_filtered_pr"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
