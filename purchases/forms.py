@@ -265,11 +265,14 @@ class TrackerForm(forms.ModelForm):
     def clean(self):
         tracking_number = self.cleaned_data.get('tracking_number')
         if self.data.get('carrier'):
-            carrier_code = self.cleaned_data.get('carrier').carrier_code
+            carrier = self.cleaned_data.get('carrier')
         else:
-            carrier_code = None
+            carrier = None
 
-        tracker_list = [(tracking_number, carrier_code)]
+        if carrier:
+            tracker_list = [(tracking_number, carrier.carrier_code)]
+        else:
+            tracker_list = [(tracking_number, None)]
         try:
             responses = register_trackers(tracker_list)
         except TrackerRejectedUnknownCode as err:
@@ -286,22 +289,24 @@ class TrackerForm(forms.ModelForm):
         # if rejected, need to re-specify carrier code and set a message (assuming previously registered)
         else:
             response_dict = rejected_response
-            response_dict['carrier_code'] = carrier_code
+            if carrier:
+                response_dict['tracker'].carrier_code = carrier.carrier_code #this is here to set a the carrier to the form data because a rejection doesn't supply one
+                response_dict['tracker'].carrier_name = carrier.name
             if isinstance(rejected_response['exception'], TrackerPreviouslyRegistered):
                 self.message = response_dict['message']
             else:
                 raise forms.ValidationError(rejected_response['message'],rejected_response['code'])
 
         # get carrier by code; on the off chance that there's an unrecognized code, create a new carrier
-        if carrier_code:
+        if carrier:
             self.carrier, _ = Carrier.objects.get_or_create(
-                        carrier_code = response_dict['carrier_code'],
+                        carrier_code = response_dict['tracker'].carrier_code,
                         defaults={
-                            'name': response_dict['carrier_code']
+                            'name': response_dict['tracker'].carrier_name
                         }
                     )
         else:
             self.carrier = None
-        self.tracking_number = response_dict['number']
+        self.tracking_number = response_dict['tracker'].tracking_number
 
         return super().clean()

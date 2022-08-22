@@ -13,7 +13,7 @@ from .models.models_data import (
     PurchaseRequestAccounts, SimpleProduct,
     SpendCategory, Requisitioner
 )
-from .models.models_apis import Tracker, TrackingEvent, create_events, update_tracker_fields
+from .models.models_apis import Tracker, TrackingEvent #, create_events #, update_tracker_fields
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 class PurchaseRequestInline(admin.TabularInline):
@@ -225,7 +225,7 @@ def update_selected_trackers(modeladmin, request, queryset):
 
             if t_obj.events_hash != str(events_hash):
                 event_update_count += 1
-                _,_ = create_events(t_obj,t.get('events'))
+                _,_ = t_obj.create_events(t.get('events'))
                 t_obj.events_hash = t.get('events_hash')
 
             tracker_objs.append(t_obj)
@@ -241,11 +241,22 @@ def update_selected_trackers(modeladmin, request, queryset):
 
         messages.add_message(request, messages.SUCCESS, "{0} tracker(s) had updated events.".format(event_update_count))
 
+@admin.action(description="Add missing first event time(s)")
+def add_first_event_time(modeladmin, request, queryset):
+    objs = []
+    for tracker in queryset:
+        if not tracker.earliest_event_time and tracker.trackingevent_set.count() > 0:
+            objs.append(tracker)
+            tracker.earliest_event_time = tracker.trackingevent_set.earliest().time_utc
+            messages.success(request, "Tracker {} updated with {} as earliest time.".format(tracker, tracker.earliest_event_time))
+
+    Tracker.objects.bulk_update(objs, ['earliest_event_time'])
+
 @admin.register(Tracker)
 class TrackerAdmin(admin.ModelAdmin):
     list_display = ['id','status','sub_status','carrier','purchase_request']
     inlines = [TrackingEventInline]
-    actions = [update_selected_trackers]
+    actions = [update_selected_trackers, add_first_event_time]
     list_filter = [TrackerCarrierListFilter]
 
     def response_change(self, request, obj, post_url_continue = ...):
@@ -253,6 +264,11 @@ class TrackerAdmin(admin.ModelAdmin):
 
         # url = super().response_change(request, obj)
         
+        return url
+
+    def response_delete(self, request, obj, post_url_continue = ...):
+        url = redirect('tracker_list')
+
         return url
 
 @admin.register(TrackingEvent)

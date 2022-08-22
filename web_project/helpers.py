@@ -6,7 +6,7 @@ from http.client import HTTPResponse
 from django.contrib import messages
 from django.shortcuts import redirect
 
-from purchases.models.models_data import status_reverse
+from purchases.models.models_data import Requisitioner, status_reverse
 from purchases.models.models_metadata import Vendor
 
 def paginate(view:ListView,**kwargs) -> tuple[bool,HTTPResponse]:
@@ -101,5 +101,13 @@ def fragment_filters(request:HttpRequest, queryset):
             queryset = queryset.order_by(sort_by)
         except:
             messages.error(request,"Cannot sort by '{}'. Sort ignored.".format(sort_by))
+
+    if 'requisitioner' in fragment.args:
+        slug = fragment.args['requisitioner']
+        requisitioner = Requisitioner.objects.filter(slug=slug)
+        if requisitioner.exists():
+            queryset = queryset.filter(requisitioner=requisitioner.first())
+        else:
+            messages.warning(request,"'requisitioner={}' not found, check that it is typed correctly in address bar.".format(slug))
 
     return queryset

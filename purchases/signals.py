@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from purchases.vendor_linking import link_from_identifier
 
 from .models.models_metadata import Department
-from .models.models_apis import Tracker, create_events, update_tracker_fields
+from .models.models_apis import Tracker #, create_events #, update_tracker_fields
 from .models.models_data import Requisitioner, PurchaseRequest, SimpleProduct
 
 # from .tracking import build_payload #, update_tracking_details

@@ -12,7 +12,7 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from purchases.models.model_helpers import requisitioner_from_user
 
-from purchases.tracking import update_tracking_details, get_generated_signature #, update_tracking_details
+from purchases.tracking import TrackerObject, update_tracking_details, get_generated_signature #, update_tracking_details
 from .models.models_metadata import (
     Accounts, Carrier, Vendor
 )
@@ -20,7 +20,7 @@ from .models.models_data import (
     Balance, SimpleProduct, Transaction, PurchaseRequest, Requisitioner, PURCHASE_REQUEST_STATUSES, status_reverse
 )
 from .models.models_apis import (
-    Tracker, TrackingWebhookMessage, create_events, update_tracker_fields
+    Tracker, TrackingWebhookMessage #, create_events #, update_tracker_fields
 )
 from django.views.generic import ListView, View
 from django.views.generic.detail import DetailView
@@ -474,37 +474,46 @@ def tracking_webhook(request):
         return HttpResponse("Message successfully received.", content_type="text/plain")
 
 @atomic
-def process_webhook_payload(payload):
+def process_webhook_payload(payload:dict):
+    payload_obj = TrackerObject.fromresponse(payload.get('data'))
     event_type = payload.get('event')
-    data = payload.get('data')
+    # data = payload.get('data')
 
-    tracking_number = data.get('number')
-    carrier_code = data.get('carrier')
-    status = data['track_info']['latest_status']['status']
-    sub_status = data['track_info']['latest_status']['sub_status']
-    delivery_estimate = data['track_info']['time_metrics']['estimated_delivery_date']['from']
-    last_update_date = data['track_info']['latest_event']['time_utc']
-    events = data['track_info']['tracking']['providers'][0]['events']
-    events_hash = data['track_info']['tracking']['providers'][0]['events_hash']
+    # tracking_number = data.get('number')
+    # carrier_code = data.get('carrier')
+    # status = data['track_info']['latest_status']['status']
+    # sub_status = data['track_info']['latest_status']['sub_status']
+    # delivery_estimate = data['track_info']['time_metrics']['estimated_delivery_date']['from']
+    # last_update_date = data['track_info']['latest_event']['time_utc']
+    # events = data['track_info']['tracking']['providers'][0]['events']
+    # events_hash = data['track_info']['tracking']['providers'][0]['events_hash']
 
     try:
-        carrier = Carrier.objects.get(carrier_code=carrier_code)
-        tracker, _ = Tracker.objects.get_or_create(tracking_number=tracking_number,carrier=carrier)
+        carrier, _ = Carrier.objects.get_or_create(
+            carrier_code=payload_obj.carrier_code,
+            defaults={
+                'name': payload_obj.carrier_name
+            }
+            )
+        tracker, _ = Tracker.objects.get_or_create(
+            tracking_number=payload_obj.tracking_number,
+            carrier=carrier
+        )
     except ObjectDoesNotExist:
         raise
 
     if event_type == 'TRACKING_UPDATED':
-        fields = {
-            'status': status,
-            'sub_status': sub_status,
-            'delivery_estimate': delivery_estimate,
-            'events_hash': events_hash,
-        }
+        # fields = {
+        #     'status': payload_obj.status,
+        #     'sub_status': payload_obj.sub_status,
+        #     'delivery_estimate': payload_obj.delivery_estimate,
+        #     'events_hash': payload_obj.events_hash,
+        # }
 
-        if tracker.events_hash != str(events_hash):
-            _, _ = create_events(tracker, events)
+        if tracker.events_hash != str(payload_obj.events_hash):
+            _, _ = tracker.create_events(payload_obj.events)
 
-        update_tracker_fields(tracker,fields)
+        _ = tracker.update_tracker_fields(payload_obj)
 
     return
 
@@ -799,9 +808,9 @@ class TrackerListView(PaginatedListMixin, ListView):
             kwargs['carrier'] = get_object_or_404(Carrier,name=carrier)
 
         if kwargs:
-            return Tracker.objects_ordered.filter(**kwargs)
+            return Tracker.objects.filter(**kwargs)
         else:
-            return Tracker.objects_ordered.all()
+            return Tracker.objects.all()
 
 class TrackerCreateView(CreateView):
     form_class = TrackerForm
@@ -844,29 +853,18 @@ def update_tracker(request,pk,*args, **kwargs):
         messages.error(request, "{}".format(err))
 
     if data.get('code') == 0:
-        fields = {}
-        fields['status'] = data.get('status')
-        fields['sub_status'] = data.get('sub_status')
-        fields['delivery_estimate'] = data.get('delivery_estimate')
-        fields['events'] = data.get('events')
-        fields['events_hash'] = data.get('events_hash')
+        tracker_obj = data.get('tracker')
 
-        if not tracker.carrier or tracker.carrier.carrier_code != str(data.get('carrier_code')):
-             carrier_code = data.get('carrier_code')
-             fields['carrier'], _ = Carrier.objects.get_or_create(
-                carrier_code = carrier_code,
-                defaults={
-                    'name': carrier_code,
-                }
-             )
+        if tracker_obj.events_hash != tracker.events_hash:
+            _, _ = tracker.create_events(tracker_obj.events)
 
         tracker_str = tracker.tracking_number.upper()
 
-        count = update_tracker_fields(tracker,fields)
+        count = tracker.update_tracker_fields(tracker_obj)
         if count:
             messages.success(request, "Tracker '{}' updated with new information.".format(tracker_str))
-        elif fields['status'] == 'NotFound':
-            messages.warning(request, "Tracker '{}' was not found, please check the tracking number and carrier ({}).".format(tracker_str,fields['carrier'].name))
+        elif tracker_obj.status == 'NotFound':
+            messages.warning(request, "Tracker '{}' was not found, please check the tracking number and carrier ({}).".format(tracker_str,tracker_obj.carrier_name))
         else:
             messages.info(request, "Tracker '{}' was already up to date.".format(tracker_str))
 

@@ -36,8 +36,8 @@ Trackers
                     {% endif %}
                 </td>
                 <td>{{ o.status|default_if_none:""|camel_case_split }}</td>
-                <td>{{ o.delivery_estimate|date:"SHORT_DATETIME_FORMAT" }}</td>
-                {% comment %} <td>{{ o.trackingevent_set.earliest.time_utc }}</td> {% endcomment %}
+                {% comment %} <td>{{ o.delivery_estimate|date:"SHORT_DATETIME_FORMAT" }}</td> {% endcomment %}
+                <td>{{ o.earliest_event_time }}</td>
                 <td><a href="{{ o.purchase_request.get_absolute_url }}">{{ o.purchase_request }}</a></td>
                 <td>{{ o.purchase_request.vendor.name|urlizespecify:o.purchase_request.vendor.get_absolute_url }}</td>
                 <td>
