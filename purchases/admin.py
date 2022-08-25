@@ -1,6 +1,8 @@
 from typing import Set
 from django.contrib import admin, messages
 from django.shortcuts import redirect
+from django.db.models import Q
+from django.utils.text import slugify
 
 from purchases import tracking
 
@@ -142,6 +144,25 @@ class UnitsAdmin(admin.ModelAdmin):
 class UrgencyAdmin(admin.ModelAdmin):
     list_display = ['name','note']
 
+class CarrierHasSlugFilter(admin.SimpleListFilter):
+    title = "Has Slug"
+    parameter_name = 'has-slug'
+    
+    def lookups(self, request, model_admin):
+        return (
+            ('true', 'Yes'),
+            ('false', 'No'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'true':
+            return queryset.filter(Q(slug__isnull = False) | Q(slug=''))
+        elif self.value() == 'false':
+            return queryset.filter(slug__isnull = True)
+        else:
+            return queryset
+
+
 class CarrierListFilterBase(admin.SimpleListFilter):
     title = 'Carrier'
     parameter_name = 'carrier'
@@ -184,12 +205,26 @@ class HasTrackerListFilter(admin.SimpleListFilter):
         if self.value():
             return queryset.filter(tracker__isnull = False).distinct()
 
+@admin.action(description="Create Slug")
+def generate_slug(modeladmin:admin.ModelAdmin, request, queryset):
+    for counter, object in enumerate(queryset):
+        if not object.slug:
+            # pass
+            print("Name({}): {}".format(counter, object.name))
+            object.slug = slugify(object.name, allow_unicode=True)
+            print("Slug({}): {}".format(counter, object.slug))
+
+    # print(modeladmin.model)
+    count = modeladmin.model.objects.bulk_update(queryset, ['slug'], batch_size=100)
+    messages.success(request, message="{} records successfully updated.".format(count))
+
 @admin.register(Carrier)
 class CarrierAdmin(admin.ModelAdmin):
-    list_display = ['name','carrier_code']
+    list_display = ['name','carrier_code','slug']
     inlines = [TrackerInline]
-    search_fields = ['name']
-    list_filter = (HasTrackerListFilter,)
+    search_fields = ['name','carrier_code','slug']
+    list_filter = (HasTrackerListFilter,CarrierHasSlugFilter)
+    actions = [generate_slug]
 
 class TrackingEventInline(admin.TabularInline):
     model = TrackingEvent

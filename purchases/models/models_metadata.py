@@ -1,35 +1,57 @@
 from django.conf import settings
 from django.db import models
+from django.forms import BaseModelForm
 from django.urls import reverse
 from django.utils.text import slugify
 from djmoney.models.fields import MoneyField
 
 from phonenumber_field.modelfields import PhoneNumberField
 
-class Manufacturer(models.Model):           # still used in `setup_sheets`
+# from web_project.helpers import first_true
+
+def first_true(iterable, default=False, pred=None):
+    """Returns the first true value in the iterable.
+
+    If no true value is found, returns *default*
+
+    If *pred* is not None, returns the first item
+    for which pred(item) is true.
+
+    """
+    # first_true([a,b,c], x) --> a or b or c or x
+    # first_true([a,b], x, f) --> a if f(a) else b if f(b) else x
+    return next(filter(pred, iterable), default)
+
+class BaseModel(models.Model):
+    name = models.CharField(max_length=50)
+    slug = models.SlugField(unique=True, editable=False)
+    created_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        abstract = True
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name, allow_unicode=True)
+        super().save(*args, **kwargs)
+
+class Manufacturer(BaseModel):           # still used in `setup_sheets`
     name = models.CharField("Name of Manufacturer",max_length=50)
-    slug = models.SlugField(max_length=255, unique=True, default='', editable=False)
     website = models.URLField("URL of Manufacturer",blank=True)
     wsu_discount = models.BooleanField("Does WSU get a discount?",default=False)
     discount_percentage = models.FloatField(default=0)
     mfg_logo = models.ImageField("Manufacturer Logo (optional)",upload_to='manufacturers',blank=True)
-    created_date = models.DateTimeField("Date manufacturer added",auto_now_add=True)
     phone = PhoneNumberField("Manufacturer Phone Number (optional)",blank=True)
-
-    def __str__(self):
-        return self.name
 
     def get_absolute_url(self):
         kwargs = {
             'pk': self.id,
             'slug': self.slug
         }
-        return reverse('manufacturer_detail', kwargs=kwargs)  
-
-    def save(self, *args, **kwargs):
-        value = self.name
-        self.slug = slugify(value, allow_unicode=True)
-        super().save(*args, **kwargs)
+        return reverse('manufacturer_detail', kwargs=kwargs)
 
 class State(models.Model):
     name = models.CharField(max_length=50,unique=True)
@@ -41,9 +63,7 @@ class State(models.Model):
     def __str__(self):
         return self.name
 
-class Vendor(models.Model):
-    name = models.CharField("Name of Vendor",max_length=50)
-    slug = models.SlugField(max_length=255, unique=True, default='', editable=False)
+class Vendor(BaseModel):
     wsu_discount = models.BooleanField("Does WSU get a discount?",default=False)
     discount_percentage = models.FloatField(default=0)
     website = models.URLField("URL/Link to Vendor Website")
@@ -64,25 +84,12 @@ class Vendor(models.Model):
             'pk': self.id,
             'slug': self.slug
         }
-        return reverse('vendor_detail', kwargs=kwargs)  
+        return reverse('vendor_detail', kwargs=kwargs)
 
-    def save(self, *args, **kwargs):
-        value = self.name
-        self.slug = slugify(value, allow_unicode=True)
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.name
-
-class Carrier(models.Model):
-    name = models.CharField("Name of Carrier",max_length=50)
+class Carrier(BaseModel):
     tracking_link = models.URLField("URL stub for tracking",blank=True)
     website = models.URLField("Carrier Website",blank=True)
-    slug = models.CharField("Carrier Slug",max_length=10,blank=True,null=True)
     carrier_code = models.CharField(max_length=30,blank=True,null=True)
-
-    def __str__(self):
-        return self.name
 
 class Unit(models.Model):
     unit = models.CharField(max_length=25)
@@ -105,7 +112,8 @@ class Urgency(models.Model):
 
 ###--------------------------------------- Imported Data -------------------------------------
 
-class Accounts(models.Model):
+class Accounts(BaseModel):
+    name = None
     account = models.CharField("Account",max_length=10)
     budget_code = models.CharField("Budget Code",max_length=5)
     fund = models.CharField("Fund",max_length=5)
@@ -119,15 +127,18 @@ class Accounts(models.Model):
         verbose_name_plural = "Accounts"
         ordering = ['account_title']
 
+    @property
+    def identity(self) -> str:
+        list = [self.program_workday, self.grant, self.gift]
+        value = first_true(list, self.account.title)
+        return value
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.identity(), allow_unicode=True)
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        if self.program_workday:
-            return "{0.program_workday} ({0.account_title})".format(self)
-        elif self.grant:
-            return "%s (%s)" % (self.grant,self.account_title)
-        elif self.gift:
-            return "%s (%s)" % (self.gift,self.account_title)
-        else:
-            return self.account_title
+        return self.identity()
 
 class Department(models.Model):
     code = models.CharField("Code/Abbreviation",max_length=10)
@@ -136,15 +147,20 @@ class Department(models.Model):
     def __str__(self):
         return self.name
         
-class SpendCategory(models.Model):
+class SpendCategory(BaseModel):
     class Meta:
         verbose_name_plural = "Spend Categories"
         ordering = ['code']
-        
+    
+    name = None
     description = models.TextField("Workday Description",blank=False)
     code = models.CharField("Workday ID",max_length=15,blank=False)
     object = models.CharField(max_length=50)
     subobject = models.CharField(max_length=50)
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.code, allow_unicode=True)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return "%s (%s) [%s%s]" % (self.code,self.description,self.object,self.subobject)
@@ -155,6 +171,7 @@ class DocumentNumber(models.Model):
     padding_digits = models.IntegerField(blank=True,null=True)
     next_counter = models.IntegerField(default=1)
     last_number = models.CharField(max_length=50,editable=False,null=True)
+    last_generated_date = models.DateTimeField(auto_now=True)
 
     def get_next_number(self):
         prefix = self.prefix

@@ -7,11 +7,9 @@ Simple Products
 {% comment %} {% block new_url %}{% url 'add_vendor' %}{% endblock new_url %} {% endcomment %}
 
 {% block page %}
-
-    {% if object_list %}
-    <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
-        <table class="table table-striped">
-          <thead>
+<div class="col">
+    <table class="table table-striped">
+        <thead>
             <tr>
                 <th scope="col">Name</th>
                 <th class="col-2">Vendor</th>
@@ -21,35 +19,32 @@ Simple Products
                 <th class="col-2">Purchase Request</th>
                 <th></th>
             </tr>
-          </thead>
-          <tbody>
+        </thead>
+        <tbody>
             {% for o in object_list %}
-            <tr>
-                {% if o.link %}
-                    <td><a href="{{ o.link }}" target="_blank" rel="noopener noreferrer">{{ o.name }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a></td>
-                {% else %}
-                    <td>{{ o.name }}</td>
-                {% endif %}
-                
-                {% if o.purchase_request.vendor.website %}                        
-                    <td><a href="{{ o.purchase_request.vendor.website }}" target="_blank" rel="noopener noreferrer">{{ o.purchase_request.vendor.name }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a></td>
-                {% else %}
-                    <td>{{ o.vendor.name }}</td>
-                {% endif %}
-                <td>{{ o.identifier|default_if_none:"" }}</td>
-                <td>{{ o.manufacturer|default_if_none:"" }}</td>
-                <td>{{ o.unit_price|currency }}</td>
-                <td><a href="{{ o.purchase_request.get_absolute_url }}">{{ o.purchase_request.number }}</a></td>
-                <td><a href="{% url 'copy_simpleproduct' pk=o.pk %}"><i class="fa-solid fa-copy"></i></a></td>
-            </tr>
-        {% endfor %}
-          </tbody>
-        </table>
-        </div>
-    </div>
-    {% else %}
-        <p>No products created.</p>
-    {% endif %}
+                <tr>
+                    {% if o.link %}
+                        <td><a href="{{ o.link }}" target="_blank" rel="noopener noreferrer">{{ o.name|truncatechars:35 }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a></td>
+                    {% else %}
+                        <td>{{ o.name|truncatechars:35 }}</td>
+                    {% endif %}
+                    
+                    {% if o.purchase_request.vendor.website %}                        
+                        <td><a href="{{ o.purchase_request.vendor.website }}" target="_blank" rel="noopener noreferrer">{{ o.purchase_request.vendor.name }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a></td>
+                    {% else %}
+                        <td>{{ o.vendor.name }}</td>
+                    {% endif %}
+                    <td>{{ o.identifier|default_if_none:"" }}</td>
+                    <td>{{ o.manufacturer|default_if_none:"" }}</td>
+                    <td>{{ o.unit_price|currency }}</td>
+                    <td><a href="{{ o.purchase_request.get_absolute_url }}">{{ o.purchase_request.number }}</a></td>
+                    <td><a href="{% url 'copy_simpleproduct' pk=o.pk %}"><i class="fa-solid fa-copy"></i></a></td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="7" class="text-center">No products matching filters.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
-{% comment %} <div id="django-debug"><pre>{% debug %}</pre></div> {% endcomment %}
 {% endblock %}

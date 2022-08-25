@@ -1,55 +1,55 @@
 {% load purchases_extras %}
-
-<div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
-    <table class="table table-striped">
-      <thead>
-      <tr>
-        <th scope="col">Requisitioner</th>
-        <th scope="col">Number</th>
-        <th>Vendor</th>
-        <th class="col-1 text-center">Status</th>
-        <th>Total</th>
-        <th>Shipping Status</th>
-        <th class="text-center"></th>
-        <th></th>
-      </tr>
-      </thead>
-      <tbody>
-        {% for o in object_list %}
-            <tr>
-                <td>{{ o.requisitioner|urlizespecify:o.requisitioner.get_absolute_url }}</td>
-                <td><a href="{{ o.get_absolute_url }}">{{ o.number }}</a></td>
-                <td><a href="{{ o.vendor.get_absolute_url }}">{{ o.vendor }}</a></td>
-                <td class="dropdown align-right">
-                  <button class="btn w-100 inline dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                      {{ o.get_status_display }}
-                  </button>
-                  <ul class="dropdown-menu">
-                      <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=wl&&next={{ request.get_full_path }}">Create</a></li>
-                      <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=aa&&next={{ request.get_full_path }}">Submit</a></li>
-                      <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=ap&&next={{ request.get_full_path }}">Approve</a></li>
-                      <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=or&&next={{ request.get_full_path }}">Order</a></li>
-                      <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=sh&&next={{ request.get_full_path }}">Ship</a></li>
-                      <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=rc&&next={{ request.get_full_path }}">Receive</a></li>
-                  </ul>
-                </td>
-                {% comment %} <td>{{ o.get_status_display }}</td> {% endcomment %}
-                <td>{{ o.grand_total }}</td>
-                <td>{{ o.tracker_set.first.status|camel_case_split }}</td>
-                <td class="text-center">
-                  <a href="{% url 'update_pr' slug=o.slug %}">
-                    <i class="fa-solid fa-pencil"></i>
-                  </a>
-                </td>
-                <td>
-                  <a href="{% url 'delete_pr' slug=o.slug %}?next={{ request.get_full_path }}">
-                    <i class="fa-solid fa-trash-can"></i>
-                  </a>
-                </td>
-            </tr>
-        {% empty %}
-        <div>Nothing in this list.</div>
-        {% endfor %}
-      </tbody>
-    </table>
+<div class="col">
+  <table class="table table-striped">
+    <thead>
+    <tr>
+      <th scope="col">Requisitioner</th>
+      <th scope="col">Number</th>
+      <th>Vendor</th>
+      <th class="col-1 text-center">Status</th>
+      <th>Total</th>
+      <th>Shipping Status</th>
+      <th class="text-center"></th>
+      <th></th>
+    </tr>
+    </thead>
+    <tbody>
+      {% for o in object_list %}
+          <tr>
+              <td>{{ o.requisitioner|urlizespecify:o.requisitioner.get_absolute_url }}</td>
+              <td><a href="{{ o.get_absolute_url }}">{{ o.number }}</a></td>
+              <td><a href="{{ o.vendor.get_absolute_url }}">{{ o.vendor }}</a></td>
+              <td class="dropdown align-right">
+                <button class="btn w-100 inline dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    {{ o.get_status_display }}
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=wl&&next={{ request.get_full_path }}">Create</a></li>
+                    <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=aa&&next={{ request.get_full_path }}">Submit</a></li>
+                    <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=ap&&next={{ request.get_full_path }}">Approve</a></li>
+                    <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=or&&next={{ request.get_full_path }}">Order</a></li>
+                    <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=sh&&next={{ request.get_full_path }}">Ship</a></li>
+                    <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=rc&&next={{ request.get_full_path }}">Receive</a></li>
+                    <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=pt&&next={{ request.get_full_path }}">Receive - Partial</a></li>
+                </ul>
+              </td>
+              {% comment %} <td>{{ o.get_status_display }}</td> {% endcomment %}
+              <td>{{ o.grand_total }}</td>
+              <td>{{ o.tracker_set.first.status|camel_case_split }}</td>
+              <td class="text-center">
+                <a href="{% url 'update_pr' slug=o.slug %}">
+                  <i class="fa-solid fa-pencil"></i>
+                </a>
+              </td>
+              <td>
+                <a href="{% url 'delete_pr' slug=o.slug %}?next={{ request.get_full_path }}">
+                  <i class="fa-solid fa-trash-can"></i>
+                </a>
+              </td>
+          </tr>
+      {% empty %}
+        <tr><td colspan="7">No matches.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>

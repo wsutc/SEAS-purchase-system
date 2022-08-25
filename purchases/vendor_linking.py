@@ -37,7 +37,8 @@ class Amazon(VendorBaseClass):
 
         url = Amazon.base_url
 
-        url /= identifier
+        if identifier:
+            url /= identifier
 
         return url
 
@@ -53,8 +54,9 @@ class Tormach(VendorBaseClass):
 
         url = Tormach.base_url
 
-        url /= 'search'
-        url.args['q'] = identifier
+        if identifier:
+            url /= 'search'
+            url.args['q'] = identifier
 
         return url
 
@@ -70,8 +72,9 @@ class CDWG(VendorBaseClass):
 
         url = CDWG.base_url
 
-        url /= 'search/'
-        url.args['key'] = identifier
+        if identifier:
+            url /= 'search/'
+            url.args['key'] = identifier
 
         return url
 
@@ -86,7 +89,7 @@ class McMaster(VendorBaseClass):
         """Returns a query based on the number. Often redirects to product page."""
 
         url = McMaster.base_url
-
-        url /= identifier
+        if identifier:
+            url /= identifier
 
         return url

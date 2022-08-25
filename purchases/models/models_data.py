@@ -1,5 +1,5 @@
 import decimal
-from xml.dom import NotFoundErr
+# from xml.dom import NotFoundErr
 from django.conf import settings
 from django.db import models
 from django.shortcuts import get_object_or_404
@@ -14,7 +14,7 @@ from django.utils.text import slugify
 from django.db.models import Avg,Sum
 # from purchases.vendor_linking import Amazon, Tormach
 
-from .models_metadata import DocumentNumber, Vendor, Accounts, Carrier, Unit, Urgency, SpendCategory, Department
+from .models_metadata import SpendCategory, DocumentNumber, Vendor, Accounts, Carrier, Unit, Urgency, Department
 # from .models_apis import Tracker
 
 class Requisitioner(models.Model):
@@ -51,6 +51,7 @@ RT = '5'
 OR = '6'
 SH = '7'
 RC = '8'
+PT = '9'
 PURCHASE_REQUEST_STATUSES = (
     (WL, 'Wish List/Created'),
     (AA, 'Awaiting Approval'),
@@ -58,6 +59,7 @@ PURCHASE_REQUEST_STATUSES = (
     (OR, 'Ordered'),
     (SH, 'Shipped'),
     (RC, 'Received'),
+    (PT, 'Partial'),
     (CM, 'Complete'),
     (DN, 'Denied (no resubmission)'),
     (RT, 'Returned (please resubmit)')

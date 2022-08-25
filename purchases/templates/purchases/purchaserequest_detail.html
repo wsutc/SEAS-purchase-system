@@ -20,6 +20,7 @@
         <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=or">Order</a></li>
         <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=sh">Ship</a></li>
         <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=rc">Receive</a></li>
+        <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=object.slug %}?status=pt">Receive - Partial</a></li>
     </ul>
 </div>
 
@@ -156,6 +157,7 @@
 
     {% if debug %}<div class="alert alert-debug">debug ->count:{{ object.simpleproduct_set.count }}</div>{% endif %}
     <div class="col-12">
+        <a href="{% url 'simpleproducts' %}?purchase-request={{ object.slug }}" class="h4">Items</a>
         <div class="bd-example-snippet bd-code-snippet">
             <div class="bd-example">
                 <table class="table table-striped">

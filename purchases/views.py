@@ -53,7 +53,7 @@ from functools import partial
 
 from furl import furl
 
-from web_project.helpers import fragment_filters, get_new_page_fragment, paginate, redirect_to_next
+from web_project.helpers import build_custom_filter_list, build_filter_list, fragment_filters, get_new_page_fragment, paginate, redirect_to_next, truncate_string
 
 # from fdfgen import forge_fdf
 
@@ -64,8 +64,10 @@ from .forms import AddVendorForm, NewPRForm
 # Create your views here.
 
 class PaginatedListMixin(MultipleObjectMixin, View):
-    paginate_by = '10'
+    paginate_by = '20'
     paginate_orphans = '2'
+    filters = []
+    filters_customer = []
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -88,7 +90,60 @@ class PaginatedListMixin(MultipleObjectMixin, View):
 
         context['page_list'] = page_fragments
 
+        count = build_custom_filter_list('status', PurchaseRequest, 'created_date')
+
+        fragment = furl(self.request.get_full_path())
+
+        # Create copy of path and remove 'page' arg. Always remove page when modifying filter.
+        fragment_no_page = fragment.copy()
+        if fragment_no_page.args.has_key('page'):
+            del fragment_no_page.args['page']
+
+        # Get list of args; should be a good proxy for filters
+        non_page_args = []
+        for arg in fragment.args:
+            if arg != 'page':
+                non_page_args.append(arg)
+
+        context['non_page_args'] = non_page_args
+
+        # Start generating actual lists and paths for filters
+        filter_list = []
+
+        for filter_name, tuple in self.filters:
+            queryset = build_filter_list(**tuple)
+            clear_filter_fragment = None
+            if fragment_no_page.args.has_key(filter_name):
+                clear_filter_fragment = fragment_no_page.copy()
+                del clear_filter_fragment.args[filter_name]
+            filter_objects = []
+            for object in queryset:
+                object_fragment = fragment_no_page.copy()
+                active = False
+                if object_fragment.args.has_key(filter_name) and object_fragment.args[filter_name] == object.slug:
+                    active = True
+                object_fragment.args[filter_name] = object.slug
+                filter_objects.append((object, object_fragment.url, active))
+            
+            filter_list.append((filter_name, filter_objects, clear_filter_fragment))
+
+        context['filter_list'] = filter_list
+
+        # Create "clear filter" paths
+        new_fragment = fragment.copy()
+
+        size = new_fragment.args.size()
+        if size > 0 and not (size == 1 and new_fragment.args.has_key('page')):  # Only offer "clear all" button if a non-page arg is present
+            context['clear_filter_fragment'] = new_fragment.path
+
         return context
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+
+        qs = fragment_filters(self.request, qs)
+
+        return qs
 
 class VendorListView(PaginatedListMixin, ListView):
     context_object_name = 'vendors'
@@ -97,25 +152,28 @@ class VendorListView(PaginatedListMixin, ListView):
 class SimpleProductListView(PaginatedListMixin, ListView):
     context_object_name = 'simpleproduct'
     queryset = SimpleProduct.objects.order_by('purchase_request__vendor','name')
-
-
+    filters = [
+            ("vendor", {'model':Vendor, 'parent_model':PurchaseRequest, 'field':'purchaserequest', 'order_by':'name'}),
+            ("requisitioner", {'model':Requisitioner, 'parent_model':PurchaseRequest, 'field':'purchaserequest', 'order_by':'user__last_name'}),
+        ]
 
 class PurchaseRequestListViewBase(PaginatedListMixin, ListView):
     context_object_name = 'purchaserequests'
     queryset = PurchaseRequest.objects.order_by('-created_date')
+    filters = [
+        ("vendor", {'model':Vendor, 'parent_model':PurchaseRequest, 'field':'purchaserequest', 'order_by':'name'}),
+    ]
+
+    # extra_context = {"status": }
 
     class Meta:
         abstract = True
-    
-    def get_queryset(self):
-        qs = super().get_queryset()
-
-        qs = fragment_filters(self.request, qs)
-
-        return qs
 
 class PurchaseRequestListView(PurchaseRequestListViewBase):
-    pass
+    filters = [
+        ("vendor", {'model':Vendor, 'parent_model':PurchaseRequest, 'field':'purchaserequest', 'order_by':'name'}),
+        ("requisitioner", {'model':Requisitioner, 'parent_model':PurchaseRequest, 'field':'purchaserequest', 'order_by':'user__last_name'}),
+    ]
 
 class RequisitionerPurchaseRequestListView(PurchaseRequestListViewBase):
     def get_queryset(self):
@@ -252,6 +310,7 @@ class CustomPurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
     permission_required = 'purchases.add_purchaserequest'
     form_class = CustomPurchaseRequestForm
     template_name = 'purchases/new_pr.html'
+
 
     def get_initial(self):
         req_obj = requisitioner_from_user(self.request.user)
@@ -734,16 +793,6 @@ def appendAsList(data:list[list:str], list:list[list:str]):
 
     return data
 
-def truncate_string(input:str, num_char:int, postfix:str = '...'):
-    if len(input) > num_char:
-        string_length = num_char - len(postfix)
-        new_string = input[:string_length]
-        while new_string[-1:].isspace():
-            new_string = new_string[:-1]
-        return "{}{}".format(new_string,postfix)
-    else:
-        return input
-
 def item_rows(purchase_request:PurchaseRequest):
     """ Create nested list of items to be used in a table """
     items = purchase_request.simpleproduct_set.all()
@@ -797,20 +846,31 @@ def update_balance(request, pk:int):
 
 class TrackerListView(PaginatedListMixin, ListView):
     context_object_name = 'tracker'
+    queryset = Tracker.objects.all()
+    filters = [
+        ("carrier", {'model':Carrier, 'parent_model':Tracker, 'field':'tracker', 'order_by':'name'}),
+        ("vendor", {'model':Vendor, 'parent_model':PurchaseRequest, 'field':'purchaserequest', 'order_by':'name'}),
+    ]
 
-    def get_queryset(self):
-        pr_slug = self.request.GET.get('purchase-request', '')
-        carrier = self.request.GET.get('carrier','')
-        kwargs = {}
-        if pr_slug:
-            kwargs['purchase_request'] = get_object_or_404(PurchaseRequest,slug=pr_slug)
-        if carrier:
-            kwargs['carrier'] = get_object_or_404(Carrier,name=carrier)
+    # def get_queryset(self):
+    #     path = furl(self.request.get_full_path())
+    #     # pr_slug = self.request.GET.get('purchase-request', '')
+    #     pr_slug = path.args.get('purchase-request', None)
+    #     carrier = path.args.get('carrier', None)
+    #     vendor = path.args.get('vendor', None)
+    #     kwargs = {}
+    #     if pr_slug:
+    #         kwargs['purchase_request'] = get_object_or_404(PurchaseRequest,slug=pr_slug)
+    #     if carrier:
+    #         kwargs['carrier'] = get_object_or_404(Carrier,slug=carrier)
+    #     if vendor:
+    #         vendor_obj = get_object_or_404(Vendor, slug=vendor)
+    #         kwargs['purchase_request__in'] = PurchaseRequest.objects.filter(vendor=vendor_obj)
 
-        if kwargs:
-            return Tracker.objects.filter(**kwargs)
-        else:
-            return Tracker.objects.all()
+    #     if kwargs:
+    #         return Tracker.objects.filter(**kwargs)
+    #     else:
+    #         return Tracker.objects.all()
 
 class TrackerCreateView(CreateView):
     form_class = TrackerForm
@@ -840,6 +900,7 @@ class TrackerDeleteView(DeleteView):
         return redirect(redirect_url)
 
 def update_tracker(request,pk,*args, **kwargs):
+    # TODO: not properly identifying whether any new information was obtained
     tracker = get_object_or_404(Tracker, pk=pk)
 
     try:

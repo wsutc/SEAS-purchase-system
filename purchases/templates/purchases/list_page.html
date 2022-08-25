@@ -26,7 +26,15 @@
     <a href="{% block new_url %}{% endblock %}" class="save btn btn-primary col-2">New</a>
 </div>
 
+<main class="d-flex flex-nowrap">
+
 {% block page %}{% endblock %}
+
+{% block filter_sidebar %}
+  {% include "purchases/filter_sidebar.html" %}
+{% endblock filter_sidebar %}
+
+</main>
 
 {% block pagination %}
   {% if page_obj.paginator.num_pages > 1 %}
@@ -69,5 +77,7 @@
   </nav>
   {% endif %}
 {% endblock pagination %}
+
+<div id="django-debug"><pre>{% debug %}</pre></div>
 
 {% endblock content %}
