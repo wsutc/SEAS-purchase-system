@@ -1,4 +1,3 @@
-
 # import http.client
 
 # conn = http.client.HTTPSConnection("api.aftership.com")
@@ -23,14 +22,14 @@ import json
 conn = http.client.HTTPSConnection("api.aftership.com")
 
 headers = {
-    'Content-Type': "application/json",
-    'aftership-api-key': "dcbad674-9232-4bd1-b3fb-eceac9cad026"
-    }
+    "Content-Type": "application/json",
+    "aftership-api-key": "dcbad674-9232-4bd1-b3fb-eceac9cad026",
+}
 
-slug = 'abf'
-tracking_number = '160447002'
+slug = "abf"
+tracking_number = "160447002"
 
-request_str = "/v4/trackings/%s/%s" % (slug,tracking_number)
+request_str = "/v4/trackings/%s/%s" % (slug, tracking_number)
 
 conn.request("GET", request_str, headers=headers)
 
@@ -38,7 +37,7 @@ res = conn.getresponse()
 data = res.read()
 dataJson = json.loads(data.decode("utf-8"))
 
-tracking = dataJson['data']['tracking']
+tracking = dataJson["data"]["tracking"]
 
 # link = tracking['courier_tracking_link']
 # expected = tracking['expected_delivery']
@@ -48,7 +47,7 @@ tracking = dataJson['data']['tracking']
 
 # print('\n\n')
 
-print("Active: " + str(tracking['active']))
-print("Link: " + tracking['courier_tracking_link'])
-print("Expected Delivery: " + tracking['expected_delivery'])
-print("Courier Slug: " + tracking['slug'])
+print("Active: " + str(tracking["active"]))
+print("Link: " + tracking["courier_tracking_link"])
+print("Expected Delivery: " + tracking["expected_delivery"])
+print("Courier Slug: " + tracking["slug"])

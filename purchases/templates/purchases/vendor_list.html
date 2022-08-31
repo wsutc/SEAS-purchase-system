@@ -6,28 +6,26 @@ All Vendors
 {% block new_url %}{% url 'add_vendor' %}{% endblock new_url %}
 
 {% block page %}
-
-    {% if object_list %}
-    <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
+    <div class="col">
         <table class="table table-striped">
           <thead>
-          <tr>
-            <th scope="col">Vendor</th>
-            <th class="col-1">Website</th>
-            <th class="col-1"></th>
-            <th class="col-1"></th>
-          </tr>
+            <tr>
+                <th scope="col">Vendor</th>
+                <th class="col">Website</th>
+                <th></th>
+                <th></th>
+            </tr>
           </thead>
           <tbody>
             {% for v in object_list %}
             <tr>
                 <td><a href="{{ v.get_absolute_url }}">{{ v.name }}</td>
                 {% if v.website %}                        
-                    <td><a href="{{ v.website }}" target="_blank" rel="noopener noreferrer">Link<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a></td>
+                    <td><a href="{{ v.website }}" target="_blank" rel="noopener noreferrer">{{ v.website }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a></td>
                 {% else %}
                     <td></td>
                 {% endif %}
-                <td class="text-center">
+                <td>
                     <a href="{% url 'update_vendor' slug=v.slug pk=v.pk %}">
                         <i class="fa-solid fa-pencil"></i>
                     </a>
@@ -38,12 +36,10 @@ All Vendors
                     </a>
                 </td>
             </tr>
+        {% empty %}
+            <p>No vendors have been added. Use the <a href="{% url 'add_vendor' %}">Add Vendor</a> form or modify filters.</p>
         {% endfor %}
           </tbody>
         </table>
-        </div>
     </div>
-    {% else %}
-        <p>No vendors have been added. Use the <a href="{% url 'add_vendor' %}">Add Vendor</a> form</p>
-    {% endif %}
 {% endblock %}

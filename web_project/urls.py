@@ -22,11 +22,11 @@ urlpatterns = [
     path("", include("setup_sheets.urls")),
     path("", include("inventory.urls")),
     path("", include("tool_compatibility.urls")),
-    path('admin/', admin.site.urls),
+    path("admin/", admin.site.urls),
 ]
 
 urlpatterns += staticfiles_urlpatterns()
 
 urlpatterns += [
-    path('accounts/', include('django.contrib.auth.urls')),
+    path("accounts/", include("django.contrib.auth.urls")),
 ]

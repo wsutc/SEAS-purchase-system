@@ -2,8 +2,10 @@ from django.forms import Select
 from django.conf import settings
 from djmoney.forms import MoneyWidget
 
+
 class BlankWidget(Select):
     template_name = "purchases/templates/empty-widget.html"
+
 
 class NoCurrencyMoneyWidget(MoneyWidget):
     def __init__(self, *args, **kwargs):

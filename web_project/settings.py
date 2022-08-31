@@ -15,14 +15,12 @@ import os
 from pathlib import Path
 from django.contrib.messages import constants as message_constants
 
-env = environ.Env(
-    DEBUG=(bool, False)
-)
+env = environ.Env(DEBUG=(bool, False))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-env_path = os.path.join(BASE_DIR, '.env')
+env_path = os.path.join(BASE_DIR, ".env")
 
 print(env_path)
 
@@ -32,14 +30,14 @@ environ.Env.read_env(env_path)
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-=575&#l3pkg&6i%bmymmf+o@7$)tj8oxd=tvsn(n^0!3d8n013'
+SECRET_KEY = "django-insecure-=575&#l3pkg&6i%bmymmf+o@7$)tj8oxd=tvsn(n^0!3d8n013"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 TEMPLATE_DEBUG = True
 MESSAGE_LEVEL = message_constants.DEBUG
 
-ALLOWED_HOSTS = ['127.0.0.1','329d-69-166-40-1.ngrok.io']
+ALLOWED_HOSTS = ["127.0.0.1", "33af-69-166-40-1.ngrok.io"]
 
 
 # Application definition
@@ -48,48 +46,50 @@ ALLOWED_HOSTS = ['127.0.0.1','329d-69-166-40-1.ngrok.io']
 
 INSTALLED_APPS = [
     # 'constance.backends.database',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django_filters",
+    "django_listview_filters",
     # 'crispy_forms',
-    'phonenumber_field',
-    'djmoney',
-    'widget_tweaks',
-    'purchases',
-    'setup_sheets',
-    'inventory',
-    'tool_compatibility',
-    'django_mysql',
+    "phonenumber_field",
+    "djmoney",
+    "widget_tweaks",
+    "purchases",
+    "setup_sheets",
+    "inventory",
+    "tool_compatibility",
+    "django_mysql",
     # 'bootstrap_modal_forms',
-    'django_select2',
+    "django_select2",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'web_project.urls'
+ROOT_URLCONF = "web_project.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
                 # 'purchases.views.manufacturers',
                 # 'purchases.views.states',
             ],
@@ -97,10 +97,10 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'web_project.wsgi.application'
+WSGI_APPLICATION = "web_project.wsgi.application"
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_URL = "/media/"
 
 
 # Database
@@ -111,20 +111,17 @@ DATABASES = {
     #     'ENGINE': 'django.db.backends.sqlite3',
     #     'NAME': BASE_DIR / 'db.sqlite3',
     # }
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': env('DB_NAME'),
-        'USER': env('DB_USER'),
-        'PASSWORD': env('DB_PASSWORD'),
-        'HOST': env('DB_HOST'),
-        'PORT': env('DB_PORT'),
-        'CHARSET': 'utf8mb4',
-        'COLLATION': 'utf8mb4_unicode_ci'
-    },
-    "TEST": {
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": env("DB_NAME"),
+        "USER": env("DB_USER"),
+        "PASSWORD": env("DB_PASSWORD"),
+        "HOST": env("DB_HOST"),
+        "PORT": env("DB_PORT"),
         "CHARSET": "utf8mb4",
-        "COLLATION": 'utf8mb4_unicode_ci'
-    }
+        "COLLATION": "utf8mb4_unicode_ci",
+    },
+    "TEST": {"CHARSET": "utf8mb4", "COLLATION": "utf8mb4_unicode_ci"},
 }
 
 
@@ -133,16 +130,16 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -150,10 +147,10 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
 # TIME_ZONE = 'UTC'
-TIME_ZONE = 'America/Los_Angeles'
+TIME_ZONE = "America/Los_Angeles"
 
 USE_I18N = True
 
@@ -163,25 +160,23 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-INTERNAL_IPS = (
-    '127.0.0.1',
-)
+INTERNAL_IPS = ("127.0.0.1",)
 
-PHONENUMBER_DEFAULT_REGION = 'US'
+PHONENUMBER_DEFAULT_REGION = "US"
 
-PHONENUMBER_DEFAULT_FORMAT = 'NATIONAL'
+PHONENUMBER_DEFAULT_FORMAT = "NATIONAL"
 
 # Custom settings
 
-DEFAULT_TAX_RATE = '.087'
-DEFAULT_INSTRUCTIONS = 'Because grand total amount does not include shipping/handling and tax costs, Dr. Mo approves if total costs exceeds grand total amount.'
+DEFAULT_TAX_RATE = ".087"
+DEFAULT_INSTRUCTIONS = "Because grand total amount does not include shipping/handling and tax costs, Dr. Mo approves if total costs exceeds grand total amount."
 
 # Constance
 
@@ -190,7 +185,7 @@ DEFAULT_INSTRUCTIONS = 'Because grand total amount does not include shipping/han
 #     'DEFAULT_INSTRUCTIONS': ('Because grand total amount does not include shipping/handling and tax costs, Dr. Mo approves if total costs exceeds grand total amount.','Default "Instructions" on Purchase Requests')
 # }
 
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = "/"
 
 
 # EASYPOST_KEY = env('EASYPOST_KEY')
@@ -201,12 +196,15 @@ LOGIN_REDIRECT_URL = '/'
 
 # SMARTSHEET_SHEET_NAME = env('SMARTSHEET_SHEET_NAME')
 
-_17TRACK_KEY = env('_17TRACK_KEY')
+_17TRACK_KEY = env("_17TRACK_KEY")
 
 MESSAGE_TAGS = {
-    message_constants.SUCCESS: 'alert alert-success',
-    message_constants.ERROR: 'alert alert-danger',
-    message_constants.WARNING: 'alert alert-warning',
-    message_constants.INFO: 'alert alert-info',
-    message_constants.DEBUG: 'alert alert-secondary',
+    message_constants.SUCCESS: "alert alert-success",
+    message_constants.ERROR: "alert alert-danger",
+    message_constants.WARNING: "alert alert-warning",
+    message_constants.INFO: "alert alert-info",
+    message_constants.DEBUG: "alert alert-secondary",
 }
+
+FILTERVIEW_SHOW_UNUSED_FILTERS = False
+FILTERVIEW_SHOW_ALL = False

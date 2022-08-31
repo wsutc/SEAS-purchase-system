@@ -11,13 +11,16 @@ from django.views.generic.edit import CreateView
 class ItemCreateView(CreateView):
     model = Item
     # template_name = "item_form.html"
-    fields = '__all__'
+    fields = "__all__"
+
 
 class ItemDetailView(DetailView):
     model = Item
 
+
 class ItemListView(ListView):
     model = Item
+
 
 # def manage_items(request):
 #     ItemFormSet = formset_factory(NewPRIForm)

@@ -1,4 +1,6 @@
 import decimal
+from attr import Attribute
+
 # from xml.dom import NotFoundErr
 from django.conf import settings
 from django.db import models
@@ -11,21 +13,35 @@ from djmoney.models.fields import MoneyField
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
-from django.db.models import Avg,Sum
+from django.db.models import Avg, Sum
+
+from purchases.exceptions import StatusCodeNotFound
+
 # from purchases.vendor_linking import Amazon, Tormach
 
-from .models_metadata import SpendCategory, DocumentNumber, Vendor, Accounts, Carrier, Unit, Urgency, Department
+from .models_metadata import (
+    SpendCategory,
+    DocumentNumber,
+    Vendor,
+    Accounts,
+    Carrier,
+    Unit,
+    Urgency,
+    Department,
+)
+
 # from .models_apis import Tracker
+
 
 class Requisitioner(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    wsu_id = models.CharField("WSU ID",max_length=50,blank=True,null=True)
+    wsu_id = models.CharField("WSU ID", max_length=50, blank=True, null=True)
     slug = models.SlugField(null=True)
-    phone = PhoneNumberField("Phone Number",max_length=25,blank=True,null=True)
-    department = models.ForeignKey(Department,on_delete=models.PROTECT)
+    phone = PhoneNumberField("Phone Number", max_length=25, blank=True, null=True)
+    department = models.ForeignKey(Department, on_delete=models.PROTECT)
 
     class Meta:
-        ordering = ['user']
+        ordering = ["user"]
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.user.get_full_name(), allow_unicode=True)
@@ -33,161 +49,188 @@ class Requisitioner(models.Model):
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        kwargs = {
-            'slug': self.slug,
-            'pk': self.pk
-        }
-        return reverse('requisitioner_detail', kwargs=kwargs)
+        kwargs = {"slug": self.slug, "pk": self.pk}
+        return reverse("requisitioner_detail", kwargs=kwargs)
 
     def __str__(self):
         return self.user.get_full_name()
 
-WL = '0'
-AA = '1'
-AP = '2'
-CM = '3'
-DN = '4'
-RT = '5'
-OR = '6'
-SH = '7'
-RC = '8'
-PT = '9'
-PURCHASE_REQUEST_STATUSES = (
-    (WL, 'Wish List/Created'),
-    (AA, 'Awaiting Approval'),
-    (AP, 'Approved'),
-    (OR, 'Ordered'),
-    (SH, 'Shipped'),
-    (RC, 'Received'),
-    (PT, 'Partial'),
-    (CM, 'Complete'),
-    (DN, 'Denied (no resubmission)'),
-    (RT, 'Returned (please resubmit)')
-)
 
-def status_reverse(code:str) -> tuple[str,str]:
+def status_reverse(code: str) -> tuple[str, str]:
     """Return key and value from status list given two-character code."""
-    global_vars = globals()
-    key = global_vars.get(code.upper(),None)
-    if not key:
-        return None
+    try:
+        key = getattr(PurchaseRequest, code.upper())
+    except AttributeError:
+        message = "No status matching code '{}' found. Please confirm.".format(code)
+        raise StatusCodeNotFound(code, message)
 
-    statuses_dict = dict(PURCHASE_REQUEST_STATUSES)
+    statuses_dict = dict(PurchaseRequest.PURCHASE_REQUEST_STATUSES)
     value = statuses_dict.get(key)
 
     return (key, value)
 
+
+def status_code(key: int) -> str:
+    """Return two-character code (lowered) (e.g. 'rc' for 'Received') given status key (e.g. 8)."""
+    class_variables = [
+        attr
+        for attr in dir(PurchaseRequest)
+        if not callable(getattr(PurchaseRequest, attr)) and not attr.startswith("__")
+    ]
+    # dict = {}
+    for class_variable in class_variables:
+        if getattr(PurchaseRequest, class_variable) == key:
+            return class_variable
+
+    raise StatusCodeNotFound(key)
+
+
 class PurchaseRequest(models.Model):
-    id = models.AutoField(primary_key=True,editable=False)
-    slug = models.SlugField(max_length=255, default='', editable=False)
-    requisitioner = models.ForeignKey(Requisitioner,on_delete=models.PROTECT)
-    number = models.CharField(max_length=10,blank=True)
-    vendor = models.ForeignKey(Vendor,on_delete=models.PROTECT,null=True)
-    created_date = models.DateTimeField("Created Date",auto_now_add=True)
-    need_by_date = models.DateField("Date Required (optional)",blank=True,null=True)
-    tax_exempt = models.BooleanField("Tax Exempt?",default=False)
-    accounts = models.ManyToManyField(Accounts,through='PurchaseRequestAccounts')
-    subtotal = MoneyField("Subtotal",decimal_places=2,max_digits=14,default_currency='USD',default=0)
-    shipping = MoneyField("Shipping ($)",decimal_places=2,max_digits=14,default_currency='USD',default=0)
-    sales_tax_rate = models.DecimalField(max_digits=5,decimal_places=3,default=settings.DEFAULT_TAX_RATE)
-    sales_tax = MoneyField("Sales Tax ($)",decimal_places=2,max_digits=14,default_currency='USD',default=0)
-    grand_total = MoneyField("Grand Total ($)",decimal_places=2,max_digits=14,default_currency='USD',default=0)
-    urgency = models.ForeignKey(Urgency,on_delete=models.PROTECT,default=1)
-    justification = models.TextField("Justification",blank=False)
+    id = models.AutoField(primary_key=True, editable=False)
+    slug = models.SlugField(max_length=255, default="", editable=False)
+    requisitioner = models.ForeignKey(Requisitioner, on_delete=models.PROTECT)
+    number = models.CharField(max_length=10, blank=True)
+    vendor = models.ForeignKey(Vendor, on_delete=models.PROTECT, null=True)
+    created_date = models.DateTimeField("Created Date", auto_now_add=True)
+    need_by_date = models.DateField("Date Required (optional)", blank=True, null=True)
+    tax_exempt = models.BooleanField("Tax Exempt?", default=False)
+    accounts = models.ManyToManyField(Accounts, through="PurchaseRequestAccounts")
+    subtotal = MoneyField(
+        "Subtotal", decimal_places=2, max_digits=14, default_currency="USD", default=0
+    )
+    shipping = MoneyField(
+        "Shipping ($)",
+        decimal_places=2,
+        max_digits=14,
+        default_currency="USD",
+        default=0,
+    )
+    sales_tax_rate = models.DecimalField(
+        max_digits=10, decimal_places=5, default=settings.DEFAULT_TAX_RATE
+    )
+    sales_tax = MoneyField(
+        "Sales Tax ($)",
+        decimal_places=2,
+        max_digits=14,
+        default_currency="USD",
+        default=0,
+    )
+    grand_total = MoneyField(
+        "Grand Total ($)",
+        decimal_places=2,
+        max_digits=14,
+        default_currency="USD",
+        default=0,
+    )
+    urgency = models.ForeignKey(Urgency, on_delete=models.PROTECT, default=1)
+    justification = models.TextField("Justification", blank=False)
     instruction = models.TextField(
         "Special Instructions",
         default=settings.DEFAULT_INSTRUCTIONS,
     )
 
     class Meta:
-        ordering = ['-created_date']
+        ordering = ["-created_date"]
 
-    PO = 'po'
-    PCARD = 'pcard'
-    IRI = 'iri'
-    INV_VOUCHER = 'invoice voucher'
-    CONTRACT = 'contract'
+    PO = "po"
+    PCARD = "pcard"
+    IRI = "iri"
+    INV_VOUCHER = "invoice voucher"
+    CONTRACT = "contract"
     PURCHASE_TYPE = (
-        (PO, 'PURCHASE ORDER'),
-        (PCARD, 'PCARD'),
-        (IRI, 'IRI'),
-        (INV_VOUCHER, 'INVOICE VOUCHER'),
-        (CONTRACT, 'CONTRACT')
+        (PO, "PURCHASE ORDER"),
+        (PCARD, "PCARD"),
+        (IRI, "IRI"),
+        (INV_VOUCHER, "INVOICE VOUCHER"),
+        (CONTRACT, "CONTRACT"),
     )
     purchase_type = models.CharField(
-        "Choose One",
-        choices=PURCHASE_TYPE,
-        default='pcard',
-        max_length=150
+        "Choose One", choices=PURCHASE_TYPE, default="pcard", max_length=150
+    )
+
+    WL = "0"
+    AA = "1"
+    AP = "2"
+    CM = "3"
+    DN = "4"
+    RT = "5"
+    OR = "6"
+    SH = "7"
+    RC = "8"
+    PT = "9"
+    PURCHASE_REQUEST_STATUSES = (
+        (WL, "Wish List/Created"),
+        (AA, "Awaiting Approval"),
+        (AP, "Approved"),
+        (OR, "Ordered"),
+        (SH, "Shipped"),
+        (RC, "Received"),
+        (PT, "Partial"),
+        (CM, "Complete"),
+        (DN, "Denied (no resubmission)"),
+        (RT, "Returned (please resubmit)"),
     )
 
     status = models.CharField(
-        choices=PURCHASE_REQUEST_STATUSES,
-        default='0',
-        max_length=150
+        choices=PURCHASE_REQUEST_STATUSES, default="0", max_length=150
     )
 
     def get_absolute_url(self):
-        kwargs = {
-            'slug': self.slug
-        }
-        return reverse('purchaserequest_detail', kwargs=kwargs)  
+        kwargs = {"slug": self.slug}
+        return reverse("purchaserequest_detail", kwargs=kwargs)
 
     def save(self, *args, **kwargs):
         print(self._state.adding)
         if not self.number:
             doc_number, _ = DocumentNumber.objects.get_or_create(
-                document = 'PurchaseRequest',
-                defaults = {
-                    'prefix': 'PR',
-                    'padding_digits': 5,
-                }
+                document="PurchaseRequest",
+                defaults={
+                    "prefix": "PR",
+                    "padding_digits": 5,
+                },
             )
             self.number = doc_number.get_next_number()
         value = self.number
         self.slug = slugify(value, allow_unicode=True)
-        
+
         super().save(*args, **kwargs)
 
     def get_subtotal(self):
-        extended_price = SimpleProduct.objects.filter(purchase_request_id=self.id).aggregate(Sum('extended_price'))
-        if extended_price['extended_price__sum'] != None:
+        extended_price = SimpleProduct.objects.filter(
+            purchase_request_id=self.id
+        ).aggregate(Sum("extended_price"))
+        if extended_price["extended_price__sum"] != None:
             pass
         else:
-            extended_price['extended_price__sum'] = 0
+            extended_price["extended_price__sum"] = 0
         return extended_price
 
     def update_totals(self):
         qs = PurchaseRequest.objects.filter(pk=self.pk)
-        subtotal = self.get_subtotal()['extended_price__sum']
+        subtotal = self.get_subtotal()["extended_price__sum"]
         shipping = self.shipping
-        tax = round((subtotal + shipping.amount) * decimal.Decimal(self.sales_tax_rate),2)
+        tax = round(
+            (subtotal + shipping.amount) * decimal.Decimal(self.sales_tax_rate), 2
+        )
         total = subtotal + shipping.amount + tax
 
-        qs.update(subtotal=subtotal,sales_tax=tax,grand_total=total)
+        qs.update(subtotal=subtotal, sales_tax=tax, grand_total=total)
         return
 
     def sales_tax_display(self):
         percent = self.sales_tax_rate * 100
         return "%s" % percent
-        
+
     def update_transactions(self):
         if self.purchaserequestaccounts_set.first():
             grand_total = self.grand_total
             account = self.purchaserequestaccounts_set.first().accounts
             balance, _ = Balance.objects.get_or_create(
-                account=account,
-                defaults= {
-                    'balance': 0,
-                    'starting_balance': 0
-                }
+                account=account, defaults={"balance": 0, "starting_balance": 0}
             )
             transaction, created = Transaction.objects.get_or_create(
                 purchase_request=self,
-                defaults= {
-                    'total_value': grand_total,
-                    'balance': balance
-                }
+                defaults={"total_value": grand_total, "balance": balance},
             )
             if not created:
                 transaction.total_value = -grand_total
@@ -202,20 +245,30 @@ class PurchaseRequest(models.Model):
     def __str__(self):
         return self.number
 
+
 class SimpleProduct(models.Model):
     name = models.CharField(max_length=100)
-    purchase_request = models.ForeignKey(PurchaseRequest,on_delete=models.CASCADE)
-    manufacturer = models.CharField("Manufacturer (optional)",max_length=50,blank=True,null=True)
-    identifier = models.CharField("Part Number/ASIN/etc.",max_length=50,blank=True,null=True)
-    link = models.URLField(blank=True,null=True)
-    unit_price = models.DecimalField(max_digits=14,decimal_places=2)
-    quantity = models.DecimalField(max_digits=14,decimal_places=3,default=1)
-    unit = models.ForeignKey(Unit,on_delete=models.PROTECT,default=1)
-    extended_price = MoneyField(max_digits=14,decimal_places=2,default_currency='USD',blank=True)
+    purchase_request = models.ForeignKey(PurchaseRequest, on_delete=models.CASCADE)
+    manufacturer = models.CharField(
+        "Manufacturer (optional)", max_length=50, blank=True, null=True
+    )
+    identifier = models.CharField(
+        "Part Number/ASIN/etc.", max_length=50, blank=True, null=True
+    )
+    link = models.URLField(blank=True, null=True)
+    unit_price = models.DecimalField(max_digits=14, decimal_places=2)
+    quantity = models.DecimalField(max_digits=14, decimal_places=3, default=1)
+    unit = models.ForeignKey(Unit, on_delete=models.PROTECT, default=1)
+    extended_price = MoneyField(
+        max_digits=14, decimal_places=2, default_currency="USD", blank=True
+    )
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields = ('purchase_request','identifier','name'),name='unique_purchase_request_part_number')
+            models.UniqueConstraint(
+                fields=("purchase_request", "identifier", "name"),
+                name="unique_purchase_request_part_number",
+            )
         ]
 
     def extend_price(self):
@@ -236,46 +289,45 @@ class SimpleProduct(models.Model):
         name = self.name
         return name
 
+
 class PurchaseRequestAccounts(models.Model):
     class Meta:
         verbose_name_plural = "Purchase Request Accounts"
-    purchase_request = models.ForeignKey(PurchaseRequest,on_delete=models.CASCADE)
-    accounts = models.ForeignKey(Accounts,on_delete=models.PROTECT)
 
-    spend_category = models.ForeignKey(SpendCategory,on_delete=models.PROTECT)
+    purchase_request = models.ForeignKey(PurchaseRequest, on_delete=models.CASCADE)
+    accounts = models.ForeignKey(Accounts, on_delete=models.PROTECT)
 
-    PERCENT = 'percent'
-    AMOUNT = 'amount'
-    DISTRIBUTION_TYPE = (
-        (PERCENT, 'Percent'),
-        (AMOUNT, 'Amount')
-    )
+    spend_category = models.ForeignKey(SpendCategory, on_delete=models.PROTECT)
+
+    PERCENT = "percent"
+    AMOUNT = "amount"
+    DISTRIBUTION_TYPE = ((PERCENT, "Percent"), (AMOUNT, "Amount"))
     distribution_type = models.CharField(
-        choices=DISTRIBUTION_TYPE,
-        default='percent',
-        max_length=15
+        choices=DISTRIBUTION_TYPE, default="percent", max_length=15
     )
 
     distribution_input = models.FloatField(default=100)
 
     def __str__(self):
-        return "%s | %s" % (self.accounts.program_workday,self.spend_category.code)
+        return "%s | %s" % (self.accounts.program_workday, self.spend_category.code)
+
 
 ###--------------------------------------- Accounting ----------------------------------------
 
-class Balance(models.Model):
-    account = models.OneToOneField(Accounts,on_delete=models.CASCADE)
-    balance = MoneyField(max_digits=14,decimal_places=2,default_currency='USD')
-    updated_datetime = models.DateTimeField(auto_now_add=True)
-    starting_balance = MoneyField(max_digits=14,decimal_places=2,default_currency='USD',default=0)
-        
-    def get_absolute_url(self):
-        kwargs = {
-            'pk': self.pk
-        }
-        return reverse('balances_detail', kwargs=kwargs)
 
-    def adjust_balance(self,adjustment_amount:decimal):
+class Balance(models.Model):
+    account = models.OneToOneField(Accounts, on_delete=models.CASCADE)
+    balance = MoneyField(max_digits=14, decimal_places=2, default_currency="USD")
+    updated_datetime = models.DateTimeField(auto_now_add=True)
+    starting_balance = MoneyField(
+        max_digits=14, decimal_places=2, default_currency="USD", default=0
+    )
+
+    def get_absolute_url(self):
+        kwargs = {"pk": self.pk}
+        return reverse("balances_detail", kwargs=kwargs)
+
+    def adjust_balance(self, adjustment_amount: decimal):
         new_balance = self.balance + adjustment_amount
         self.updated_datetime = timezone.now()
         self.balance = new_balance
@@ -283,8 +335,10 @@ class Balance(models.Model):
         return self.balance
 
     def recalculate_balance(self):
-        transactions_sum = Transaction.objects.filter(balance = self).aggregate(Sum('total_value'))
-        if total_sum := transactions_sum.get('total_value__sum'):
+        transactions_sum = Transaction.objects.filter(balance=self).aggregate(
+            Sum("total_value")
+        )
+        if total_sum := transactions_sum.get("total_value__sum"):
             new_balance = self.starting_balance.amount + total_sum
         else:
             new_balance = self.starting_balance
@@ -293,7 +347,8 @@ class Balance(models.Model):
         self.save()
 
     def __str__(self):
-        return "%s [%s]" % (self.account.account_title,self.balance.amount)
+        return "%s [%s]" % (self.account.account_title, self.balance.amount)
+
 
 @receiver(post_save, sender=Balance)
 def set_initial_balance(sender, instance, created, **kwargs):
@@ -303,17 +358,21 @@ def set_initial_balance(sender, instance, created, **kwargs):
 
 
 class Transaction(models.Model):
-    balance = models.ForeignKey(Balance,on_delete=models.CASCADE)
-    purchase_request = models.OneToOneField(PurchaseRequest,on_delete=models.CASCADE)
+    balance = models.ForeignKey(Balance, on_delete=models.CASCADE)
+    purchase_request = models.OneToOneField(PurchaseRequest, on_delete=models.CASCADE)
     processed_datetime = models.DateTimeField(auto_now_add=True)
-    total_value = MoneyField(max_digits=14,decimal_places=2,default_currency='USD')
+    total_value = MoneyField(max_digits=14, decimal_places=2, default_currency="USD")
 
     class Meta:
-        ordering = ['-processed_datetime']
+        ordering = ["-processed_datetime"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__original_total = self.total_value
 
     def __str__(self):
-        return "%s | %s [%s]" % (self.balance.account.account_title,self.purchase_request,self.total_value.amount)
+        return "%s | %s [%s]" % (
+            self.balance.account.account_title,
+            self.purchase_request,
+            self.total_value.amount,
+        )

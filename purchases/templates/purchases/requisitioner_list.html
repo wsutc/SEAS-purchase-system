@@ -7,16 +7,14 @@ All Requisitioners
 {% block new_url %}{% url 'new_requisitioner' %}{% endblock new_url %}
 
 {% block page %}
-
-    {% if object_list %}
-    <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
+    <div class="col">
         <table class="table table-striped">
           <thead>
           <tr>
             <th class="col-3">User</th>
             <th>Email</th>
             <th>Phone</th>
-            {% comment %} <th class="col-1"></th> {% endcomment %}
+            <th class="col-1"></th>
           </tr>
           </thead>
           <tbody>
@@ -25,18 +23,16 @@ All Requisitioners
                 <td>{{ v.user.get_full_name|urlizespecify:v.get_absolute_url }}</td>
                 <td>{{ v.user.email|urlize }}</td>
                 <td>{{ v.phone|default_if_none:"" }}</td>
-                {% comment %} <td class="text-center">
-                    <a href="#">
+                <td class="text-center">
+                    <a href="{% url 'admin:purchases_requisitioner_change' v.pk %}">
                         <i class="fa-solid fa-pencil"></i>
                     </a>
-                </td> {% endcomment %}
+                </td>
             </tr>
+        {% empty %}
+            <tr><td colspan="100%">No requisitioners match filters.</td></tr>
         {% endfor %}
           </tbody>
         </table>
-        </div>
     </div>
-    {% else %}
-        <p>No requisitioners have been added. Use the <a href="{% url 'new_requisitioner' %}">Add Requisitioner</a> form</p>
-    {% endif %}
 {% endblock %}

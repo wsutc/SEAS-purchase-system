@@ -1,8 +1,8 @@
 import smartsheet
 
-class SmartsheetSheet:
 
-    def __init__(self,name):
+class SmartsheetSheet:
+    def __init__(self, name):
         self.smartsheet_client = smartsheet.Smartsheet()
         self.smartsheet_client.errors_as_exceptions(True)
         self.sheet = self.get_sheet_by_name(name)
@@ -21,29 +21,25 @@ class SmartsheetSheet:
 
         return column_map
 
-    def add_sheet_rows(self,data:list[dict]):
+    def add_sheet_rows(self, data: list[dict]):
         """Add rows to sheet"""
         rows = []
         for r in data:
             row = smartsheet.models.Row()
             row.to_top = True
             for column in r:
-                row.cells.append({
-                    'column_id': self.columns[column],
-                    'value': r[column]
-                })
+                row.cells.append(
+                    {"column_id": self.columns[column], "value": r[column]}
+                )
             # i += 1
             rows.append(row)
 
-        return self.smartsheet_client.Sheets.add_rows(
-            self.sheet.id,
-            rows
-        )
+        return self.smartsheet_client.Sheets.add_rows(self.sheet.id, rows)
 
-    def update_sheet_row_by_number(self,number:str):
+    def update_sheet_row_by_number(self, number: str):
         pass
-    
-    def get_sheet_by_name(self,name:str):
+
+    def get_sheet_by_name(self, name: str):
         """Get sheet object by sheet name"""
         response = self.smartsheet_client.Sheets.list_sheets(include_all=True)
         sheets = response.data

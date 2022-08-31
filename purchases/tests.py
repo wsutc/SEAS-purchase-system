@@ -1,10 +1,12 @@
 from http import HTTPStatus
 from django.shortcuts import get_object_or_404
+
 # from multiprocessing.connection import Client
 from django.test import TestCase, override_settings, Client
 from django.contrib.auth.models import User
 from django.urls import reverse
 from purchases import urls
+
 # from .models.models_apis import Tracker, TrackingEvent, TrackingWebhookMessage
 # from .models.models_metadata import Carrier, Department, Urgency, Vendor
 # from .models.models_data import PurchaseRequest, Requisitioner
@@ -19,11 +21,13 @@ from purchases.views import tracking_webhook
 
 # from web_project.settings import _17TRACK_KEY
 
-class PurchaseRequestTestModel(TestCase):
 
+class PurchaseRequestTestModel(TestCase):
     def setUp(self):
         print("hello")
-        self.purchase_request = baker.make('purchases.models.models_data.PurchaseRequest')
+        self.purchase_request = baker.make(
+            "purchases.models.models_data.PurchaseRequest"
+        )
 
         print(self.purchase_request.number)
 
@@ -36,8 +40,11 @@ class PurchaseRequestTestModel(TestCase):
         # self.purchase_request = PurchaseRequest.objects.get(pk=self.purchase_request.pk)
 
     def test_using_purchase_request(self):
-        self.assertIsInstance(self.purchase_request, 'purchases.models.models_data.PurchaseRequest')
+        self.assertIsInstance(
+            self.purchase_request, "purchases.models.models_data.PurchaseRequest"
+        )
         self.assertNotEqual(self.purchase_request.slug, "")
+
 
 # class TestCreatePRView(TestCase):
 
@@ -52,7 +59,7 @@ class PurchaseRequestTestModel(TestCase):
 #     def test_permissed_user_can_see_page(self):
 #         # user = baker.make(User)
 #         self.user.user_permissions.add(Permission.objects.get(codename='add_purchaserequest'))
-        
+
 #         self.client.force_login(user=self.user)
 #         response = self.client.get(reverse("new_pr"))
 #         self.assertEqual(response.status_code, 200)
@@ -311,6 +318,6 @@ class PurchaseRequestTestModel(TestCase):
 #         awm = TrackingWebhookMessage.objects.get()
 #         assert awm.received_at >= start
 #         # assert awm.payload == {"this": "is a message"}
-    
+
 #     def test_tracker_update(self):
 #         pass

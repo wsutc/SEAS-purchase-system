@@ -9,7 +9,6 @@
       <th class="col-1 text-center">Status</th>
       <th>Total</th>
       <th>Shipping Status</th>
-      <th class="text-center"></th>
       <th></th>
     </tr>
     </thead>
@@ -37,18 +36,12 @@
               <td>{{ o.grand_total }}</td>
               <td>{{ o.tracker_set.first.status|camel_case_split }}</td>
               <td class="text-center">
-                <a href="{% url 'update_pr' slug=o.slug %}">
-                  <i class="fa-solid fa-pencil"></i>
-                </a>
-              </td>
-              <td>
-                <a href="{% url 'delete_pr' slug=o.slug %}?next={{ request.get_full_path }}">
-                  <i class="fa-solid fa-trash-can"></i>
-                </a>
+                <a href="{% url 'update_pr' slug=o.slug %}"><i class="fa-solid fa-pencil px-1"></i></a>
+                <a href="{% url 'delete_pr' slug=o.slug %}?next={{ request.get_full_path }}"><i class="fa-solid fa-trash-can px-1"></i></a>
               </td>
           </tr>
       {% empty %}
-        <tr><td colspan="7">No matches.</td></tr>
+        <tr><td colspan="100%" class="text-center">No matching requests.</td></tr>
       {% endfor %}
     </tbody>
   </table>

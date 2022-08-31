@@ -6,34 +6,35 @@ All Setup Sheets
 {% block new_url %}{% url 'create_new_setup_sheet' %}{% endblock new_url %}
 
 {% block page %}
-
-    {% if object_list %}
-    <div class="bd-example-snippet bd-code-snippet"><div class="bd-example">
-        <table class="table table-striped">
-          <thead>
-            <tr>
-                <th class="col-1 text-center">Part Number</th>
-                <th class="col-1 text-center">Revision</th>
-                <th class="col">Name</th>
-                <th class="col-1">Operation</th>
-                <th class="col">Program Name</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for v in object_list %}
-            <tr>
-                <td class="text-center">{{ v.part.number }}</td>
-                <td class="text-center">{{ v.part_revision.revision }}</td>
-                <td><a href="{{ v.get_absolute_url }}">{{ v.name }}</a></td>
-                <td>{{ v.operation }}</td>
-                <td>{{ v.program_name }}</td>
-            </tr>
+  <div class="col">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+            <th class="text-center">Part Number</th>
+            <th class="text-center">Revision</th>
+            <th class="col-auto">Name</th>
+            <th>Operation</th>
+            <th class="col-auto">Program Name</th>
+            <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in object_list %}
+        <tr>
+            <td class="text-center">{{ v.part.number }}</td>
+            <td class="text-center">{{ v.part_revision.revision }}</td>
+            <td><a href="{{ v.get_absolute_url }}">{{ v.name }}</a></td>
+            <td>{{ v.operation }}</td>
+            <td>{{ v.program_name }}</td>
+            <td class="text-center">
+              <a href="{% url 'admin:setup_sheets_setupsheet_change' v.pk %}"><i class="fa-solid fa-pencil px-1"></i></a>
+              <a href="{% url 'admin:setup_sheets_setupsheet_delete' v.pk %}"><i class="fa-solid fa-trash-can px-1"></i></a>
+            </td>
+        </tr>
+        {% empty %}
+          <tr><td colspan="100%">No setup sheets match filters.</td></tr>
         {% endfor %}
-          </tbody>
-        </table>
-        </div>
-    </div>
-    {% else %}
-        <p>No vendors have been added. Use the <a href="{% url 'create_new_setup_sheet' %}">Add Setup Sheet</a> form</p>
-    {% endif %}
+      </tbody>
+    </table>
+  </div>
 {% endblock %}

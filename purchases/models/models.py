@@ -1,17 +1,20 @@
 # from re import sub
 import http.client, json
 import decimal
+
 # from time import strptime
 from django.conf import settings
 from django.db import models
-from django.db.models import Avg,Sum
+from django.db.models import Avg, Sum
 from django.dispatch import receiver
 from django.urls import reverse
 from djmoney.models.fields import MoneyField
+
 # from easypost import User
 from django.contrib.auth.models import User
 from phonenumber_field.modelfields import PhoneNumberField
 from django.db.models.signals import pre_save, post_save
+
 # from django.shortcuts import get_object_or_404
 # from django.forms.widgets import Input
 
@@ -20,11 +23,10 @@ from django.db.models.signals import pre_save, post_save
 # from ..tracking import build_payload
 from ..smartsheet import SmartsheetSheet
 
-# from purchases.forms import  
+# from purchases.forms import
 # from pyexpat import model
 
 ###------------------------------- Item Setup -----------------------------------
-
 
 
 ###--------------------------------------- Helper Tables -------------------------------------
@@ -45,11 +47,6 @@ from ..smartsheet import SmartsheetSheet
 #     )
 
 ###--------------------------------------- Request Setup -------------------------------------
-
-
-
-
-
 
 
 # class PercentInput(Input):
@@ -91,7 +88,6 @@ from ..smartsheet import SmartsheetSheet
 #     def __init__(self, *args, **kwargs)
 
 
-
 # def save_formset(sender, instance, *args, **kwargs):
 
 # @receiver(post_save, sender=PurchaseRequest)
@@ -102,7 +98,6 @@ from ..smartsheet import SmartsheetSheet
 #     elif subtotal != instance.subtotal.amount:
 #         instance.subtotal = subtotal
 #         instance.save()
-
 
 
 # class PurchaseRequestItems(models.Model):
@@ -198,7 +193,7 @@ from ..smartsheet import SmartsheetSheet
 #         kwargs = {
 #             'slug': self.slug
 #         }
-#         return reverse('purchaseorder_detail', kwargs=kwargs)  
+#         return reverse('purchaseorder_detail', kwargs=kwargs)
 
 #     def get_tracking_link(self):
 #         return self.carrier.tracking_link + self.tracking_number
@@ -273,8 +268,6 @@ from ..smartsheet import SmartsheetSheet
 #         return name
 
 
-
-
 # class PurchaseOrderAccounts(models.Model):
 #     class Meta:
 #         verbose_name_plural = "Purchase Order Accounts"
@@ -287,9 +280,6 @@ from ..smartsheet import SmartsheetSheet
 
 #     def __str__(self):
 #         return self.spend_category
-
-
-
 
 
 # class TransactionManager(models.Manager):
