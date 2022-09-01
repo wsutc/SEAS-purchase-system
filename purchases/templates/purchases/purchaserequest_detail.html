@@ -90,23 +90,26 @@
                                     {% for tracker in object.tracker_set.all %}
                                         <tr>
                                             <td>
-                                                {% if tracker.get_tracking_link %}
-                                                    <a href="{{ tracker.get_tracking_link }}" target="_blank" rel="noopener noreferrer">
-                                                        {{ tracker.carrier }} {{ tracker.tracking_number }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i>
-                                                    </a>
-                                                {% else %}
-                                                    {{ tracker.carrier }} {{ tracker.tracking_number }}
-                                                {% endif %}
+                                                <a href="{% url "tracker_detail" tracker.pk %}">{{ tracker }}</a>
                                             </td>
                                             <td class="text-capitalize">
-                                                Status: {{ tracker.status|default_if_none:"(unknown)"|camel_case_split }}
+                                                Status: {{ tracker.status|default:"(unknown)"|camel_case_split }}
                                             </td>
                                         </tr>
                                     {% empty %}
                                         <tr></tr>
                                     {% endfor %}
                                     {% if object.tracker_set.count %}
-                                        <tr><td><a class="btn btn-secondary" href="{% url 'tracker_list' %}?purchase-request={{ object.slug }}">Show Trackers</a></td></tr>
+                                        {% comment %} {% with {% url 'tracker_list' %} as list %} {% endcomment %}
+                                            {% comment %} <tr><td>{% urlquery list ('purchase_request_id__exact', object.id) %}</td></tr> {% endcomment %}
+                                        <tr>
+                                            <td>
+                                                <a class="btn btn-secondary" href="{% urlquery 'tracker_list' 'purchase_request__id__exact' object.id %}">
+                                                    Show Trackers
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% comment %} {% endwith %} {% endcomment %}
                                     {% endif %}
                                 </table>
                             </td>
@@ -157,7 +160,7 @@
 
     {% if debug %}<div class="alert alert-debug">debug ->count:{{ object.simpleproduct_set.count }}</div>{% endif %}
     <div class="col-12">
-        <a href="{% url 'simpleproducts' %}?purchase-request={{ object.slug }}" class="h4">Items</a>
+        <a href="{% url 'pr_filtered_simpleproducts' object.slug %}" class="h4">Items</a>
         <div class="bd-example-snippet bd-code-snippet">
             <div class="bd-example">
                 <table class="table table-striped">
@@ -192,8 +195,8 @@
                             {% comment %} <td align="center">{{ item.vendor_number|default_if_none:"" }}</td> {% endcomment %}
                             <td align="center">{{ item.quantity|floatformat }}</td>
                             <td align="center">{{ item.unit.unit }}</td>
-                            <td align="right">{{ item.unit_price|currency }}</td>
-                            <td align="right">{{ item.extended_price }}</td>
+                            <td>{{ item.unit_price|usd_accounting:simpleproducts_unitprice_maxdigits }}</td>
+                            <td>{{ item.extended_price.amount|usd_accounting }}</td>
                         </tr>
                     {% empty %}
                         <tr>Please edit Purchase Request to add items.</tr>
@@ -203,22 +206,22 @@
                     <tr>
                         <td colspan="4">&nbsp;</td>
                         <td colspan="3" class="text-end">Subtotal</td>
-                        <td align="right">{{ object.subtotal }}</td>
+                        <td>{{ object.subtotal|usd_accounting }}</td>
                     </tr>
                     <tr>
                         <td colspan="4"></td>
                         <td colspan="3" class="text-end">Shipping</td>
-                        <td align="right">{{ object.shipping }}</td>
+                        <td>{{ object.shipping|usd_accounting }}</td>
                     </tr>
                     <tr>
                         <td colspan="4"></td>
                         <td colspan="3" class="text-end">Sales Tax ({{ object.sales_tax_rate|numeric2percent:2 }})</td>
-                        <td align="right">{{ object.sales_tax }}</td>
+                        <td>{{ object.sales_tax|usd_accounting }}</td>
                     </tr>
                     <tr>
                         <td colspan="4"></td>
                         <td colspan="3" class="text-end">Grand Total</td>
-                        <td align="right">{{ object.grand_total }}</td>
+                        <td>{{ object.grand_total|usd_accounting }}</td>
                     </tr>
                 </tfoot>
                 </table>
@@ -245,6 +248,6 @@
       })
 </script> {% endcomment %}
 
-<pre> {% filter force_escape %} {% debug %} {% endfilter %} </pre>
+<div id="django-debug"><pre>{% debug %}</pre></div>
 
 {% endblock %}

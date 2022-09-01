@@ -1,2 +1,2 @@
 [tool.black]
-    extend-exclude = '(/migrations|apps.py| *sgi.py|__init__.py)'
+    extend-exclude = '(/migrations|apps.py| *sgi.py|__init__.py| *urls.py)'

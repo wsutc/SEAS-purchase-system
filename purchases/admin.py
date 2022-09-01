@@ -389,12 +389,22 @@ class TrackingEventAdmin(admin.ModelAdmin):
 
 @admin.register(SimpleProduct)
 class SimpleProductAdmin(admin.ModelAdmin):
-    list_display = ["name", "link", "identifier", "purchase_request"]
-    search_fields = [
+    list_display = [
+        "name",
+        "link",
+        "identifier",
         "purchase_request",
-        "purchase_request__requisitioner__user__first_name",
-        "purchase_request__requisitioner__user__last_name",
-        "purchase_request__vendor__name",
+        "quantity",
+        "unit_price",
+    ]
+    list_editable = ["unit_price", "quantity"]
+    list_filter = ["purchase_request"]
+    search_fields = [
+        "identifier",
+        # "purchase_request",
+        # "purchase_request__requisitioner__user__first_name",
+        # "purchase_request__requisitioner__user__last_name",
+        # "purchase_request__vendor__name",
     ]
 
 

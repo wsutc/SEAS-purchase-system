@@ -198,11 +198,11 @@ class PurchaseRequest(models.Model):
     def get_subtotal(self):
         extended_price = SimpleProduct.objects.filter(
             purchase_request_id=self.id
-        ).aggregate(Sum("extended_price"))
-        if extended_price["extended_price__sum"] != None:
-            pass
-        else:
-            extended_price["extended_price__sum"] = 0
+        ).aggregate(Sum("extended_price", default=0))
+        # if extended_price["extended_price__sum"] != None:
+        #     pass
+        # else:
+        #     extended_price["extended_price__sum"] = 0
         return extended_price
 
     def update_totals(self):
@@ -256,7 +256,7 @@ class SimpleProduct(models.Model):
         "Part Number/ASIN/etc.", max_length=50, blank=True, null=True
     )
     link = models.URLField(blank=True, null=True)
-    unit_price = models.DecimalField(max_digits=14, decimal_places=2)
+    unit_price = models.DecimalField(max_digits=14, decimal_places=4)
     quantity = models.DecimalField(max_digits=14, decimal_places=3, default=1)
     unit = models.ForeignKey(Unit, on_delete=models.PROTECT, default=1)
     extended_price = MoneyField(
@@ -277,6 +277,8 @@ class SimpleProduct(models.Model):
 
     def save(self, *args, **kwargs):
         self.extended_price = self.extend_price()
+
+        self.purchase_request.update_totals()
 
         super().save(*args, **kwargs)
 

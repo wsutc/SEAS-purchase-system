@@ -69,6 +69,8 @@ from django.db.transaction import atomic, non_atomic_requests
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
+from django.db.models import Max
+
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import cm, inch
 from reportlab.lib.pagesizes import letter
@@ -92,7 +94,10 @@ from web_project.helpers import (
     redirect_to_next,
     truncate_string,
 )
-from django_listview_filters.filters import RelatedFieldListViewFilter, ChoicesFieldListViewFilter
+from django_listview_filters.filters import (
+    RelatedFieldListViewFilter,
+    ChoicesFieldListViewFilter,
+)
 
 # from fdfgen import forge_fdf
 
@@ -121,6 +126,19 @@ class SimpleProductListView(PaginatedListMixin, ListView):
     #         ("requisitioner", {'model':Requisitioner, 'parent_model':PurchaseRequest, 'field':'purchaserequest', 'order_by':'user__last_name'}),
     #     ]
 
+
+class SimpleProductPRListView(SimpleProductListView):
+    # queryset = SimpleProduct.objects.order_by("purchase_request__vendor", "name")
+    list_filter = []
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        slug = self.kwargs['purchaserequest']
+        purchase_request = PurchaseRequest.objects.filter(slug=slug)
+        qs = qs.filter(purchase_request__in = purchase_request)
+
+        return qs
+    
 
 # class PartRevisionFilter(ListViewFilterBase):
 #     main_model = None
@@ -186,10 +204,11 @@ class RequisitionerPurchaseRequestListView(PurchaseRequestListViewBase):
     #     ("status", {'field':'status', 'parent_model':PurchaseRequest}),
     #     ("vendor", {'model':Vendor, 'parent_model':PurchaseRequest, 'field':'purchaserequest', 'order_by':'name'}),
     # ]
-    # list_filter = [
-    #     ('status', ChoicesFieldListViewFilter),
-    #     ('vendor', RelatedFieldListViewFilter),
-    # ]
+    list_filter = [
+        ('status', ChoicesFieldListViewFilter),
+        ('vendor', RelatedFieldListViewFilter),
+    ]
+
     def get_queryset(self):
         self.requisitioner = get_object_or_404(
             Requisitioner, slug=self.kwargs["requisitioner"]
@@ -213,6 +232,34 @@ class PurchaseRequestDetailView(DetailView):
     template_name = "purchases/purchaserequest_detail.html"
     context_object_name = "purchaserequest"
     query_pk_and_slug = True
+
+    def get_context_data(self, **kwargs):
+        """Add context for max digits of unit price field for formatting."""
+        context = super().get_context_data(**kwargs)
+
+        def count_digits(value) -> int:
+            string = "{}".format(float(value))
+            parts = string.split('.')
+            if len(parts) > 1:
+                decimals = parts[1]
+                return len(decimals)
+            else:
+                return 0
+
+        SimpleProduct.objects.values_list
+
+        unitprice_values = self.object.simpleproduct_set.values_list(
+            "unit_price", flat=True
+        )
+
+        digits_list = []
+        for value in unitprice_values:
+            digits = count_digits(value)
+            digits_list.append(digits)
+            
+        context["simpleproducts_unitprice_maxdigits"] = max(digits_list)
+
+        return context
 
 
 class RequisitionerCreateView(CreateView):
@@ -952,7 +999,13 @@ def update_balance(request, pk: int):
 
 class TrackerListView(PaginatedListMixin, ListView):
     context_object_name = "tracker"
-    queryset = Tracker.objects.all()
+    queryset = Tracker.objects.all().exclude(purchase_request__isnull=True)
+    list_filter = [
+        ('carrier', RelatedFieldListViewFilter),
+        ('purchase_request__requisitioner', RelatedFieldListViewFilter),
+        ('purchase_request__vendor', RelatedFieldListViewFilter),
+        ('purchase_request', RelatedFieldListViewFilter),
+    ]
     # filters = [
     #     ("carrier", {'model':Carrier, 'parent_model':Tracker, 'field':'tracker', 'order_by':'name'}),
     #     ("vendor", {'model':Vendor, 'parent_model':PurchaseRequest, 'field':'purchaserequest', 'order_by':'name'}),

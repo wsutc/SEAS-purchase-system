@@ -2,7 +2,12 @@ from django import template
 from django.utils.html import mark_safe, conditional_escape
 from django.template.defaultfilters import stringfilter
 from django.contrib.humanize.templatetags.humanize import intcomma
+
+from django.urls import reverse
+
 import re
+
+from furl import furl
 
 register = template.Library()
 
@@ -20,6 +25,58 @@ def currency(value: float, currency: str = "USD"):
             return return_value
         case other:
             return value
+
+
+@register.filter(needs_autoescape=True)
+def usd_accounting(value: float, decimals: int = 2, autoescape=True):
+    """Format number as accounting.
+
+    For USD; adds whitespace between $ and numbers to right align digits and left align $.
+    """
+    if autoescape:
+        value = conditional_escape(value)
+
+    dollars = prepare_for_currency(value, decimals)
+
+    string = """
+        <table style="width: 100%">
+            <td align="left">$</td>
+            <td align="right">{value:.{prec}f}</td>
+        </table>
+    """.format(
+        value=dollars, prec=decimals
+    )
+
+    return mark_safe(string)
+
+
+def attempt_float(value) -> bool:
+    """Return whether <value> can convert to 'float' type."""
+    try:
+        output = float(value)
+        return output
+    except ValueError:
+        return False
+
+
+def prepare_for_currency(value: float, decimals: int = 2) -> str:
+    if isinstance(value, str):
+        value = re.sub(r"[^0-9.]", "", value)
+
+    floated = attempt_float(value)
+
+    if not floated is False:
+        value = floated
+    else:
+        # Likely 'Money' if not something that can convert to 'float.'
+        try:
+            value = float(value.amount)
+        except TypeError:
+            raise
+
+    dollars = round(float(value), decimals)
+
+    return dollars
 
 
 @register.filter
@@ -116,3 +173,12 @@ def replace(value: str, chars: str) -> str:
     for i in old_chars[0]:
         value = value.replace(i, old_chars[1])
     return value
+
+
+@register.simple_tag
+def urlquery(path: str, param_name: str, param_val: str) -> str:
+    path_reverse = reverse(path)
+    fragment = furl(path_reverse)
+    fragment.args[param_name] = param_val
+
+    return fragment.url

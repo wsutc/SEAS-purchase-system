@@ -23,7 +23,6 @@ from django.contrib.admin.utils import (
     # reverse_field_path,
     # lookup_spawns_duplicates,
 )
-# from django.contrib.admin.options import IncorrectLookupParameters
 
 from purchases.models.models_data import (
     PurchaseRequest,
@@ -55,6 +54,7 @@ from django_listview_filters.filters import (
     # FieldListViewFilter,
 )
 from django_listview_filters.mixins import FilterViewMixin
+
 
 def paginate(view: ListView, **kwargs) -> tuple[bool, HTTPResponse]:
     """Validate incoming page number and create redirect if outside bounds or invalid
@@ -129,6 +129,7 @@ def redirect_to_next(request: HttpRequest, default_redirect, **kwargs) -> HTTPRe
 
         return redirect_url
 
+
 def get_new_page_fragment(view: ListView, new_page: int) -> str:
     """A helper that replaces the 'page' parameter of a path with <new_path>.
 
@@ -140,10 +141,12 @@ def get_new_page_fragment(view: ListView, new_page: int) -> str:
 
     return new_path.url
 
+
 def get_app_name(request: HttpRequest):
     func_path = request.resolver_match._func_path
     func_path_split = func_path.split(".", 1)
     return func_path_split[0]
+
 
 def truncate_string(input: str, num_char: int, postfix: str = "..."):
     if len(input) > num_char:
