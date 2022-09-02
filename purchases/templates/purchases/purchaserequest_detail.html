@@ -180,7 +180,13 @@
                 <tbody>
                     {% for item in object.simpleproduct_set.all %}
                         <tr>
-                            <td class="text-truncate">{{ item.name }}</td>
+                            <td>
+                                <div>
+                                    <span class="text-truncate copyText" id="{{ item.pk }}Description">{{ item.name }}</span>
+                                    {% comment %} <input style="width: 100%" class="text text-truncate" type="text" value="{{ item.name }}" id="{{ item.pk }}Input"> {% endcomment %}
+                                    {% comment %} <a href="#" class="copyButton" id="{{ item.pk }}DescriptionButton"><i class="fa-solid fa-paste"></i></a> {% endcomment %}
+                                </div>
+                            </td>
                             {% if item.link %}
                                 <td style="text-align: center;">
                                     <a href="{{ item.link }}" target="_blank" rel="noopener noreferrer">
@@ -242,12 +248,16 @@
 {% block related_pr_table %}{% endblock related_pr_table %}
 {% block related_simpleproduct_table %}{% endblock related_simpleproduct_table %}
 
-{% comment %} <script>
-    $(function () {
-        $('[data-toggle="tooltip"]').tooltip()
-      })
-</script> {% endcomment %}
-
 <div id="django-debug"><pre>{% debug %}</pre></div>
+
+<script>
+    $('.copyButton').click(
+        function(e)
+        {
+            e.preventDefault();
+            alert("Not Implemented.");
+        }
+    )
+</script>
 
 {% endblock %}

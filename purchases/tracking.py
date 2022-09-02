@@ -10,48 +10,6 @@ from benedict import benedict
 
 from purchases.exceptions import TrackerPreviouslyRegistered, TrackerRejectedUnknownCode
 
-# def register_tracker(tracking_number:str, carrier_code:str = None) -> tuple[str,str,str,bool]:
-#     """Register tracker if it doesn't already exist
-
-#     Response is a tuple
-
-#     tracking number
-
-#     carrier as carrier_code
-
-#     message
-
-#     true/false of whether tracker was created
-#     """
-#     try:
-#         tracker_response = tracker_request('REGISTER',[(tracking_number,carrier_code)])
-#     except:
-#         raise
-
-#     data = next(iter(tracker_response['accepted'] or []), None)
-#     error = next(iter(tracker_response['rejected'] or []), None)['error']
-#     code = error['code']
-#     if data:
-#         response = True
-#         message = None
-#         carrier_code = data['carrier']
-#         number = data['number']
-#     elif code == -18019901:
-#         response = False
-#         message = code,error['message']
-#         carrier_code = None
-#         number = None
-#     else:
-#         response = False
-#         message = code,error['message']
-#         carrier_code = None
-#         number = None
-
-#     return number, carrier_code, message, response
-
-# T = TypeVar('T',(str,str,str,bool))
-
-
 def register_trackers(payload: list[tuple[str, str]]) -> dict[list[dict], list[dict]]:
     """Register trackers if they doesn't already exist
 
@@ -196,14 +154,7 @@ def update_tracking_details(trackers: list[tuple[str, str]]) -> list[dict]:
     try:
         for row in data["accepted"]:
             tracking = {}
-            tracking["tracker"] = TrackerObject.fromresponse(row)
-            # tracking['carrier_code'] = row['carrier']
-            # tracking['tracking_number'] = row['number']
-            # tracking['status'] = row['track_info']['latest_status']['status']
-            # tracking['sub_status'] = row['track_info']['latest_status']['sub_status']
-            # tracking['delivery_estimate'] = row['track_info']['time_metrics']['estimated_delivery_date']['from']
-            # tracking['events'] = row['track_info']['tracking']['providers'][0]['events']
-            # tracking['events_hash'] = row['track_info']['tracking']['providers'][0]['events_hash']
+            tracking["tracker"] = TrackerObject.fromupdateresponse(row)
             if tracking["tracker"].status != "NotFound":
                 tracking["message"] = "accepted"
                 tracking["code"] = 0
@@ -245,7 +196,7 @@ class TrackerObject:
             self.carrier_name = self.carrier_code
 
     @classmethod
-    def fromresponse(cls, datadict: dict):
+    def fromupdateresponse(cls, datadict: dict):
         d = benedict()
         i = benedict(datadict)
         d["tracking_number"] = i.get_str(["number"])
@@ -264,6 +215,15 @@ class TrackerObject:
         d["carrier.code"] = i.get_int(["track_info.tracking.providers[0].provider.key"])
         d["events_hash"] = i.get_int(["track_info.tracking.providers[0].events_hash"])
         d["events"] = i.get_list(["track_info.tracking.providers[0].events"])
+
+        return cls(d)
+
+    @classmethod
+    def fromstopresponse(cls, datadict: dict):
+        d = benedict()
+        i = benedict(datadict)
+        d["tracking_number"] = i.get_str(["number"])
+        d["carrier.code"] = i.get_int(["carrier"])
 
         return cls(d)
 

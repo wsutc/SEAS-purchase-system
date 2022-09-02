@@ -1,36 +1,28 @@
 import decimal
-from attr import Attribute
 
-# from xml.dom import NotFoundErr
 from django.conf import settings
 from django.db import models
-from django.shortcuts import get_object_or_404
 from phonenumber_field.modelfields import PhoneNumberField
 from django.contrib.auth.models import User
 from django.dispatch import receiver
-from django.db.models.signals import pre_save, post_save
+from django.db.models.signals import post_save
 from djmoney.models.fields import MoneyField
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
-from django.db.models import Avg, Sum
+from django.db.models import Sum
 
 from purchases.exceptions import StatusCodeNotFound
-
-# from purchases.vendor_linking import Amazon, Tormach
 
 from .models_metadata import (
     SpendCategory,
     DocumentNumber,
     Vendor,
     Accounts,
-    Carrier,
     Unit,
     Urgency,
     Department,
 )
-
-# from .models_apis import Tracker
 
 
 class Requisitioner(models.Model):
@@ -70,15 +62,22 @@ def status_reverse(code: str) -> tuple[str, str]:
     return (key, value)
 
 
+def getsimpleattrs(object):
+    """Return list of attributes of <object> that are not callable or private (starting with '__')
+    
+    :param object: An object with attributes
+    :type object: object
+    :return: List of attributes from object excluding callables or private (starting with '__')
+    :rtype: list
+    """
+    variables = [attr for attr in dir(object) if not callable(getattr(object, attr)) and not attr.startswith("__")]
+
+    return variables
+
+
 def status_code(key: int) -> str:
     """Return two-character code (lowered) (e.g. 'rc' for 'Received') given status key (e.g. 8)."""
-    class_variables = [
-        attr
-        for attr in dir(PurchaseRequest)
-        if not callable(getattr(PurchaseRequest, attr)) and not attr.startswith("__")
-    ]
-    # dict = {}
-    for class_variable in class_variables:
+    for class_variable in getsimpleattrs(PurchaseRequest):
         if getattr(PurchaseRequest, class_variable) == key:
             return class_variable
 

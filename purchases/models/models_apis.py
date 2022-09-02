@@ -1,37 +1,16 @@
-from datetime import datetime
-from time import strptime
 from django.db import models
-from django.db.models import Min
-from django.contrib import messages
-from django.http import HttpResponse
 from django.urls import reverse
 from django.utils.text import slugify
 
 from purchases.models.models_data import PurchaseRequest
 from purchases.tracking import TrackerObject
 
-# from purchases.tracking import register_tracker
-
-
 from .models_metadata import Carrier
-
-
-class TrackerManager(models.Manager):
-    def get_queryset(self):
-        # first_event_time=Min('trackingevent__time_utc')
-        qs = (
-            super()
-            .get_queryset()
-            .annotate(time_utc=Min("trackingevent__time_utc"))
-            .order_by("-time_utc")
-        )
-        # qs = super().get_queryset().order_by('-first_event_time')
-        # does_exist = qs.exists()
-        return qs
 
 
 class Tracker(models.Model):
     id = models.CharField(max_length=100, primary_key=True, editable=False, null=False)
+    active = models.BooleanField(default=True)
     carrier = models.ForeignKey(
         Carrier, on_delete=models.PROTECT, blank=True, null=True
     )
@@ -46,9 +25,6 @@ class Tracker(models.Model):
         PurchaseRequest, on_delete=models.CASCADE, null=True
     )
     earliest_event_time = models.DateTimeField(blank=True, null=True, editable=False)
-
-    # objects_ordered = TrackerManager()
-    # objects = models.Manager()
 
     class Meta:
         indexes = [models.Index(fields=["id"])]
@@ -71,15 +47,11 @@ class Tracker(models.Model):
 
     def get_tracking_link(self):
         try:
-            return "%s%s" % (self.carrier.tracking_link, self.tracking_number)
+            return "{}{}".format(self.carrier.tracking_link, self.tracking_number)
         except:
             return None
-        # if stub := self.carrier.tracking_link:
-        #     return "%s%s" % (stub,self.tracking_number)
-        # else:
-        #     return None
 
-    def update_tracker_fields(self, tracker_obj: TrackerObject) -> int:
+    def update_tracker_fields(self, tracker_obj: TrackerObject) -> bool:
         """Updates <tracker> using <fields>"""
         qs = Tracker.objects.filter(
             pk=self.pk
@@ -95,21 +67,12 @@ class Tracker(models.Model):
             update_fields["sub_status"] = tracker_obj.sub_status
 
         if delivery_estimate := tracker_obj.delivery_estimate:
-            # delivery_estimate = datetime.fromisoformat(delivery_estimate)
             delivery_estimate = tracker_obj.delivery_estimate
         else:
             delivery_estimate = None
 
         if self.delivery_estimate != delivery_estimate:
             update_fields["delivery_estimate"] = delivery_estimate
-
-        # events_hash = str(fields.get('events_hash'))
-
-        # if tracker.events_hash != events_hash:
-        #     _, _ = create_events(tracker,fields.get('events'))
-
-        #     update_fields['events'] = fields.get('events')      # This is the JSON field, *not* the TrackingEvent model
-        #     update_fields['events_hash'] = events_hash
 
         if tracker_obj.carrier_code:
             carrier, _ = Carrier.objects.get_or_create(
@@ -120,10 +83,9 @@ class Tracker(models.Model):
 
         if len(update_fields):
             count = qs.update(**update_fields)
-            # qs.update(status=status)
-            return count
+            return True if count > 0 else False
         else:
-            return None
+            return False
 
     def create_events(self, events) -> tuple[list, list]:
         created_events = []
@@ -153,6 +115,11 @@ class Tracker(models.Model):
     def __str__(self):
         value = "{0} {1}".format(self.carrier, self.tracking_number)
         return str(value)
+
+    def stop(self):
+        tracker = self.__class__.objects.filter(pk=self.pk)
+
+        return True if tracker.update(active = False) else False
 
 
 class TrackingWebhookMessage(models.Model):

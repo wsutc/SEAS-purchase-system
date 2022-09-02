@@ -11,12 +11,12 @@ Simple Products
     <table class="table table-striped">
         <thead>
             <tr>
-                <th scope="col">Name</th>
-                <th class="col-2">Vendor</th>
-                <th class="col">Part Number</th>
+                <th>Name</th>
+                <th>Vendor</th>
+                <th>Part Number</th>
                 <th>Manufacturer</th>
-                <th class="col-1">Unit Price</th>
-                <th class="col-2">Purchase Request</th>
+                <th>Unit Price</th>
+                <th>Purchase Request</th>
                 <th></th>
             </tr>
         </thead>
@@ -36,7 +36,7 @@ Simple Products
                     {% endif %}
                     <td>{{ o.identifier|default_if_none:"" }}</td>
                     <td>{{ o.manufacturer|default_if_none:"" }}</td>
-                    <td>{{ o.unit_price|currency }}</td>
+                    <td>{{ o.unit_price|usd_accounting:unitprice_maxdigits }}</td>
                     <td><a href="{{ o.purchase_request.get_absolute_url }}">{{ o.purchase_request.number }}</a></td>
                     <td><a href="{% url 'copy_simpleproduct' pk=o.pk %}"><i class="fa-solid fa-copy"></i></a></td>
                 </tr>

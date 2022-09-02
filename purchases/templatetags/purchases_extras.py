@@ -36,12 +36,14 @@ def usd_accounting(value: float, decimals: int = 2, autoescape=True):
     if autoescape:
         value = conditional_escape(value)
 
+    decimals = 2 if decimals < 2 else decimals
+
     dollars = prepare_for_currency(value, decimals)
 
     string = """
         <table style="width: 100%">
             <td align="left">$</td>
-            <td align="right">{value:.{prec}f}</td>
+            <td align="right">{value:,.{prec}f}</td>
         </table>
     """.format(
         value=dollars, prec=decimals

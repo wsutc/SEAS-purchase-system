@@ -18,6 +18,8 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib import messages
 
+import logging
+
 # from purchases.exceptions import Error
 from purchases.models.model_helpers import requisitioner_from_user
 
@@ -105,6 +107,8 @@ from django_listview_filters.filters import (
 
 from .forms import AddVendorForm, NewPRForm
 
+logger = logging.getLogger(__name__)
+
 # Create your views here.
 
 
@@ -120,11 +124,46 @@ class SimpleProductListView(PaginatedListMixin, ListView):
         ("purchase_request__vendor", RelatedFieldListViewFilter),
         ("purchase_request__requisitioner", RelatedFieldListViewFilter),
         ("purchase_request__status", ChoicesFieldListViewFilter),
+        ("purchase_request", RelatedFieldListViewFilter),
     ]
     # filters = [
     #         ("vendor", {'model':Vendor, 'parent_model':PurchaseRequest, 'field':'purchaserequest', 'order_by':'name'}),
     #         ("requisitioner", {'model':Requisitioner, 'parent_model':PurchaseRequest, 'field':'purchaserequest', 'order_by':'user__last_name'}),
     #     ]
+
+    def get_context_data(self, **kwargs):
+        """Add context for max digits of unit price field for formatting."""
+        context = super().get_context_data(**kwargs)
+
+        def count_digits(value) -> int:
+            string = "{}".format(float(value))
+            parts = string.split(".")
+            if len(parts) > 1:
+                decimals = parts[1]
+                return len(decimals)
+            else:
+                return 0
+
+        # SimpleProduct.objects.values_list
+
+        # paginator = self.get_paginator(self.queryset, self.paginate_by)
+
+        qs = context['object_list']
+
+        unitprice_values = qs.values_list(
+            "unit_price", flat=True
+        )
+
+        digits_list = []
+        for value in unitprice_values:
+            digits = count_digits(value)
+            digits_list.append(digits)
+
+        logger.debug("Object List Length: {}".format(len(digits_list)))
+
+        context["unitprice_maxdigits"] = max(digits_list)
+
+        return context
 
 
 class SimpleProductPRListView(SimpleProductListView):
@@ -133,12 +172,14 @@ class SimpleProductPRListView(SimpleProductListView):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        slug = self.kwargs['purchaserequest']
+        slug = self.kwargs["purchaserequest"]
         purchase_request = PurchaseRequest.objects.filter(slug=slug)
-        qs = qs.filter(purchase_request__in = purchase_request)
+        qs = qs.filter(purchase_request__in=purchase_request)
+
+        logger.warning("Purchase Request: {}".format(purchase_request.first()))
 
         return qs
-    
+
 
 # class PartRevisionFilter(ListViewFilterBase):
 #     main_model = None
@@ -161,9 +202,9 @@ class PurchaseRequestListViewBase(PaginatedListMixin, ListView):
     context_object_name = "purchaserequests"
     queryset = PurchaseRequest.objects.order_by("-created_date")
     list_filter = [
-        ('status', ChoicesFieldListViewFilter),
-        ('vendor', RelatedFieldListViewFilter),
-        ('requisitioner', RelatedFieldListViewFilter),
+        ("status", ChoicesFieldListViewFilter),
+        ("vendor", RelatedFieldListViewFilter),
+        ("requisitioner", RelatedFieldListViewFilter),
     ]
     # filters = [
     #     ("status", {'field':'status', 'parent_model':PurchaseRequest}),
@@ -205,8 +246,8 @@ class RequisitionerPurchaseRequestListView(PurchaseRequestListViewBase):
     #     ("vendor", {'model':Vendor, 'parent_model':PurchaseRequest, 'field':'purchaserequest', 'order_by':'name'}),
     # ]
     list_filter = [
-        ('status', ChoicesFieldListViewFilter),
-        ('vendor', RelatedFieldListViewFilter),
+        ("status", ChoicesFieldListViewFilter),
+        ("vendor", RelatedFieldListViewFilter),
     ]
 
     def get_queryset(self):
@@ -239,7 +280,7 @@ class PurchaseRequestDetailView(DetailView):
 
         def count_digits(value) -> int:
             string = "{}".format(float(value))
-            parts = string.split('.')
+            parts = string.split(".")
             if len(parts) > 1:
                 decimals = parts[1]
                 return len(decimals)
@@ -256,7 +297,7 @@ class PurchaseRequestDetailView(DetailView):
         for value in unitprice_values:
             digits = count_digits(value)
             digits_list.append(digits)
-            
+
         context["simpleproducts_unitprice_maxdigits"] = max(digits_list)
 
         return context
@@ -660,60 +701,77 @@ def tracking_webhook(request):
                 "Inconsistency in response signature.", content_type="text/plain"
             )
 
-        TrackingWebhookMessage.objects.filter(
+        deleted, _ = TrackingWebhookMessage.objects.filter(
             received_at__lte=timezone.now() - dt.timedelta(days=7)
         ).delete()
+
+        if deleted > 0:
+            logger.info("Webhook Messages Deleted: {}".format(deleted))
+        else:
+            logger.info("No Webhook Messages Deleted.")
 
         payload = json.loads(request.body)
         TrackingWebhookMessage.objects.create(
             received_at=timezone.now(), payload=payload
         )
 
-        process_webhook_payload(payload)
+        try:
+            success, message = process_webhook_payload(payload)
+            if success:
+                logger.info(message)
+            else:
+                logger.warning(message)
+        except ObjectDoesNotExist:
+            logger.error("No object matching payload found", exc_info=1)
 
         return HttpResponse("Message successfully received.", content_type="text/plain")
 
 
 @atomic
-def process_webhook_payload(payload: dict):
-    payload_obj = TrackerObject.fromresponse(payload.get("data"))
+def process_webhook_payload(payload: dict) -> str:
     event_type = payload.get("event")
-    # data = payload.get('data')
-
-    # tracking_number = data.get('number')
-    # carrier_code = data.get('carrier')
-    # status = data['track_info']['latest_status']['status']
-    # sub_status = data['track_info']['latest_status']['sub_status']
-    # delivery_estimate = data['track_info']['time_metrics']['estimated_delivery_date']['from']
-    # last_update_date = data['track_info']['latest_event']['time_utc']
-    # events = data['track_info']['tracking']['providers'][0]['events']
-    # events_hash = data['track_info']['tracking']['providers'][0]['events_hash']
-
-    try:
-        carrier, _ = Carrier.objects.get_or_create(
-            carrier_code=payload_obj.carrier_code,
-            defaults={"name": payload_obj.carrier_name},
-        )
-        tracker, _ = Tracker.objects.get_or_create(
-            tracking_number=payload_obj.tracking_number, carrier=carrier
-        )
-    except ObjectDoesNotExist:
-        raise
 
     if event_type == "TRACKING_UPDATED":
-        # fields = {
-        #     'status': payload_obj.status,
-        #     'sub_status': payload_obj.sub_status,
-        #     'delivery_estimate': payload_obj.delivery_estimate,
-        #     'events_hash': payload_obj.events_hash,
-        # }
+        payload_obj = TrackerObject.fromupdateresponse(payload.get("data"))
+
+        try:
+            carrier, _ = Carrier.objects.get_or_create(
+                carrier_code=payload_obj.carrier_code,
+                defaults={"name": payload_obj.carrier_name},
+            )
+            tracker, _ = Tracker.objects.get_or_create(
+                tracking_number=payload_obj.tracking_number, carrier=carrier
+            )
+        except ObjectDoesNotExist:
+            raise
 
         if tracker.events_hash != str(payload_obj.events_hash):
             _, _ = tracker.create_events(payload_obj.events)
 
-        _ = tracker.update_tracker_fields(payload_obj)
+        success = tracker.update_tracker_fields(payload_obj)
 
-    return
+        tracker_success = 'Tracker {} successfully updated.'.format(tracker)
+        tracker_failure = 'No updates made to tracker {}.'.format(tracker)
+
+        return success, tracker_success if success else tracker_failure
+
+    elif event_type == "TRACKING_STOPPED":
+        payload_obj = TrackerObject.fromstopresponse(payload.get("data"))
+
+        try:
+            carrier = Carrier.objects.get(carrier_code=payload_obj.carrier_code)
+            tracker = Tracker.objects.get(
+                tracking_number=payload_obj.tracking_number, carrier=carrier
+            )
+        except ObjectDoesNotExist:
+            raise
+
+        stop = tracker.stop()
+
+        success_message = "Tracker {} successfully stopped.".format(tracker)
+        failure_message = "No trackers stopped."
+
+        return stop, success_message if stop else failure_message
 
 
 def generate_pr_pdf(request, slug):
@@ -1001,37 +1059,11 @@ class TrackerListView(PaginatedListMixin, ListView):
     context_object_name = "tracker"
     queryset = Tracker.objects.all().exclude(purchase_request__isnull=True)
     list_filter = [
-        ('carrier', RelatedFieldListViewFilter),
-        ('purchase_request__requisitioner', RelatedFieldListViewFilter),
-        ('purchase_request__vendor', RelatedFieldListViewFilter),
-        ('purchase_request', RelatedFieldListViewFilter),
+        ("carrier", RelatedFieldListViewFilter),
+        ("purchase_request__requisitioner", RelatedFieldListViewFilter),
+        ("purchase_request__vendor", RelatedFieldListViewFilter),
+        ("purchase_request", RelatedFieldListViewFilter),
     ]
-    # filters = [
-    #     ("carrier", {'model':Carrier, 'parent_model':Tracker, 'field':'tracker', 'order_by':'name'}),
-    #     ("vendor", {'model':Vendor, 'parent_model':PurchaseRequest, 'field':'purchaserequest', 'order_by':'name'}),
-    #     ('status', {'field':'status', 'parent_model':Tracker}),
-    #     ("requisitioner", {'model':Requisitioner, 'parent_model':PurchaseRequest, 'field':'purchaserequest', 'order_by':'user__last_name'}),
-    # ]
-
-    # def get_queryset(self):
-    #     path = furl(self.request.get_full_path())
-    #     # pr_slug = self.request.GET.get('purchase-request', '')
-    #     pr_slug = path.args.get('purchase-request', None)
-    #     carrier = path.args.get('carrier', None)
-    #     vendor = path.args.get('vendor', None)
-    #     kwargs = {}
-    #     if pr_slug:
-    #         kwargs['purchase_request'] = get_object_or_404(PurchaseRequest,slug=pr_slug)
-    #     if carrier:
-    #         kwargs['carrier'] = get_object_or_404(Carrier,slug=carrier)
-    #     if vendor:
-    #         vendor_obj = get_object_or_404(Vendor, slug=vendor)
-    #         kwargs['purchase_request__in'] = PurchaseRequest.objects.filter(vendor=vendor_obj)
-
-    #     if kwargs:
-    #         return Tracker.objects.filter(**kwargs)
-    #     else:
-    #         return Tracker.objects.all()
 
 
 class TrackerCreateView(CreateView):
