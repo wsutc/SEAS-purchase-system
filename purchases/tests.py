@@ -7,14 +7,16 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from purchases import urls
 
+# from django.conf import settings
+
 # from .models.models_apis import Tracker, TrackingEvent, TrackingWebhookMessage
 # from .models.models_metadata import Carrier, Department, Urgency, Vendor
 # from .models.models_data import PurchaseRequest, Requisitioner
 from model_bakery import baker
 from django.contrib.auth.models import Permission
 
-import datetime as dt
-from django.utils import timezone
+# import datetime as dt
+# from django.utils import timezone
 from purchases.views import tracking_webhook
 
 # from web_project.settings import AFTERSHIP_WEBHOOK_SECRET

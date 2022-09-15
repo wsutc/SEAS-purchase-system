@@ -1,9 +1,11 @@
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
 from django.forms import BaseModelForm
 from django.urls import reverse
 from django.utils.text import slugify
 from djmoney.models.fields import MoneyField
+from django.utils.translation import gettext_lazy as _
+from django.db.models import F, Max, Count
 
 from phonenumber_field.modelfields import PhoneNumberField
 
@@ -67,6 +69,182 @@ class State(models.Model):
         return self.name
 
 
+class RankManager(models.Manager):
+    def move(self, obj, new_rank):
+        if new_rank < 1:
+            raise ValueError("Unable to set rank below '1'; already highest rank.")
+        elif new_rank == obj.get_next_rank():
+            raise ValueError(
+                "Unable to set rank above '{}'; already lowest rank.".format(obj.rank)
+            )
+
+        qs = self.get_queryset()
+        current_rank = obj.rank  # set temp variable for filters below
+        # obj.rank = 0
+        qs.filter(pk=obj.pk).update(
+            rank=0
+        )  # avoid unique constraint (no values should be zero)
+
+        with transaction.atomic():
+            if current_rank > int(new_rank):
+                qs.filter(
+                    parent_model=obj.parent_model,
+                    rank__lt=current_rank,
+                    rank__gte=new_rank,
+                ).exclude(pk=obj.pk,).order_by("-rank").update(
+                    rank=F("rank") + 1,
+                )
+            else:
+                qs.filter(
+                    parent_model=obj.parent_model,
+                    rank__lte=new_rank,
+                    rank__gt=current_rank,
+                ).exclude(pk=obj.pk,).update(
+                    rank=F("rank") - 1,
+                )
+
+        obj.rank = new_rank
+        obj.save()
+
+    def create(self, **kwargs):
+        instance = self.model(**kwargs)
+
+        with transaction.atomic():
+            instance.rank = instance.get_next_rank()
+            instance.save()
+
+            return instance
+
+    def move_to_end(self, obj):
+        current_rank = obj.rank
+
+        if (obj.get_next_rank() - 1) == current_rank:
+            raise ValueError(
+                "Unable to move to end; '{}' already lowest rank.".format(current_rank)
+            )
+
+        qs = self.get_queryset()
+
+        with transaction.atomic():
+            qs.filter(pk=obj.pk).update(rank=obj.get_next_rank())
+
+            # if current_rank == obj.rank:
+            #     raise ValueError("Unable to move to end; '{}' already lowest rank.".format(current_rank))
+
+            qs.filter(parent_model=obj.parent_model, rank__gt=current_rank,).order_by(
+                "rank"
+            ).update(rank=F("rank") - 1)
+
+    def move_to_top(self, obj):
+        if obj.rank == 1:
+            raise ValueError("Unable to set rank below '1'; already highest rank.")
+
+        current_rank = obj.rank
+
+        qs = self.get_queryset()
+
+        with transaction.atomic():
+            qs.filter(pk=obj.pk).update(rank=0)
+
+            qs.filter(parent_model=obj.parent_model, rank__lt=current_rank,).order_by(
+                "-rank"
+            ).update(rank=F("rank") + 1)
+
+    def normalize_ranks(self, field: str, model: str = None):
+        if model in self.model.StatusModel.choices:
+            model_list = [model]
+        else:
+            model_list = self.model.StatusModel.choices
+
+        qs = self.get_queryset()
+
+        qsa = self.model.objects.none()
+
+        with transaction.atomic():
+            for m in model_list:
+                kwargs = {field: m[0]}
+                qsm = qs.filter(**kwargs).order_by("rank")
+                result = qsm.aggregate(Max("rank"), Count("rank"))
+
+                if (
+                    result["rank__max"] == result["rank__count"]
+                    or result["rank__count"] == 0
+                ):
+                    continue
+
+                for count, s in enumerate(qsm, 1):
+                    s.rank = count + int(result["rank__max"])
+                self.bulk_update(qsm, ["rank"])
+
+                qsm.update(
+                    rank=F("rank") - int(result["rank__max"]),
+                )
+
+                qsa = qsa | qsm
+
+        for obj in qsa:
+            print("Rank[{}]: {}".format(obj.name, obj.rank))
+
+        # self.bulk_update(qsa, ["rank"])
+
+
+class Status(BaseModel):
+    slug = None
+    created_date = None
+    rank = models.PositiveSmallIntegerField(_("rank"), editable=False)
+    open = models.BooleanField(
+        _("open"), help_text=_("purchase request not complete"), default=False
+    )
+
+    class StatusModel(models.TextChoices):
+        PURCHASE_REQUEST = "PR"
+        ORDER = "OR"
+
+    parent_model = models.CharField(
+        _("model"),
+        max_length=30,
+        choices=StatusModel.choices,
+    )
+
+    class Meta:
+        ordering = ["parent_model", "rank"]
+        verbose_name_plural = _("statuses")
+        verbose_name = _("status")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["parent_model", "rank"], name="status_model_unique"
+            )
+        ]
+
+    objects = RankManager()
+
+    def save(self, *args, **kwargs):
+        if not self.rank:
+            self.rank = self.get_next_rank()
+
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        value = super().delete(*args, **kwargs)
+
+        self.__class__.objects.normalize_ranks("parent_model")
+
+    def get_next_rank(self):
+        results = self.__class__.objects.filter(
+            parent_model=self.parent_model,
+        ).aggregate(Max("rank"))
+
+        current_order = results["rank__max"]
+        current_order = current_order if current_order else 0
+
+        value = current_order + 1
+        return value
+
+
+def something(something: Status):
+    something.parent_model.get_quer
+
+
 class Vendor(BaseModel):
     wsu_discount = models.BooleanField("Does WSU get a discount?", default=False)
     discount_percentage = models.FloatField(default=0)
@@ -120,16 +298,78 @@ class Urgency(models.Model):
 
 class Accounts(BaseModel):
     name = None
-    account = models.CharField("Account", max_length=10)
-    budget_code = models.CharField("Budget Code", max_length=5)
-    fund = models.CharField("Fund", max_length=5)
+    slug = None
+    account = models.CharField(
+        _("account"), help_text=_("in form XXXX-XXXX."), max_length=10
+    )
+    budget_code = models.CharField(
+        _("budget code"),
+        help_text=_("usually first four characters of account"),
+        max_length=5,
+    )
+    # fund = models.CharField("Fund", max_length=5)
     grant = models.CharField(max_length=15, blank=True)
     gift = models.CharField(max_length=15, blank=True)
-    program_workday = models.CharField("Program Workday", max_length=10)
-    account_title = models.CharField("Account Title", max_length=200)
+    program_workday = models.CharField(_("program workday"), max_length=10, blank=True)
+    account_title = models.CharField(
+        _("account title"),
+        help_text=_("human-readable description of account"),
+        max_length=200,
+    )
     cost_center = models.CharField(max_length=15, null=True)
 
-    # identity_list = [program_workday, grant, gift]
+    class Meta:
+        ordering = ["account"]
+        constraints = [
+            # models.CheckConstraint(
+            #     name="%(app_label)s_%(class)s_only_one_type",
+            #     check=(
+            #         (
+            #             (
+            #                 models.Q(
+            #                     grant__isnull=False,
+            #                     # TODO grant__exact__not="",
+            #                     gift__isnull=True,
+            #                     gift__exact="",
+            #                     program_workday__isnull=True,
+            #                     program_workday__exact="",
+            #                 )
+            #                 & ~models.Q(grant_exact="")
+            #             )
+            #             | (
+            #                 models.Q(
+            #                     grant__isnull=True,
+            #                     grant__exact="",
+            #                     gift__isnull=False,
+            #                     # TODO gift__exact="",
+            #                     program_workday__isnull=True,
+            #                     program_workday__exact="",
+            #                 )
+            #                 & ~models.Q(gift__exact="")
+            #             )
+            #         )
+            #         | (
+            #             models.Q(
+            #                 grant__isnull=True,
+            #                 grant__exact="",
+            #                 gift__isnull=True,
+            #                 gift__exact="",
+            #                 program_workday__isnull=False,
+            #                 # TODO program_workday__exact="",
+            #             )
+            #             & ~models.Q(program_workday__exact="")
+            #         )
+            #     ),
+            # ),
+            models.UniqueConstraint(
+                "gift", "grant", "program_workday", name="unique_program"
+            ),
+            models.UniqueConstraint("account", name="unique_account"),
+        ]
+
+    @property
+    def identity_list(self):
+        return [self.program_workday, self.grant, self.gift]
 
     class Meta:
         verbose_name_plural = "Accounts"
@@ -142,6 +382,7 @@ class Accounts(BaseModel):
         return value
 
     def save(self, *args, **kwargs):
+        # if identity := self.identity is True:
         self.slug = slugify(self.identity(), allow_unicode=True)
         super().save(*args, **kwargs)
 
@@ -150,6 +391,15 @@ class Accounts(BaseModel):
         value = first_true(list, True)
         value = "{} | {}".format(value, self.account_title)
         return value
+
+
+class AccountGroup(BaseModel):
+    name = models.CharField(_("group name"), max_length=50, unique=True)
+    accounts = models.ManyToManyField(Accounts, verbose_name=_("accounts"))
+
+    class Meta:
+        verbose_name_plural = _("account groups")
+        ordering = ["name"]
 
 
 class Department(models.Model):

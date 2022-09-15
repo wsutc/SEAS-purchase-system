@@ -9,6 +9,7 @@ from purchases.models.models_data import (
     Requisitioner,
     Vendor,
     SimpleProduct,
+    VendorOrder,
 )
 from django.forms.models import inlineformset_factory
 from django.contrib import messages
@@ -65,6 +66,12 @@ class PurchaseRequestWidget(s2forms.ModelSelect2Widget):
 class AddVendorForm(forms.ModelForm):
     class Meta:
         model = Vendor
+        fields = "__all__"
+
+
+class AddVendorOrderForm(forms.ModelForm):
+    class Meta:
+        model = VendorOrder
         fields = "__all__"
 
 

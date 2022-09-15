@@ -1,0 +1,41 @@
+{% load purchases_extras %}
+{% load i18n %}
+<div class="col">
+  <table class="table table-striped">
+      <thead>
+          <tr class="text-center">
+              <th>{% translate "Description" %}</th>
+              <th>{% translate "Part Number" %}</th>
+              <th>{% translate "Quantity" %}</th>
+              <th>{% translate "Total Quantity" %}</th>
+              <th>{% translate "Shipment Received" %}</th>
+              <th>{% translate "Missing" %}</th>
+              <th></th>
+          </tr>
+      </thead>
+      <tbody>
+          {% for o in object_list %}
+              <tr class="text-center">
+                <td class="text-start">{{ o.simple_product }}</td>
+                <td>{{ o.simple_product.identifier }}</td>
+                <td>{{ o.quantity|floatformat }}</td>
+                <td>{{ o.simple_product.quantity|floatformat }}</td>
+                <td>{{ o.shipment_received }}</td>
+                <td>{{ o.missing }}</td>
+                <td>
+                    {% comment %} <div class="btn-group">
+                        <a class="btn-link" href="{% url "admin:purchases_vendororder_change" o.pk %}?next={{ request.get_full_path }}">
+                            <i class="fa-solid fa-pencil px-1"></i>
+                        </a>
+                        <a class="btn-link" href="{% url "admin:purchases_vendororder_delete" o.pk %}">
+                            <i class="fa-solid fa-trash-can px-1"></i>
+                        </a>
+                    <div class="btn-group"> {% endcomment %}
+                </td>
+              </tr>
+          {% empty %}
+              <tr><td colspan="100%" class="text-center">No matching items.</td></tr>
+          {% endfor %}
+      </tbody>
+  </table>
+</div>

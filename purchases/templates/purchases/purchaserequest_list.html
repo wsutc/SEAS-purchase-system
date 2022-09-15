@@ -1,19 +1,18 @@
 {% extends "purchases/list_page.html" %}
 {% load purchases_extras %}
 {% block title %}
-Home
+  Home
 {% endblock %}
 {% block header %}Purchase Requests{% endblock header %}
 {% block new_url %}{% url 'new_pr' %}{% endblock new_url %}
 {% block page %}
 
-<style>
-  .inline {
-    --bs-btn-padding-y: 0rem
-}
+  {% comment %} <style>
+    .inline {
+      --bs-btn-padding-y: 0rem
+    }
+  </style> {% endcomment %}
 
-</style>
-
-{% include "purchases/purchaserequest_list_table.html" %}
+  {% include "purchases/purchaserequest_list_table.html" %}
 
 {% endblock %}

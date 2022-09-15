@@ -7,49 +7,7 @@ Trackers
 {% block new_url %}{% url 'create_tracker' %}{% endblock new_url %}
 
 {% block page %}
-<div class="col">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th scope="col">Carrier</th>
-                <th>Tracking Number</th>
-                <th class="col-1">Track</th>
-                <th class="col">Status</th>
-                <th>Delivery Estimate</th>
-                <th class="col-2">Purchase Request</th>
-                <th>Vendor</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for o in object_list %}
-                <tr>
-                    <td><a href="{{ o.carrier.website }}">{{ o.carrier }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a></td>
-                    <td><a href="{{ o.get_absolute_url }}">{{ o.tracking_number|truncatechars:20 }}</a></td>
-                    <td>
-                        {% if o.get_tracking_link %}
-                            <a href="{{ o.get_tracking_link }}" target="_blank" rel="noopener noreferrer">
-                                <i class="fa-solid fa-up-right-from-square"></i>
-                            </a>
-                        {% endif %}
-                    </td>
-                    <td>{{ o.status|default_if_none:""|camel_case_split }}</td>
-                    <td>{{ o.delivery_estimate|date:"SHORT_DATETIME_FORMAT" }}</td>
-                    {% comment %} <td>{{ o.earliest_event_time }}</td> {% endcomment %}
-                    <td><a href="{{ o.purchase_request.get_absolute_url }}">{{ o.purchase_request }}</a></td>
-                    <td>{{ o.purchase_request.vendor.name|urlizespecify:o.purchase_request.vendor.get_absolute_url }}</td>
-                    <td>
-                        <a href="{% url 'update_tracker' o.pk %}"><i class="fa-solid fa-arrows-rotate px-1"></i></a>
-                        <a href="{% url 'admin:purchases_tracker_change' o.pk %}"><i class="fa-solid fa-pencil px-1"></i></a>
-                        <a href="{% url 'tracker_delete' pk=o.pk %}?next={{ request.get_full_path }}">
-                            <i class="fa-solid fa-trash-can px-1"></i>
-                        </a>
-                    </td>
-                </tr>
-            {% empty %}
-                <tr><td colspan="8" class="text-center">No matching trackers.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+
+    {% include "purchases/tracker_list_table.html" with tracker_list=object_list %}
+
 {% endblock %}

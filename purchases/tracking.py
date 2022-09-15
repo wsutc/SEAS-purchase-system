@@ -10,6 +10,7 @@ from benedict import benedict
 
 from purchases.exceptions import TrackerPreviouslyRegistered, TrackerRejectedUnknownCode
 
+
 def register_trackers(payload: list[tuple[str, str]]) -> dict[list[dict], list[dict]]:
     """Register trackers if they doesn't already exist
 

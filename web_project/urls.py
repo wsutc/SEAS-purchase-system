@@ -16,13 +16,16 @@ Including another URLconf
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.contrib import admin
 from django.urls import include, path
+from django.views.generic import RedirectView
 
 urlpatterns = [
-    path("", include("purchases.urls")),
-    path("", include("setup_sheets.urls")),
-    path("", include("inventory.urls")),
-    path("", include("tool_compatibility.urls")),
+    path("", RedirectView.as_view(url="purchases/")),
+    path("purchases/", include("purchases.urls")),
+    path("setup-sheets/", include("setup_sheets.urls")),
+    path("inventory/", include("inventory.urls")),
+    path("tools/", include("tool_compatibility.urls")),
     path("admin/", admin.site.urls),
+    path("__debug__/", include('debug_toolbar.urls')),
 ]
 
 urlpatterns += staticfiles_urlpatterns()

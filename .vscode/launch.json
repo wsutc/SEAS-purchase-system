@@ -25,6 +25,28 @@
             ],
             "django": true,
             "justMyCode": true
-        }
+        },
+        {
+            "name": "Python: Django - allcode",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}\\manage.py",
+            "args": [
+                "runserver"
+            ],
+            "django": true,
+            "justMyCode": false
+        },
+        {
+            "name": "Python: Django: Test",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}\\manage.py",
+            "args": [
+                "test"
+            ],
+            "django": true,
+            "justMyCode": false
+        },
     ]
 }

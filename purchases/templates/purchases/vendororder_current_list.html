@@ -1,0 +1,21 @@
+{% extends "purchases/list_page.html" %}
+{% load purchases_extras %}
+{% block title %}
+Orders
+{% endblock %}
+{% comment %} {% block header %}Orders{% endblock header %} {% endcomment %}
+{% comment %} {% block new_url %}{% url 'vendororder_create' %}{% endblock new_url %} {% endcomment %}
+
+{% block listheader %}
+<div class="row mb-3">
+    <h1 class="wsu-c-heading col-sm">Current <span class="header-em">Orders</span></h1> 
+    <a href="{% url 'vendororder_create' %}" class="save btn btn-primary col-2">New</a>
+</div>
+<a href="{% url 'vendororder_list' %}">Show All Orders</a>
+{% endblock listheader %}
+
+{% block page %}
+
+    {% include "purchases/vendororder_list_table.html" %}
+
+{% endblock %}

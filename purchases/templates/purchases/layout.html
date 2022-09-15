@@ -395,13 +395,22 @@
           </a>
           <ul class="dropdown-menu" aria-labelledby="dropdownPurchaseRequests">
             <a href="{% url 'new_pr' %}" class="nav-link px-2 link-dark">New</a>
-            <a href="{% url 'home' %}" class="nav-link px-2 link-dark">List</a>
+            <a href="{% url 'open_pr' %}" class="nav-link px-2 link-dark">List Open</a>
+            <a href="{% url 'home' %}" class="nav-link px-2 link-dark">List All</a>
             <a href="{% url 'tracker_list' %}" class="nav-link px-2 link-dark">Trackers</a>
             <a href="{% url 'simpleproducts' %}" class="nav-link px-2 link-dark">Items</a>
           </ul>
         </li>
         {% comment %} <li><a href="{% url 'home' %}" class="nav-link px-2 link-secondary">Purchase Requests</a></li> {% endcomment %}
-        <li><a href="{% url 'all_vendors' %}" class="nav-link px-2 link-dark">Vendors</a></li>
+        <li>
+          <a href="#" class="nav-link px-2 link-secondary dropdown-toggle" id="dropdownVendors" data-bs-toggle="dropdown" aria-expanded="false">
+            Vendors
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="dropdownVendors">
+            <a href="{% url 'all_vendors' %}" class="nav-link px-2 link-dark">List</a>
+            <a href="{% url 'vendororder_current_list' %}" class="nav-link px-2 link-dark">Current Orders</a>
+          </ul>
+        </li>
         <li><a href="{% url 'all_requisitioners' %}" class="nav-link px-2 link-dark">Requisitioners</a></li>
         {% comment %} <li><a href="{% url 'tracker_list' %}" class="nav-link px-2 link-dark">Trackers</a></li> {% endcomment %}
         {% comment %} <li><a href="{% url 'simpleproducts' %}" class="nav-link px-2 link-dark">Items</a></li> {% endcomment %}

@@ -2,10 +2,20 @@ from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
 
-from purchases.models.models_data import PurchaseRequest
+from purchases.models.models_data import PurchaseRequest, SimpleProduct
 from purchases.tracking import TrackerObject
 
 from .models_metadata import Carrier
+
+from django_listview_filters._helpers import get_setting
+
+from django.utils.translation import gettext_lazy as _
+
+from furl import furl
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Tracker(models.Model):
@@ -25,6 +35,15 @@ class Tracker(models.Model):
         PurchaseRequest, on_delete=models.CASCADE, null=True
     )
     earliest_event_time = models.DateTimeField(blank=True, null=True, editable=False)
+    received = models.BooleanField(_("package received"), default=False)
+    simple_product = models.ManyToManyField(
+        SimpleProduct, verbose_name=_("items"), through="TrackerItem"
+    )
+
+    @property
+    def latest_event(self):
+        latest_event = self.trackingevent_set.latest()
+        return latest_event
 
     class Meta:
         indexes = [models.Index(fields=["id"])]
@@ -46,8 +65,24 @@ class Tracker(models.Model):
         super().save(*args, **kwargs)
 
     def get_tracking_link(self):
+        tracking_patterns = get_setting("TRACKER_PARAMS", ["trackingnumber"])
+
+        for pattern in tracking_patterns:
+            logger.info("{}".format(pattern))
+
         try:
-            return "{}{}".format(self.carrier.tracking_link, self.tracking_number)
+            path = furl(self.carrier.tracking_link)
+
+            tracking_param = [
+                param for param in path.args if param.lower() in tracking_patterns
+            ]
+
+            if len(tracking_param) == 1:
+                path.args[tracking_param[0]] = self.tracking_number
+            else:
+                raise KeyError(path)
+
+            return path.url
         except:
             return None
 
@@ -119,7 +154,30 @@ class Tracker(models.Model):
     def stop(self):
         tracker = self.__class__.objects.filter(pk=self.pk)
 
-        return True if tracker.update(active = False) else False
+        return True if tracker.update(active=False) else False
+
+
+class TrackerItem(models.Model):
+    tracker = models.ForeignKey(
+        Tracker, verbose_name=_("tracker"), on_delete=models.CASCADE
+    )
+    simple_product = models.ForeignKey(
+        SimpleProduct, verbose_name=_("item"), on_delete=models.CASCADE
+    )
+    quantity = models.DecimalField(
+        _("quantity in shipment"), max_digits=15, decimal_places=3
+    )
+    missing = models.BooleanField(_("missing"), default=False)
+
+    @property
+    def shipment_received(self):
+        return self.tracker.received
+
+    def __str__(self) -> str:
+        value = "{item} | {tracker}".format(
+            item=self.simple_product, tracker=self.tracker
+        )
+        return value
 
 
 class TrackingWebhookMessage(models.Model):
@@ -148,3 +206,10 @@ class TrackingEvent(models.Model):
             time=self.time_utc.strftime("%c %Z"),
         )
         return value
+
+
+class TrackerStatusSteps(models.Model):
+    tracker_status = models.CharField(_("status"), max_length=50)
+    rank = models.PositiveSmallIntegerField(
+        _("rank"), help_text=_("rank in sort order"), unique=True
+    )

@@ -1,0 +1,14 @@
+<div class="dropdown align-right">
+  <button class="btn status-button dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+      {{ purchase_request.status|title }}
+  </button>
+  <ul class="dropdown-menu">
+    {% for status in purchase_request_statuses %}
+      <li>
+        <a class="dropdown-item" href="{% url 'update_pr_status' slug=purchase_request.slug %}?status={{ status.pk }}&next={{ request.get_full_path }}">
+          {{ status|title }}{{ for.counter }}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+</div>

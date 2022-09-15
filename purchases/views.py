@@ -1,9 +1,11 @@
 import os
 
-# from http.client import HTTPResponse
 import io
 
-# import re
+from importlib.metadata import version
+
+from packaging import version as p_version
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.http import (
@@ -11,37 +13,40 @@ from django.http import (
     HttpRequest,
     HttpResponse,
     HttpResponseForbidden,
-)  # , HttpResponseNotFound
+    # , HttpResponseNotFound
+)  
 from django.shortcuts import redirect
 from django.urls import reverse_lazy  # , reverse
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib import messages
 
+from django.views.generic.detail import SingleObjectMixin
+
+from django.utils.translation import gettext_lazy as _
+
 import logging
 
-# from purchases.exceptions import Error
 from purchases.models.model_helpers import requisitioner_from_user
-
-# from django.utils.text import slugify
 
 from purchases.tracking import (
     TrackerObject,
     update_tracking_details,
     get_generated_signature,
 )
+from django.conf import settings
 
-# from setup_sheets.models import Part, PartRevision
-# from setup_sheets.views import PartRevisionFilter #, update_tracking_details
-from .models.models_metadata import Accounts, Carrier, Vendor
+from .models.models_metadata import Accounts, Carrier, Status, Vendor
 from .models.models_data import (
     Balance,
     SimpleProduct,
     Transaction,
     PurchaseRequest,
     Requisitioner,
-    status_reverse,
+    VendorOrder,
+    # status_reverse,
 )
+
 from .models.models_apis import (
     Tracker,
     TrackingWebhookMessage,  # , create_events #, update_tracker_fields
@@ -50,9 +55,9 @@ from django.views.generic import ListView  # , View
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 
-# from django.views.generic.list import MultipleObjectMixin
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from .forms import (
+    AddVendorOrderForm,
     CreateUserForm,
     PurchaseRequestAccountsFormset,
     SimpleProductCopyForm,
@@ -61,8 +66,6 @@ from .forms import (
     CustomPurchaseRequestForm,
 )
 
-# from django_filters.views import FilterMixin
-
 import datetime as dt
 import json
 from django.utils import timezone
@@ -70,8 +73,6 @@ from django.utils import timezone
 from django.db.transaction import atomic, non_atomic_requests
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-
-from django.db.models import Max
 
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import cm, inch
@@ -87,23 +88,17 @@ from furl import furl
 
 from web_project.helpers import (
     PaginatedListMixin,
-    # StatusObject,
-    # build_custom_filter_list,
-    # build_filter_list,
-    # copy_no_page,
-    get_new_page_fragment,
-    paginate,
     redirect_to_next,
     truncate_string,
 )
+
 from django_listview_filters.filters import (
     RelatedFieldListViewFilter,
     ChoicesFieldListViewFilter,
+    AllValuesFieldListFilter,
 )
 
 # from fdfgen import forge_fdf
-
-# from bootstrap_modal_forms.generic import BSModalCreateView
 
 from .forms import AddVendorForm, NewPRForm
 
@@ -117,6 +112,65 @@ class VendorListView(PaginatedListMixin, ListView):
     queryset = Vendor.objects.order_by("name")
 
 
+class SimpleView(SingleObjectMixin):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["purchase_request_statuses"] = Status.objects.filter(
+            parent_model="PR"
+        ).order_by("rank")
+
+        return context
+
+
+class VendorOrderCreateView(CreateView):
+    form_class = AddVendorOrderForm
+    template_name = "purchases/vendororder_create.html"
+
+    def form_valid(self, form):
+        if hasattr(form, "message"):
+            messages.info(self.request, form.message)
+
+        return super().form_valid(form)
+
+
+class VendorOrderDetailView(SimpleView, DetailView):
+    model = VendorOrder
+    query_pk_and_slug = True
+
+    # def get_context_data(self, **kwargs):
+    #     context = super().get_context_data(**kwargs)
+
+    #     # trackers = []
+    #     # object = self.get_object()
+    #     # for request in object.purchase_requests.all():
+    #     #     for tracker in request.tracker_set.all():
+    #     #         trackers.append(tracker)
+
+    #     # context['trackers'] = trackers
+
+    #     return context
+
+
+class VendorOrderListView(PaginatedListMixin, ListView):
+    context_object_name = "vendororder"
+    queryset = VendorOrder.objects.all()
+    list_filter = [
+        ("purchase_requests", RelatedFieldListViewFilter),
+        ("vendor", RelatedFieldListViewFilter),
+        ("purchase_requests__requisitioner", RelatedFieldListViewFilter),
+        ("purchase_requests__status", ChoicesFieldListViewFilter),
+        # ("o.purchase_requests.last.tracker_set.last.status"),
+    ]
+
+
+class VendorOrderCurrentListView(VendorOrderListView):
+    template_name = "purchases/vendororder_current_list.html"
+    queryset = VendorOrder.objects.filter(
+        purchase_requests__status__open=True
+    )
+
+
 class SimpleProductListView(PaginatedListMixin, ListView):
     context_object_name = "simpleproduct"
     queryset = SimpleProduct.objects.order_by("purchase_request__vendor", "name")
@@ -125,11 +179,8 @@ class SimpleProductListView(PaginatedListMixin, ListView):
         ("purchase_request__requisitioner", RelatedFieldListViewFilter),
         ("purchase_request__status", ChoicesFieldListViewFilter),
         ("purchase_request", RelatedFieldListViewFilter),
+        # ("purchase_request__tracker_set__latest__status", AllValuesFieldListFilter),
     ]
-    # filters = [
-    #         ("vendor", {'model':Vendor, 'parent_model':PurchaseRequest, 'field':'purchaserequest', 'order_by':'name'}),
-    #         ("requisitioner", {'model':Requisitioner, 'parent_model':PurchaseRequest, 'field':'purchaserequest', 'order_by':'user__last_name'}),
-    #     ]
 
     def get_context_data(self, **kwargs):
         """Add context for max digits of unit price field for formatting."""
@@ -144,15 +195,30 @@ class SimpleProductListView(PaginatedListMixin, ListView):
             else:
                 return 0
 
-        # SimpleProduct.objects.values_list
+        filter_name = "purchase_request__vendor"
 
-        # paginator = self.get_paginator(self.queryset, self.paginate_by)
+        dlf_version_str = version("django_listview_filters")
 
-        qs = context['object_list']
+        if p_version.parse(dlf_version_str) <= p_version.parse("0.0.1b0.dev1"):
+            filter = [
+                filter
+                for filter in self.filter_specs
+                if filter.field_path == filter_name
+            ][0]
+        else:
+            filter = self.get_filter_by_name(filter_name)
 
-        unitprice_values = qs.values_list(
-            "unit_price", flat=True
+        filter.lookup_choices = sorted(
+            filter.lookup_choices, key=lambda x: x[1].lower()
         )
+
+        if settings.DEBUG:
+            for counter, choice in enumerate(filter.lookup_choices):
+                logger.debug("Choice {}: {}".format(counter, choice))
+
+        qs = context["object_list"]
+
+        unitprice_values = qs.values_list("unit_price", flat=True)
 
         digits_list = []
         for value in unitprice_values:
@@ -181,63 +247,33 @@ class SimpleProductPRListView(SimpleProductListView):
         return qs
 
 
-# class PartRevisionFilter(ListViewFilterBase):
-#     main_model = None
-#     parent_model = PartRevision
-#     field = 'revision'
-#     name = 'revision'
-#     order_by = 'revision'
-#     paramater_name = 'revision'
-
-# class PartCreatedByFilter(ListViewFilterBase):
-#     main_model = User
-#     parent_model = Part
-#     field = 'setup_sheets_part_related'
-#     order_by = 'last_name'
-#     name = 'created by'
-#     paramater_name = 'created-by'
-
-
 class PurchaseRequestListViewBase(PaginatedListMixin, ListView):
     context_object_name = "purchaserequests"
     queryset = PurchaseRequest.objects.order_by("-created_date")
     list_filter = [
-        ("status", ChoicesFieldListViewFilter),
+        ("status", RelatedFieldListViewFilter),
         ("vendor", RelatedFieldListViewFilter),
         ("requisitioner", RelatedFieldListViewFilter),
     ]
-    # filters = [
-    #     ("status", {'field':'status', 'parent_model':PurchaseRequest}),
-    #     ("vendor", {'model':Vendor, 'parent_model':PurchaseRequest, 'field':'purchaserequest', 'order_by':'name'}),
-    #     ("requisitioner", {'model':Requisitioner, 'parent_model':PurchaseRequest, 'field':'purchaserequest', 'order_by':'user__last_name'}),
-    # ]
 
-    # def get(self, request, *args, **kwargs):
-    #     self.model = self.queryset.model
-    #     filterset_class = self.get_filterset_class()
-    #     self.filterset = self.get_filterset(filterset_class)
-
-    #     if (
-    #         not self.filterset.is_bound
-    #         or self.filterset.is_valid()
-    #         or not self.get_strict()
-    #     ):
-    #         self.object_list = self.filterset.qs
-    #     else:
-    #         self.object_list = self.filterset.queryset.none()
-
-    #     context = self.get_context_data(
-    #         filter=self.filterset, object_list=self.object_list
-    #     )
-
-    #     return self.render_to_response(context)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["purchase_request_statuses"] = Status.objects.filter(
+            parent_model="PR"
+        ).order_by("rank")
+        return context
 
     class Meta:
         abstract = True
 
 
 class PurchaseRequestListView(PurchaseRequestListViewBase):
-    pass
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["show_link"] = (_("show open"), "open_pr")
+
+        return context
 
 
 class RequisitionerPurchaseRequestListView(PurchaseRequestListViewBase):
@@ -249,6 +285,13 @@ class RequisitionerPurchaseRequestListView(PurchaseRequestListViewBase):
         ("status", ChoicesFieldListViewFilter),
         ("vendor", RelatedFieldListViewFilter),
     ]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["show_link"] = (_("show open"), "open_pr")
+
+        return context
 
     def get_queryset(self):
         self.requisitioner = get_object_or_404(
@@ -263,12 +306,40 @@ class RequisitionerPurchaseRequestListView(PurchaseRequestListViewBase):
         return qs
 
 
+class OpenPurchaseRequestListView(PurchaseRequestListViewBase):
+    # pr = PurchaseRequest.PurchaseRequestStatuses
+    # current_statuses = [pr.WL, pr.AP, pr.OR, pr.PT, pr.SH, pr.AA]
+    queryset = PurchaseRequest.objects.filter(status__open=True).order_by(
+        "-created_date"
+    )
+    list_filter = [
+        ("vendor", RelatedFieldListViewFilter),
+        ("requisitioner", RelatedFieldListViewFilter),
+    ]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["show_link"] = (_("show all"), "home")
+
+        return context
+
+
 class VendorDetailView(DetailView):
     model = Vendor
     query_pk_and_slug = True
 
 
-class PurchaseRequestDetailView(DetailView):
+def get_status_choices(model: Status.StatusModel):
+    statuses = PurchaseRequest.PurchaseRequestStatuses
+    status_choices = statuses.values
+
+    dict_f = lambda x: {"name": statuses(x).name, "label": statuses(x).label}
+
+    return [dict_f(x) for x in status_choices]
+
+
+class PurchaseRequestDetailView(SimpleView, DetailView):
     model = PurchaseRequest
     template_name = "purchases/purchaserequest_detail.html"
     context_object_name = "purchaserequest"
@@ -287,7 +358,7 @@ class PurchaseRequestDetailView(DetailView):
             else:
                 return 0
 
-        SimpleProduct.objects.values_list
+        # context["purchase_request_statuses"] = get_status_choices()
 
         unitprice_values = self.object.simpleproduct_set.values_list(
             "unit_price", flat=True
@@ -577,7 +648,7 @@ class PurchaseRequestUpdateView(UpdateView):
         )
 
 
-class AccountDetailView(DetailView):
+class AccountDetailView(SimpleView, DetailView):
     model = Accounts
     template_name = "purchases/account_detail_simple.html"
 
@@ -589,35 +660,34 @@ def update_pr_status(request: HttpRequest, slug: str, *args, **kwargs) -> HttpRe
     return_redirect = redirect(redirect_url)
 
     if not new_status:
+        messages.info(_("existing status chosen, no changes made."))
         return return_redirect
 
-    try:
-        status_number, status = status_reverse(new_status)
-    except TypeError as err:
-        messages.warning(
-            request, "Invalid status parameter provided '{}'.".format(new_status)
-        )
-        messages.debug(request, "From exception: {}".format(err))
-
-        return return_redirect
+    status = Status.objects.filter(pk=new_status).first()
 
     qs = PurchaseRequest.objects.filter(slug=slug)
     count = qs.count()
-    if count != 1:
+    if count == 1:
+        qs.update(status=status)
+        messages.add_message(
+            request,
+            messages.SUCCESS,
+            message="{pr}'s status updated to '{status}.'".format(
+                pr=qs.first(), status=status.name.title()
+            ),
+        )
+    else:
+        logger.warning(
+            "Slug {} returned too many/too few results: {}; no records updated.".format(
+                slug,
+                count,
+            )
+        )
         messages.add_message(
             request,
             messages.ERROR,
             message="Slug returned too many/too few results: {}; no records updated.".format(
                 count
-            ),
-        )
-    else:
-        qs.update(status=status_number)
-        messages.add_message(
-            request,
-            messages.SUCCESS,
-            message="{pr}'s status updated to '{status}.'".format(
-                pr=qs.first(), status=status
             ),
         )
 
@@ -750,8 +820,8 @@ def process_webhook_payload(payload: dict) -> str:
 
         success = tracker.update_tracker_fields(payload_obj)
 
-        tracker_success = 'Tracker {} successfully updated.'.format(tracker)
-        tracker_failure = 'No updates made to tracker {}.'.format(tracker)
+        tracker_success = "Tracker {} successfully updated.".format(tracker)
+        tracker_failure = "No updates made to tracker {}.".format(tracker)
 
         return success, tracker_success if success else tracker_failure
 
@@ -1065,6 +1135,10 @@ class TrackerListView(PaginatedListMixin, ListView):
         ("purchase_request", RelatedFieldListViewFilter),
     ]
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
 
 class TrackerCreateView(CreateView):
     form_class = TrackerForm
@@ -1097,6 +1171,7 @@ class TrackerDeleteView(DeleteView):
 
 
 def update_tracker(request, pk, *args, **kwargs):
+    fragment = furl(request.get_full_path())
     # TODO: not properly identifying whether any new information was obtained
     tracker = get_object_or_404(Tracker, pk=pk)
 
@@ -1138,4 +1213,6 @@ def update_tracker(request, pk, *args, **kwargs):
                 request, "Tracker '{}' was already up to date.".format(tracker_str)
             )
 
-    return redirect(tracker)
+    url = tracker if not fragment.args.has_key("next") else fragment.args.get("next")
+
+    return redirect(url)

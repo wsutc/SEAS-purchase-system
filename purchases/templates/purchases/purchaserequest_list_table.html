@@ -1,4 +1,11 @@
 {% load purchases_extras %}
+
+<style>
+  .status-button {
+    --bs-btn-padding-y: 0rem
+}
+</style>
+
 <div class="col">
   <table class="table table-striped">
     <thead>
@@ -19,7 +26,8 @@
               <td><a href="{{ o.get_absolute_url }}">{{ o.number }}</a></td>
               <td><a href="{{ o.vendor.get_absolute_url }}">{{ o.vendor }}</a></td>
               <td class="dropdown align-right">
-                <button class="btn w-100 inline dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                {% include "purchases/status_change_button.html" with purchase_request=o %}
+                {% comment %} <button class="btn w-100 inline dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     {{ o.get_status_display }}
                 </button>
                 <ul class="dropdown-menu">
@@ -30,7 +38,7 @@
                     <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=sh&&next={{ request.get_full_path }}">Ship</a></li>
                     <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=rc&&next={{ request.get_full_path }}">Receive</a></li>
                     <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=pt&&next={{ request.get_full_path }}">Receive - Partial</a></li>
-                </ul>
+                </ul> {% endcomment %}
               </td>
               {% comment %} <td>{{ o.get_status_display }}</td> {% endcomment %}
               <td>{{ o.grand_total }}</td>

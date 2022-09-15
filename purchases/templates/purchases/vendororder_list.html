@@ -1,0 +1,13 @@
+{% extends "purchases/list_page.html" %}
+{% load purchases_extras %}
+{% block title %}
+Orders
+{% endblock %}
+{% block header %}Orders{% endblock header %}
+{% block new_url %}{% url 'vendororder_create' %}{% endblock new_url %}
+
+{% block page %}
+
+    {% include "purchases/vendororder_list_table.html" %}
+
+{% endblock %}

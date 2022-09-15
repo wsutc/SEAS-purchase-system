@@ -1,7 +1,7 @@
 {% extends 'purchases/layout.html' %}
 {% block title %}test{% endblock %}
 {% block content %}
-
+<body>
 <style>
     .inline {
       --bs-btn-padding-y: 0rem
@@ -57,26 +57,30 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for row in object.purchaserequest_set.all %}
-                            {% for product in row.simpleproduct_set.all %}
-                                <tr>
-                                    <td>{{ product.name }}</td>
-                                    <td>{{ product.identifier|default_if_none:"" }}</td>
-                                    <td>{{ row.get_status_display }}</td>
-                                    <td><a href="{{ row.get_absolute_url }}">{{ row }}</a></td>
-                                    {% if product.link %}
-                                        <td style="text-align: center;">
-                                            <a href="{{ product.link }}" target="_blank" rel="noopener noreferrer">
-                                                <i class="fa-solid fa-up-right-from-square" ></i>
-                                            </a>
-                                        </td>
-                                    {% else %}
-                                        <td></td>
-                                    {% endif %}
-                                    <td><a href="{% url 'copy_simpleproduct' pk=product.pk %}"><i class="fa-solid fa-copy"></i></a></td>
-                                </tr>
+                        {% with object.purchaserequest_set as set %}
+                            {% for row in set.all %}
+                                {% with row.simpleproduct_set as rowset %}
+                                    {% for product in row_set.all %}
+                                        <tr>
+                                            <td>{{ product.name }}</td>
+                                            <td>{{ product.identifier|default_if_none:"" }}</td>
+                                            <td>{{ row.get_status_display }}</td>
+                                            <td><a href="{{ row.get_absolute_url }}">{{ row }}</a></td>
+                                            {% if product.link %}
+                                                <td style="text-align: center;">
+                                                    <a href="{{ product.link }}" target="_blank" rel="noopener noreferrer">
+                                                        <i class="fa-solid fa-up-right-from-square" ></i>
+                                                    </a>
+                                                </td>
+                                            {% else %}
+                                                <td></td>
+                                            {% endif %}
+                                            <td><a href="{% url 'copy_simpleproduct' pk=product.pk %}"><i class="fa-solid fa-copy"></i></a></td>
+                                        </tr>
+                                    {% endfor %}
+                                {% endwith %}
                             {% endfor %}
-                        {% endfor %}
+                        {% endwith %}
                     </tbody>
                 </table>
             </div>
@@ -84,5 +88,8 @@
     </div>
 {% comment %} </div> {% endcomment %}
 {% endblock related_simpleproduct_table %}
+{% block custom_tables %}{% endblock custom_tables %}
 
+{% comment %} <div id="django-debug"><pre>{% debug %}</pre></div> {% endcomment %}
+</body>
 {% endblock %}

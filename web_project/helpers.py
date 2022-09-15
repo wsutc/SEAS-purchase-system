@@ -13,7 +13,8 @@ from django.db import models
 from django.db.models import Count, Max, Min
 from django.apps import apps
 from purchases.exceptions import Error, StatusCodeNotFound
-from purchases.models.models_apis import Tracker
+
+# from purchases.models.models_apis import Tracker
 from django.contrib.auth.models import User
 from django.db.models import QuerySet, Field
 from django.contrib.admin.utils import (
@@ -24,13 +25,13 @@ from django.contrib.admin.utils import (
     # lookup_spawns_duplicates,
 )
 
-from purchases.models.models_data import (
-    PurchaseRequest,
-    Requisitioner,
-    status_code,
-    status_reverse,
-)
-from purchases.models.models_metadata import Carrier  # , Vendor
+# from purchases.models.models_data import (
+#     PurchaseRequest,
+#     Requisitioner,
+#     status_code,
+#     status_reverse,
+# )
+# from purchases.models.models_metadata import Carrier  # , Vendor
 
 # from setup_sheets.models import PartRevision
 from django.utils.text import slugify

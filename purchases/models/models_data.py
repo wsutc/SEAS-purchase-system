@@ -7,22 +7,40 @@ from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 from djmoney.models.fields import MoneyField
+from djmoney.money import Money
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
+from django.utils.translation import gettext_lazy as _
 from django.db.models import Sum
 
+# import purchases
+from purchases import apps
+import purchases
+from purchases.apps import PurchasesConfig
+
+from django.apps import AppConfig
+
 from purchases.exceptions import StatusCodeNotFound
+from web_project.helpers import get_app_name
+
+# from purchases.models.models_apis import Tracker
 
 from .models_metadata import (
+    BaseModel,
     SpendCategory,
     DocumentNumber,
+    Status,
     Vendor,
     Accounts,
     Unit,
     Urgency,
     Department,
 )
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Requisitioner(models.Model):
@@ -48,29 +66,35 @@ class Requisitioner(models.Model):
         return self.user.get_full_name()
 
 
-def status_reverse(code: str) -> tuple[str, str]:
-    """Return key and value from status list given two-character code."""
-    try:
-        key = getattr(PurchaseRequest, code.upper())
-    except AttributeError:
-        message = "No status matching code '{}' found. Please confirm.".format(code)
-        raise StatusCodeNotFound(code, message)
+# def status_reverse(code: str) -> tuple[str, str]:
+#     """Return key and value from status list given two-character code."""
+#     # try:
+#     #     key = getattr(PurchaseRequest, code.upper())
+#     # except AttributeError:
+#     #     message = "No status matching code '{}' found. Please confirm.".format(code)
+#     #     raise StatusCodeNotFound(code, message)
 
-    statuses_dict = dict(PurchaseRequest.PURCHASE_REQUEST_STATUSES)
-    value = statuses_dict.get(key)
+#     # statuses_dict = dict(PurchaseRequest.PURCHASE_REQUEST_STATUSES)
+#     statuses_dict = dict(PurchaseRequest.PurchaseRequestStatuses.choices)
+#     value = statuses_dict.get(code, None)
 
-    return (key, value)
+
+#     return (key, value)
 
 
 def getsimpleattrs(object):
     """Return list of attributes of <object> that are not callable or private (starting with '__')
-    
+
     :param object: An object with attributes
     :type object: object
     :return: List of attributes from object excluding callables or private (starting with '__')
     :rtype: list
     """
-    variables = [attr for attr in dir(object) if not callable(getattr(object, attr)) and not attr.startswith("__")]
+    variables = [
+        attr
+        for attr in dir(object)
+        if not callable(getattr(object, attr)) and not attr.startswith("__")
+    ]
 
     return variables
 
@@ -131,48 +155,21 @@ class PurchaseRequest(models.Model):
     class Meta:
         ordering = ["-created_date"]
 
-    PO = "po"
-    PCARD = "pcard"
-    IRI = "iri"
-    INV_VOUCHER = "invoice voucher"
-    CONTRACT = "contract"
-    PURCHASE_TYPE = (
-        (PO, "PURCHASE ORDER"),
-        (PCARD, "PCARD"),
-        (IRI, "IRI"),
-        (INV_VOUCHER, "INVOICE VOUCHER"),
-        (CONTRACT, "CONTRACT"),
-    )
+    class PurchaseType(models.TextChoices):
+        PO = "po", _("PURCHASE ORDER")
+        PCARD = "pcard", _("PCARD")
+        IRI = "iri", _("IRI")
+        INV_VOUCHER = "invoice voucher", _("INVOICE VOUCHER")
+        CONTRACT = "contract", _("CONTRACT")
+        
     purchase_type = models.CharField(
-        "Choose One", choices=PURCHASE_TYPE, default="pcard", max_length=150
+        "Choose One",
+        choices=PurchaseType.choices,
+        default=PurchaseType.PCARD,
+        max_length=25,
     )
 
-    WL = "0"
-    AA = "1"
-    AP = "2"
-    CM = "3"
-    DN = "4"
-    RT = "5"
-    OR = "6"
-    SH = "7"
-    RC = "8"
-    PT = "9"
-    PURCHASE_REQUEST_STATUSES = (
-        (WL, "Wish List/Created"),
-        (AA, "Awaiting Approval"),
-        (AP, "Approved"),
-        (OR, "Ordered"),
-        (SH, "Shipped"),
-        (RC, "Received"),
-        (PT, "Partial"),
-        (CM, "Complete"),
-        (DN, "Denied (no resubmission)"),
-        (RT, "Returned (please resubmit)"),
-    )
-
-    status = models.CharField(
-        choices=PURCHASE_REQUEST_STATUSES, default="0", max_length=150
-    )
+    status = models.ForeignKey(Status, on_delete=models.PROTECT)
 
     def get_absolute_url(self):
         kwargs = {"slug": self.slug}
@@ -243,6 +240,102 @@ class PurchaseRequest(models.Model):
 
     def __str__(self):
         return self.number
+
+
+class VendorOrder(BaseModel):
+    name = models.CharField(verbose_name=_("order number"), max_length=50)
+    vendor = models.ForeignKey(Vendor, on_delete=models.PROTECT, blank=False)
+    link = models.URLField(verbose_name=_("link"), blank=True)
+    purchase_requests = models.ManyToManyField(
+        PurchaseRequest, verbose_name=_("purchase_requests")
+    )
+    subtotal = MoneyField(
+        _("subtotal"), max_digits=14, default_currency="USD", default=0
+    )
+    shipping = MoneyField(
+        _("shipping"), max_digits=14, default_currency="USD", default=0
+    )
+    sales_tax = MoneyField(
+        _("sales tax"), max_digits=14, default_currency="USD", default=0
+    )
+    order_placed = models.DateField(_("date order placed"), blank=True)
+    invoice_number = models.CharField(_("invoice number"), max_length=50, blank=True)
+    invoice_due_date = models.DateField(_("invoice due date"), blank=True, null=True)
+
+    @property
+    def grand_total(self) -> Money:
+        items = [self.subtotal, self.shipping, self.sales_tax]
+        math_sum = sum(items)
+        return math_sum
+
+    @property
+    def trackers(self):
+        model_name = "tracker"
+
+        trackers = []
+
+        try:
+            tm = self._meta.app_config
+            tracker_model = tm.get_model(model_name)
+        except LookupError:
+            logger.error(
+                _("No model of {modelname} found.".format(modelname=model_name))
+            )
+        except:
+            logger.error(_("Some Unknown Error"), exc_info=1)
+            raise
+        else:
+            trackers = tracker_model.objects.filter(
+                purchase_request__in=self.purchase_requests.all()
+            )
+
+        return trackers
+
+    @property
+    def items(self, **kwargs):
+        model_name = "trackeritem"
+
+        items = []
+
+        try:
+            app_config = self._meta.app_config
+            trackeritem_model = app_config.get_model(model_name)
+        except LookupError:
+            logger.error(
+                _("No model of {modelname} found.".format(modelname=model_name))
+            )
+        except:
+            logger.error(_("Some Unknown Error"), exc_info=1)
+            raise
+        else:
+            items = trackeritem_model.objects.filter(tracker__in=self.trackers)
+
+        return items
+
+    class Meta:
+        verbose_name = _("vendor order")
+        verbose_name_plural = _("vendor orders")
+        ordering = ["-order_placed", "-created_date"]
+
+    def save(self, *args, **kwargs):
+        self.order_placed = (
+            self.order_placed if self.order_placed is not None else timezone.now()
+        )
+
+        return super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        kwargs = {
+            "pk": self.pk,
+            "slug": self.slug,
+        }
+        return reverse("vendororder_detail", kwargs=kwargs)
+
+    def __str__(self):
+        custom_str = "{vendor} {number}".format(
+            vendor=self.vendor.name, number=self.name
+        )
+        return custom_str
 
 
 class SimpleProduct(models.Model):

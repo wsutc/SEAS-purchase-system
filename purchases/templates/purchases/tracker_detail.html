@@ -1,5 +1,6 @@
 {% extends 'purchases/detail_page.html' %}
 {% load purchases_extras %}
+{% load i18n %}
 {% block title %}{{ object.purchase_request }} Tracker{% endblock %}
 {% block header %}Tracker{% endblock %}
 {% comment %} {% block previous %}{{ object.get_previous_by_sort_order.get_absolute_url }}{% endblock previous %}
@@ -50,10 +51,22 @@
                 <td class="pe-2 fw-bold">Tracking Number</td>
                 <td><a href="{{ object.get_tracking_link }}" target="_blank" rel="noopener noreferrer">{{ object.tracking_number }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></a></td>
             </tr>
+            <tr>
+                <td class="pe-2 fw-bold">Latest Location</td>
+                <td>{{ object.latest_event.location }}</td>
+            </tr>
           </table>
         </div>
       </div>
   </div>
+
+  {% with object.trackeritem_set.all as items %}
+    {% if debug %}<div class="alert alert-debug">debug ->count:{{ items|length }}</div>{% endif %}
+
+    <div class="h4">{% translate "Items" %}</div>
+
+    {% include "purchases/trackeritem_list_table.html" with object_list=items %}
+  {% endwith %}
 
   <div class="col-12">
     <div class="h2">Events</div>
@@ -86,4 +99,8 @@
 {% endblock %}
 
 {% block related_pr_table %}{% endblock related_pr_table %}
-{% block related_simpleproduct_table %}{% endblock related_simpleproduct_table %}
+{% block related_simpleproduct_table %}
+
+
+
+{% endblock related_simpleproduct_table %}

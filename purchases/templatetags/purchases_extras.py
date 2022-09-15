@@ -2,8 +2,11 @@ from django import template
 from django.utils.html import mark_safe, conditional_escape
 from django.template.defaultfilters import stringfilter
 from django.contrib.humanize.templatetags.humanize import intcomma
+from django.shortcuts import redirect
 
 from django.urls import reverse
+
+from django.apps import AppConfig
 
 import re
 
@@ -165,6 +168,27 @@ def urlizespecifyblank(value: str, href: str, autoescape=True) -> str:
     )
 
     return mark_safe(tag)
+
+
+@register.filter(needs_autoescape=True)
+def urlizeobject(object, autoescape=True):
+    """Create a link for an object using it's `get_absolute_url` method, if it has one.
+
+    :param object: The object/model to create a link for
+    :type object: models.Model
+    :return: If <object> has a `get_absolute_url` method, return a link tag in the form '<a href="{{ object.get_absolute_url }}">{{ object }}</a>';
+        if no method exists, return {{ object }}.
+    :rtype: str, marked safe
+    """
+    text = str(object)
+    try:
+        url = object.get_absolute_url()
+    except:
+        return text
+    else:
+        tag = '<a href="{url}">{text}</a>'.format(url=url, text=text)
+
+        return mark_safe(tag)
 
 
 @register.filter

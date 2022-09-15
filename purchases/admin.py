@@ -3,14 +3,17 @@ from django.contrib import admin, messages
 from django.shortcuts import redirect
 from django.db.models import Q
 from django.utils.text import slugify
+from django.utils.translation import gettext_lazy as _
 
 from purchases import tracking
 
 from .models.models_metadata import (
+    AccountGroup,
     Accounts,
     Carrier,
     Department,
     DocumentNumber,
+    Status,
     Urgency,
     Vendor,
     State,
@@ -24,9 +27,11 @@ from .models.models_data import (
     SimpleProduct,
     SpendCategory,
     Requisitioner,
+    VendorOrder,
 )
 from .models.models_apis import (
     Tracker,
+    TrackerItem,
     TrackingEvent,
 )  # , create_events #, update_tracker_fields
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
@@ -86,6 +91,33 @@ class TrackerInline(admin.TabularInline):
     exclude = ["events", "shipment_id"]
 
 
+@admin.register(TrackerItem)
+class TrackerItemAdmin(admin.ModelAdmin):
+    list_display = [
+        "simple_product",
+        "purchase_request",
+        "tracker",
+        "shipment_received",
+    ]
+    list_filter = [
+        ("simple_product__purchase_request", admin.RelatedOnlyFieldListFilter),
+    ]
+    search_fields = ["simple_product", "tracker"]
+
+    def purchase_request(self, obj):
+        value = obj.simple_product.purchase_request
+        return value
+
+    # @property
+    # def vendor(self, obj):
+    #     value = obj.tracker.vendor
+    #     return value
+
+
+class TrackerItemInline(admin.TabularInline):
+    model = TrackerItem
+
+
 @admin.register(PurchaseRequest)
 class PurchaseRequestAdmin(admin.ModelAdmin):
     list_display = [
@@ -129,6 +161,45 @@ class PurchaseRequestAdmin(admin.ModelAdmin):
         form.instance.update_totals()
 
 
+@admin.register(VendorOrder)
+class VendorOrderAdmin(admin.ModelAdmin):
+    list_display = ["name", "grand_total", "link"]
+    list_filter = [
+        ("purchase_requests", admin.RelatedOnlyFieldListFilter),
+        ("vendor", admin.RelatedOnlyFieldListFilter),
+        "purchase_requests__requisitioner",
+        "purchase_requests__status",
+    ]
+    search_fields = ["purchase_requests", "vendor"]
+
+    def response_change(self, request, obj, post_url_continue=...):
+
+        return redirect_object_or_next(obj, request)
+
+    def response_delete(self, request, obj, post_url_continue=...):
+
+        return redirect_object_or_next(obj, request)
+
+
+def redirect_object_or_next(object, request, next_param="next"):
+    """Redirect to specified 'next' page or object's detail page.
+
+    :param object: Object/model to be redirected to if no 'next' page specified
+    :type object: Django models.Model object
+    :param request: The request as specified by the server
+    :type request: HTTPRequest
+    :param next_param: Paramater used in URL to specify 'next' page
+    :type next_param: str, optional
+    """
+    next = request.GET.get(next_param, None)
+    if next:
+        url = next
+    else:
+        url = object
+
+    return redirect(url)
+
+
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
     list_display = ["name"]
@@ -167,10 +238,66 @@ class PurchaseRequestAccountsInline(admin.TabularInline):
     extra = 0
 
 
+@admin.register(AccountGroup)
+class AccountGroupAdmin(admin.ModelAdmin):
+    list_display = ["name", "account_count"]
+    filter_horizontal = [
+        "accounts",
+    ]
+
+    def account_count(self, obj):
+
+        count = obj.accounts.count()
+        return count
+
+
+class AccountGroupsListFilter(admin.SimpleListFilter):
+    title = _("engineering")
+    parameter_name = "is_engineering"
+
+    def lookups(self, request, model_admin):
+        qs = AccountGroup.objects.values_list("slug", "name")
+        return qs
+
+    def queryset(self, request, queryset):
+        if value := self.value():
+            account_qs = AccountGroup.objects.filter(slug=value)
+            queryset = account_qs.first().accounts
+
+        return queryset
+
+
+class HasSlugFilter(admin.SimpleListFilter):
+    title = "Has Slug"
+    parameter_name = "has-slug"
+
+    def lookups(self, request, model_admin):
+        return (
+            ("true", "Yes"),
+            ("false", "No"),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == "true":
+            return queryset.filter(Q(slug__isnull=False) | Q(slug=""))
+        elif self.value() == "false":
+            return queryset.filter(slug__isnull=True)
+        else:
+            return queryset
+
+
 @admin.register(Accounts)
 class AccountsAdmin(admin.ModelAdmin):
     list_display = ["account", "account_title", "program_workday", "grant", "gift"]
     inlines = [PurchaseRequestAccountsInline]
+    search_fields = ["account", "account_title", "program_workday", "grant", "gift"]
+    list_filter = [
+        # "program_workday__is_null",
+        AccountGroupsListFilter,
+        HasSlugFilter,
+        # ("grant__is_null", admin.BooleanFieldListFilter),
+        # ("gift_is_null", admin.BooleanFieldListFilter),
+    ]
 
 
 @admin.register(SpendCategory)
@@ -278,6 +405,95 @@ class CarrierAdmin(admin.ModelAdmin):
     actions = [generate_slug]
 
 
+@admin.action(description="Move Up 1")
+def move_up_one(modeladmin: admin.ModelAdmin, request, queryset):
+    if queryset.count() != 1:
+        # messages.error(request, message="Exactly one item can be chose for reordering; {} chosen.".format(count))
+        modeladmin.message_user(
+            request,
+            message="Exactly one item can be chose for reordering; {} chosen.".format(
+                queryset.count()
+            ),
+        )
+        return
+
+    obj = queryset[0]
+    obj_rank = obj.rank
+    try:
+        queryset.model.objects.move(obj, obj_rank - 1)
+    except ValueError as err:
+        modeladmin.message_user(request, message=err, level="warning")
+
+
+@admin.action(description="Move Down 1")
+def move_down_one(modeladmin: admin.ModelAdmin, request, queryset):
+    if queryset.count() != 1:
+        # messages.error(request, message="Exactly one item can be chose for reordering; {} chosen.".format(count))
+        modeladmin.message_user(
+            request,
+            message="Exactly one item can be chose for reordering; {} chosen.".format(
+                queryset.count()
+            ),
+        )
+        return
+
+    obj = queryset[0]
+    obj_rank = obj.rank
+    try:
+        queryset.model.objects.move(obj, obj_rank + 1)
+    except ValueError as err:
+        modeladmin.message_user(request, message=err, level="warning")
+
+
+@admin.action(description="Move to Top")
+def move_to_top(modeladmin, request, queryset):
+    if queryset.count() != 1:
+        modeladmin.message_user(
+            request,
+            message="Exactly one item can be chose for reordering; {} chosen.".format(
+                queryset.count()
+            ),
+        )
+        return
+
+    obj = queryset[0]
+    try:
+        queryset.model.objects.move_to_top(obj)
+    except ValueError as err:
+        modeladmin.message_user(request, message=err, level="warning")
+
+
+@admin.action(description="Move to End")
+def move_to_end(modeladmin, request, queryset):
+    if queryset.count() != 1:
+        modeladmin.message_user(
+            request,
+            message="Exactly one item can be chose for reordering; {} chosen.".format(
+                queryset.count()
+            ),
+        )
+        return
+
+    obj = queryset[0]
+    try:
+        queryset.model.objects.move_to_end(obj)
+    except ValueError as err:
+        modeladmin.message_user(request, message=err, level="warning")
+
+
+@admin.action(description="Normalize")
+def normalize(modeladmin, request, queryset):
+    queryset.model.objects.normalize_ranks("parent_model")
+
+
+@admin.register(Status)
+class StatusAdmin(admin.ModelAdmin):
+    list_display = ["name", "parent_model", "rank", "open"]
+    list_filter = ["parent_model"]
+    actions = [move_to_top, move_up_one, move_down_one, move_to_end, normalize]
+    list_editable = ["open"]
+
+
 class TrackingEventInline(admin.TabularInline):
     model = TrackingEvent
     extra = 0
@@ -367,7 +583,7 @@ class TrackerAdmin(admin.ModelAdmin):
     list_filter = [TrackerCarrierListFilter, "status", "purchase_request"]
 
     def response_change(self, request, obj, post_url_continue=...):
-        url = redirect("tracker_detail", pk=obj.pk)
+        url = redirect(obj)
 
         # url = super().response_change(request, obj)
 
@@ -406,6 +622,7 @@ class SimpleProductAdmin(admin.ModelAdmin):
         # "purchase_request__requisitioner__user__last_name",
         # "purchase_request__vendor__name",
     ]
+    inlines = [TrackerItemInline]
 
 
 @admin.register(Balance)

@@ -1,0 +1,1 @@
+[{"model": "purchases.urgency", "pk": 1, "fields": {"name": "Standard/Lowest Cost", "note": "Assume flexible timeline."}}, {"model": "purchases.urgency", "pk": 2, "fields": {"name": "ASAP", "note": "As soon as possible."}}]

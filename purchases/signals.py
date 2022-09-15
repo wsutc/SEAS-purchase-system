@@ -1,19 +1,44 @@
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import post_save, pre_save, post_delete
 from django.contrib.auth.models import User
 from django.dispatch import receiver
 
 # import http.client, json
-from django.conf import settings
+# from django.conf import settings
 from django.contrib.auth.models import User
 
 from purchases.vendor_linking import link_from_identifier
 
-from .models.models_metadata import Department
-from .models.models_apis import Tracker  # , create_events #, update_tracker_fields
+from .models.models_metadata import Accounts, Department, Status, first_true
+
+# from .models.models_apis import Tracker  # , create_events #, update_tracker_fields
 from .models.models_data import Requisitioner, PurchaseRequest, SimpleProduct
 
 # from .tracking import build_payload #, update_tracking_details
-from purchases import tracking
+# from purchases import tracking
+
+
+def single_true(iterable) -> bool:
+    """Return `True` if one and only one truthy value is present, else `False`."""
+    i = iter(iterable)
+    # Two things to know to understand the next line:
+    # 1. an iterable will be 'consumed' as it is iterated over
+    # 2. the return statement will be solved left --> right
+    # So, the first `any(i)` will search for the first 'truthy' option, consuming
+    # `i` as it does, and then will stop. Once that's done, the `not any(i)` starts
+    # and consumes `i` unless and until it hits another 'truthy' instance. If that
+    # happens, there's more than one.
+    return any(i) and not any(i)
+
+
+def n_trues(iterable, n: int) -> bool:
+    i = iter(iterable)
+    return all(any(i) for j in range(n)) and not any(i)
+
+
+@receiver(pre_save, sender=Accounts)
+def validate_account_program(sender, instance, created, **kwargs):
+    if single_true(instance.identity_list):
+        return first_true(instance.identity_list)
 
 
 @receiver(post_save, sender=User)
@@ -34,6 +59,11 @@ def create_link(sender, instance, **kwargs):
         instance.link = link_from_identifier(
             instance.identifier, instance.purchase_request.vendor
         )
+
+
+@receiver(post_delete, sender=Status)
+def re_normalize_ranks(sender, instance, **kwargs):
+    sender.objects.normalize_ranks("parent_model", instance.__class__)
 
 
 # @receiver(post_save, sender=Tracker)
