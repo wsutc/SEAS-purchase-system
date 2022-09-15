@@ -1,29 +1,29 @@
-from urllib.parse import urlencode
+# from urllib.parse import urlencode
 from django.http import HttpRequest
 from django.urls import reverse
-from django import apps
+# from django import apps
 from furl import furl
 from django.views.generic import ListView, View
 from django.views.generic.list import MultipleObjectMixin
 from http.client import HTTPResponse
 from django.contrib import messages
 from django.shortcuts import redirect
-from django.core.exceptions import FieldError, ImproperlyConfigured, ValidationError
-from django.db import models
-from django.db.models import Count, Max, Min
-from django.apps import apps
-from purchases.exceptions import Error, StatusCodeNotFound
+# from django.core.exceptions import FieldError, ImproperlyConfigured, ValidationError
+# from django.db import models
+# from django.db.models import Count, Max, Min
+# from django.apps import apps
+# from purchases.exceptions import Error, StatusCodeNotFound
 
 # from purchases.models.models_apis import Tracker
-from django.contrib.auth.models import User
-from django.db.models import QuerySet, Field
-from django.contrib.admin.utils import (
-    # get_model_from_relation,
-    get_fields_from_path,
-    # prepare_lookup_value,
-    # reverse_field_path,
-    # lookup_spawns_duplicates,
-)
+# from django.contrib.auth.models import User
+# from django.db.models import QuerySet, Field
+# from django.contrib.admin.utils import (
+#     # get_model_from_relation,
+#     get_fields_from_path,
+#     # prepare_lookup_value,
+#     # reverse_field_path,
+#     # lookup_spawns_duplicates,
+# )
 
 # from purchases.models.models_data import (
 #     PurchaseRequest,
@@ -47,13 +47,13 @@ from django.utils.text import slugify
 #     FieldListViewFilter,
 # )
 
-from django_listview_filters.filters import (
-    # PAGE_VAR,
-    # ERROR_VAR,
-    # IGNORED_PARAMS,
-    ListViewFilter,
-    # FieldListViewFilter,
-)
+# from django_listview_filters.filters import (
+#     # PAGE_VAR,
+#     # ERROR_VAR,
+#     # IGNORED_PARAMS,
+#     ListViewFilter,
+#     # FieldListViewFilter,
+# )
 from django_listview_filters.mixins import FilterViewMixin
 
 
@@ -193,3 +193,16 @@ class PaginatedListMixin(FilterViewMixin, MultipleObjectMixin, View):
         fragment = furl(self.request.get_full_path())
 
         return context
+
+def first_true(iterable, default=False, pred=None):
+    """Returns the first true value in the iterable.
+
+    If no true value is found, returns *default*
+
+    If *pred* is not None, returns the first item
+    for which pred(item) is true.
+
+    """
+    # first_true([a,b,c], x) --> a or b or c or x
+    # first_true([a,b], x, f) --> a if f(a) else b if f(b) else x
+    return next(filter(pred, iterable), default)

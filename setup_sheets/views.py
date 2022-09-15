@@ -4,13 +4,13 @@ from django.urls import reverse_lazy
 from django.views.generic import DetailView, CreateView, ListView, DeleteView
 from django.contrib.auth.models import User
 from purchases.exceptions import Error
-from web_project.helpers import (
-    ListViewFilter,
-    # copy_no_page,
-    # fk_based_filters,
-    paginate,
-    # tuple_based_filters,
-)
+# from web_project.helpers import (
+#     ListViewFilter,
+#     # copy_no_page,
+#     # fk_based_filters,
+#     paginate,
+#     # tuple_based_filters,
+# )
 from setup_sheets.forms import PartRevisionForm, SetupSheetForm
 from setup_sheets.models import Part, SetupSheet, PartRevision
 from django.utils.text import slugify

@@ -4,8 +4,10 @@ from django.utils.text import slugify
 
 from django.core.validators import MinValueValidator  # , MaxValueValidator
 
-from purchases.models.models_metadata import Manufacturer
-from purchases.models.models_data import PurchaseRequest  # , PurchaseOrder
+from purchases.models import (
+    Manufacturer,
+    PurchaseRequest,
+)
 
 # Create your models here.
 class Department(models.Model):

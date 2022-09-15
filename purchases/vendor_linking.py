@@ -1,7 +1,7 @@
-import requests
+# import requests
 from furl import furl
 
-from purchases.models.models_metadata import Vendor
+from .models import Vendor
 
 
 def link_from_identifier(identifier: str, vendor: Vendor) -> str:

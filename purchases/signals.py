@@ -8,14 +8,16 @@ from django.contrib.auth.models import User
 
 from purchases.vendor_linking import link_from_identifier
 
-from .models.models_metadata import Accounts, Department, Status, first_true
+from .models import (
+    Accounts,
+    Department,
+    Status,
+    Requisitioner,
+    PurchaseRequest,
+    SimpleProduct,
+)
 
-# from .models.models_apis import Tracker  # , create_events #, update_tracker_fields
-from .models.models_data import Requisitioner, PurchaseRequest, SimpleProduct
-
-# from .tracking import build_payload #, update_tracking_details
-# from purchases import tracking
-
+from web_project.helpers import first_true
 
 def single_true(iterable) -> bool:
     """Return `True` if one and only one truthy value is present, else `False`."""

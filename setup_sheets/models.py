@@ -5,7 +5,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
 from django.urls import reverse
-from purchases.models.models_metadata import Manufacturer
+from purchases.models import Manufacturer
 from django.utils.text import slugify
 
 # Create your models here.

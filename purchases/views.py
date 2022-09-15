@@ -8,13 +8,14 @@ from packaging import version as p_version
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
+
 from django.http import (
     FileResponse,
     HttpRequest,
     HttpResponse,
     HttpResponseForbidden,
-    # , HttpResponseNotFound
 )  
+
 from django.shortcuts import redirect
 from django.urls import reverse_lazy  # , reverse
 from django.shortcuts import get_object_or_404
@@ -36,21 +37,21 @@ from purchases.tracking import (
 )
 from django.conf import settings
 
-from .models.models_metadata import Accounts, Carrier, Status, Vendor
-from .models.models_data import (
+from .models import (
+    TrackingWebhookMessage,
+    Accounts,
+    Carrier,
+    Status,
+    Vendor,
     Balance,
     SimpleProduct,
     Transaction,
     PurchaseRequest,
     Requisitioner,
     VendorOrder,
-    # status_reverse,
+    Tracker,
 )
 
-from .models.models_apis import (
-    Tracker,
-    TrackingWebhookMessage,  # , create_events #, update_tracker_fields
-)
 from django.views.generic import ListView  # , View
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
@@ -1127,7 +1128,7 @@ def update_balance(request, pk: int):
 
 class TrackerListView(PaginatedListMixin, ListView):
     context_object_name = "tracker"
-    queryset = Tracker.objects.all().exclude(purchase_request__isnull=True)
+    queryset = Tracker.objects.all()
     list_filter = [
         ("carrier", RelatedFieldListViewFilter),
         ("purchase_request__requisitioner", RelatedFieldListViewFilter),

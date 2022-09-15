@@ -2,15 +2,20 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from purchases.exceptions import TrackerPreviouslyRegistered, TrackerRejectedUnknownCode
-from purchases.models.models_apis import Tracker
-from purchases.models.models_data import (
-    PurchaseRequest,
+
+from .models import (
     PurchaseRequestAccounts,
-    Requisitioner,
+    PurchaseRequest,
+    # Requisitioner,
     Vendor,
     SimpleProduct,
     VendorOrder,
+    Carrier,
+    Department,
+    # Urgency,
+    Tracker,
 )
+
 from django.forms.models import inlineformset_factory
 from django.contrib import messages
 
@@ -22,7 +27,6 @@ from phonenumber_field.formfields import PhoneNumberField
 
 from django_select2 import forms as s2forms
 
-from purchases.models.models_metadata import Carrier, Department, Urgency
 from purchases.tracking import register_trackers
 
 

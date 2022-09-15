@@ -5,10 +5,9 @@ from django.db.models import Q
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
-from purchases import tracking
+from purchases.tracking import update_tracking_details
 
-from .models.models_metadata import (
-    AccountGroup,
+from .models import (
     Accounts,
     Carrier,
     Department,
@@ -18,22 +17,19 @@ from .models.models_metadata import (
     Vendor,
     State,
     Unit,
-)
-from .models.models_data import (
+    AccountGroup,
+    PurchaseRequestAccounts,
     Balance,
     PurchaseRequest,
     Transaction,
-    PurchaseRequestAccounts,
     SimpleProduct,
     SpendCategory,
     Requisitioner,
     VendorOrder,
-)
-from .models.models_apis import (
     Tracker,
-    TrackerItem,
     TrackingEvent,
-)  # , create_events #, update_tracker_fields
+)
+
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 
@@ -91,31 +87,31 @@ class TrackerInline(admin.TabularInline):
     exclude = ["events", "shipment_id"]
 
 
-@admin.register(TrackerItem)
-class TrackerItemAdmin(admin.ModelAdmin):
-    list_display = [
-        "simple_product",
-        "purchase_request",
-        "tracker",
-        "shipment_received",
-    ]
-    list_filter = [
-        ("simple_product__purchase_request", admin.RelatedOnlyFieldListFilter),
-    ]
-    search_fields = ["simple_product", "tracker"]
+# @admin.register(TrackerItem)
+# class TrackerItemAdmin(admin.ModelAdmin):
+#     list_display = [
+#         "simple_product",
+#         "purchase_request",
+#         "tracker",
+#         "shipment_received",
+#     ]
+#     list_filter = [
+#         ("simple_product__purchase_request", admin.RelatedOnlyFieldListFilter),
+#     ]
+#     search_fields = ["simple_product", "tracker"]
 
-    def purchase_request(self, obj):
-        value = obj.simple_product.purchase_request
-        return value
+#     def purchase_request(self, obj):
+#         value = obj.simple_product.purchase_request
+#         return value
 
-    # @property
-    # def vendor(self, obj):
-    #     value = obj.tracker.vendor
-    #     return value
+#     # @property
+#     # def vendor(self, obj):
+#     #     value = obj.tracker.vendor
+#     #     return value
 
 
-class TrackerItemInline(admin.TabularInline):
-    model = TrackerItem
+# class TrackerItemInline(admin.TabularInline):
+#     model = TrackerItem
 
 
 @admin.register(PurchaseRequest)
@@ -129,7 +125,7 @@ class PurchaseRequestAdmin(admin.ModelAdmin):
         "slug",
     ]
     list_editable = ["status"]
-    inlines = [SimpleProductInline, PurchaseRequestAccountsInline, TrackerInline]
+    inlines = [SimpleProductInline, PurchaseRequestAccountsInline]
     actions = [make_awaiting_approval, save_requests]  # ,update_trackers]
     search_fields = [
         "number",
@@ -149,7 +145,7 @@ class PurchaseRequestAdmin(admin.ModelAdmin):
     @admin.display(description="Update Tracker(s)")
     def update_tracker(self, obj):
         if obj.tracker:
-            tracking.update_tracking_details(obj.tracker)
+            update_tracking_details(obj.tracker)
             return obj.tracker.status
         return
 
@@ -507,7 +503,7 @@ def update_selected_trackers(modeladmin, request, queryset):
         list.append(d)
 
     try:
-        updated_trackers = tracking.update_tracking_details(list)
+        updated_trackers = update_tracking_details(list)
     except ValueError as err:
         messages.error(request, "{}".format(err))
 
@@ -577,10 +573,10 @@ def add_first_event_time(modeladmin, request, queryset):
 
 @admin.register(Tracker)
 class TrackerAdmin(admin.ModelAdmin):
-    list_display = ["id", "status", "sub_status", "carrier", "purchase_request"]
+    list_display = ["id", "status", "sub_status", "carrier"]
     inlines = [TrackingEventInline]
     actions = [update_selected_trackers, add_first_event_time]
-    list_filter = [TrackerCarrierListFilter, "status", "purchase_request"]
+    list_filter = [TrackerCarrierListFilter, "status"]
 
     def response_change(self, request, obj, post_url_continue=...):
         url = redirect(obj)
@@ -622,7 +618,7 @@ class SimpleProductAdmin(admin.ModelAdmin):
         # "purchase_request__requisitioner__user__last_name",
         # "purchase_request__vendor__name",
     ]
-    inlines = [TrackerItemInline]
+    # inlines = [TrackerItemInline]
 
 
 @admin.register(Balance)
