@@ -1,5 +1,5 @@
-from django.forms import Select
 from django.conf import settings
+from django.forms import Select
 from djmoney.forms import MoneyWidget
 
 

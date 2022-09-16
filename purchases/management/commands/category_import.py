@@ -1,9 +1,10 @@
 import csv
 import os
 
-from django.core.management.base import BaseCommand
-import purchases.models
 from django.conf import settings
+from django.core.management.base import BaseCommand
+
+import purchases.models
 
 
 class Command(BaseCommand):

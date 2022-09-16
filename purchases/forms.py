@@ -1,33 +1,28 @@
 from django import forms
+from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from purchases.exceptions import TrackerPreviouslyRegistered, TrackerRejectedUnknownCode
-
-from .models import (
-    PurchaseRequestAccounts,
-    PurchaseRequest,
-    # Requisitioner,
-    Vendor,
-    SimpleProduct,
-    VendorOrder,
-    Carrier,
-    Department,
-    # Urgency,
-    Tracker,
-)
-
 from django.forms.models import inlineformset_factory
-from django.contrib import messages
+from django_select2 import forms as s2forms
+from phonenumber_field.formfields import PhoneNumberField
+
+from purchases.exceptions import TrackerPreviouslyRegistered, TrackerRejectedUnknownCode
+from purchases.tracking import register_trackers
+
+from .models import Department  # Requisitioner,; Urgency,
+from .models import (
+    Carrier,
+    PurchaseRequest,
+    PurchaseRequestAccounts,
+    SimpleProduct,
+    Tracker,
+    Vendor,
+    VendorOrder,
+)
 
 # from django.db.models import FilteredRelation, Q
 
 # from bootstrap_modal_forms.forms import BSModalForm
-
-from phonenumber_field.formfields import PhoneNumberField
-
-from django_select2 import forms as s2forms
-
-from purchases.tracking import register_trackers
 
 
 class RequisitionerWidget(s2forms.Select2Widget):
@@ -312,9 +307,9 @@ class TrackerForm(forms.ModelForm):
             tracker_list = [(tracking_number, None)]
         try:
             responses = register_trackers(tracker_list)
-        except TrackerRejectedUnknownCode as err:
+        except TrackerRejectedUnknownCode:
             raise
-        except Exception as err:
+        except Exception:
             raise
 
         accepted_response = next(

@@ -1,15 +1,12 @@
-from django import template
-from django.utils.html import mark_safe, conditional_escape
-from django.template.defaultfilters import stringfilter
-from django.contrib.humanize.templatetags.humanize import intcomma
-from django.shortcuts import redirect
-
-from django.urls import reverse
-
-from django.apps import AppConfig
-
 import re
 
+from django import template
+from django.apps import AppConfig
+from django.contrib.humanize.templatetags.humanize import intcomma
+from django.shortcuts import redirect
+from django.template.defaultfilters import stringfilter
+from django.urls import reverse
+from django.utils.html import conditional_escape, mark_safe
 from furl import furl
 
 register = template.Library()
@@ -23,7 +20,9 @@ def currency(value: float, currency: str = "USD"):
     match currency:
         case "USD":
             dollars = round(float(value), 2)
-            return_value = "$%s%s" % (intcomma(int(dollars)), ("%0.2f" % dollars)[-3:])
+            return_value = "${}{}".format(
+                intcomma(int(dollars)), ("%0.2f" % dollars)[-3:]
+            )
 
             return return_value
         case other:
@@ -70,7 +69,7 @@ def prepare_for_currency(value: float, decimals: int = 2) -> str:
 
     floated = attempt_float(value)
 
-    if not floated is False:
+    if floated is not False:
         value = floated
     else:
         # Likely 'Money' if not something that can convert to 'float.'
@@ -93,15 +92,15 @@ def percent(value: float, decimal_places: int = None):
          '95.4'|numeric2percent:2 becomes '95.4%'
     """
     if not decimal_places:
-        return_value = "{:g}%".format(value)
+        return_value = f"{value:g}%"
     else:
         # rounded = round(value, decimal_places)
         # return_value = "%g%%" % (rounded)
         if value.is_integer():
-            return_value = "{:g}%".format(value)
+            return_value = f"{value:g}%"
         else:
             value = round(value, decimal_places)
-            return_value = "{:g}%".format(value)
+            return_value = f"{value:g}%"
 
     return return_value
 
@@ -116,12 +115,12 @@ def numeric2percent(value: float, decimal_places: int = None):
     as_percent = float(value * 100)
     if not decimal_places:
         # floated = float(as_percent)
-        return_value = "{:g}%".format(as_percent)
+        return_value = f"{as_percent:g}%"
         # return_value = "%s%%" % (float(as_percent))
     else:
         as_percent = round(as_percent, decimal_places)
         # value = float("{0:{1}f}".format(value, decimal_places+2))
-        return_value = "{:g}%".format(as_percent)
+        return_value = f"{as_percent:g}%"
         # return_value = "%s%%" % (rounded)
 
     return return_value
@@ -151,7 +150,7 @@ def urlizespecify(value: str, href: str, autoescape=True) -> str:
     if autoescape:
         value = conditional_escape(value)
 
-    tag = '<a href="{href}">{text}</a>'.format(text=value, href=href)
+    tag = f'<a href="{href}">{value}</a>'
 
     return mark_safe(tag)
 
@@ -183,10 +182,10 @@ def urlizeobject(object, autoescape=True):
     text = str(object)
     try:
         url = object.get_absolute_url()
-    except:
+    except Exception:
         return text
     else:
-        tag = '<a href="{url}">{text}</a>'.format(url=url, text=text)
+        tag = f'<a href="{url}">{text}</a>'
 
         return mark_safe(tag)
 

@@ -3,9 +3,10 @@ from django.views.generic import ListView, View
 from django.views.generic.detail import DetailView
 from django.views.generic.list import MultipleObjectMixin
 
-from .models import Insert, Tool, Holder, Manufacturer
-
 from web_project.helpers import paginate
+
+from .models import Holder, Insert, Manufacturer, Tool
+
 
 # Create your views here.
 class PaginatedListMixin(MultipleObjectMixin, View):

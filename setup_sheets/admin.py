@@ -1,8 +1,7 @@
 from django.contrib import admin
 
-# from purchases.models.models_metadata import Manufacturer
-
 from setup_sheets.models import (
+    Fixture,
     Material,
     Part,
     PartRevision,
@@ -10,8 +9,10 @@ from setup_sheets.models import (
     SetupSheetTool,
     Tool,
     ToolComponents,
-    Fixture,
 )
+
+# from purchases.models.models_metadata import Manufacturer
+
 
 # Register your models here.
 class SetupSheetToolInline(admin.TabularInline):

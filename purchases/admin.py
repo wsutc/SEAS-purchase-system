@@ -1,36 +1,36 @@
-from typing import Set
+# from typing import Set
+
 from django.contrib import admin, messages
-from django.shortcuts import redirect
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.db.models import Q
+from django.shortcuts import redirect
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
 from purchases.tracking import update_tracking_details
 
 from .models import (
+    AccountGroup,
     Accounts,
+    Balance,
     Carrier,
     Department,
     DocumentNumber,
-    Status,
-    Urgency,
-    Vendor,
-    State,
-    Unit,
-    AccountGroup,
-    PurchaseRequestAccounts,
-    Balance,
     PurchaseRequest,
-    Transaction,
+    PurchaseRequestAccounts,
+    Requisitioner,
     SimpleProduct,
     SpendCategory,
-    Requisitioner,
-    VendorOrder,
+    State,
+    Status,
     Tracker,
     TrackingEvent,
+    Transaction,
+    Unit,
+    Urgency,
+    Vendor,
+    VendorOrder,
 )
-
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 
 class PurchaseRequestInline(admin.TabularInline):
@@ -383,13 +383,13 @@ def generate_slug(modeladmin: admin.ModelAdmin, request, queryset):
     for counter, object in enumerate(queryset):
         if not object.slug:
             # pass
-            print("Name({}): {}".format(counter, object.name))
+            print(f"Name({counter}): {object.name}")
             object.slug = slugify(object.name, allow_unicode=True)
-            print("Slug({}): {}".format(counter, object.slug))
+            print(f"Slug({counter}): {object.slug}")
 
     # print(modeladmin.model)
     count = modeladmin.model.objects.bulk_update(queryset, ["slug"], batch_size=100)
-    messages.success(request, message="{} records successfully updated.".format(count))
+    messages.success(request, message=f"{count} records successfully updated.")
 
 
 @admin.register(Carrier)
@@ -505,7 +505,7 @@ def update_selected_trackers(modeladmin, request, queryset):
     try:
         updated_trackers = update_tracking_details(list)
     except ValueError as err:
-        messages.error(request, "{}".format(err))
+        messages.error(request, f"{err}")
 
     if updated_trackers:
         tracker_objs = []
@@ -540,17 +540,17 @@ def update_selected_trackers(modeladmin, request, queryset):
             )
         elif update_count == 1:
             messages.add_message(
-                request, messages.SUCCESS, "{0:d} object updated.".format(update_count)
+                request, messages.SUCCESS, f"{update_count:d} object updated."
             )
         else:
             messages.add_message(
-                request, messages.SUCCESS, "{0:d} objects updated.".format(update_count)
+                request, messages.SUCCESS, f"{update_count:d} objects updated."
             )
 
         messages.add_message(
             request,
             messages.SUCCESS,
-            "{0} tracker(s) had updated events.".format(event_update_count),
+            f"{event_update_count} tracker(s) had updated events.",
         )
 
 
@@ -577,6 +577,7 @@ class TrackerAdmin(admin.ModelAdmin):
     inlines = [TrackingEventInline]
     actions = [update_selected_trackers, add_first_event_time]
     list_filter = [TrackerCarrierListFilter, "status"]
+    search_fields = ["id", "sub_status"]
 
     def response_change(self, request, obj, post_url_continue=...):
         url = redirect(obj)

@@ -1,11 +1,11 @@
-import csv, os
-from logging import exception
-import MySQLdb
+import csv
+import os
 
+# import MySQLdb
+from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from purchases.models.models_metadata import Accounts
-from django.conf import settings
 
 
 class Command(BaseCommand):
@@ -76,7 +76,7 @@ class Command(BaseCommand):
                         self.stdout.write(
                             self.style.NOTICE('Updated "%s".' % object.account_title)
                         )
-                except:
+                except Exception:
                     self.stdout.write(
                         self.style.ERROR(
                             'Unable to create/update object "%s".' % row[0]

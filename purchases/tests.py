@@ -1,23 +1,25 @@
 from http import HTTPStatus
+
+from django.contrib.auth.models import Permission, User
 from django.shortcuts import get_object_or_404
 
 # from multiprocessing.connection import Client
-from django.test import TestCase, override_settings, Client
-from django.contrib.auth.models import User
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
-from purchases import urls
-
-# from django.conf import settings
 
 # from .models.models_apis import Tracker, TrackingEvent, TrackingWebhookMessage
 # from .models.models_metadata import Carrier, Department, Urgency, Vendor
 # from .models.models_data import PurchaseRequest, Requisitioner
 from model_bakery import baker
-from django.contrib.auth.models import Permission
+
+from purchases import urls
 
 # import datetime as dt
 # from django.utils import timezone
 from purchases.views import tracking_webhook
+
+# from django.conf import settings
+
 
 # from web_project.settings import AFTERSHIP_WEBHOOK_SECRET
 

@@ -2,6 +2,7 @@ from django.contrib import admin
 
 from .models import Building, Department, EquipmentAccessory, Item, Room
 
+
 # Register your models here.
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):

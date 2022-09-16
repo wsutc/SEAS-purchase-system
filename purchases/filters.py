@@ -1,6 +1,6 @@
-from .models.models_data import PurchaseRequest
-
 import django_filters
+
+from .models.models_data import PurchaseRequest
 
 
 class PurchaseRequestFilter(django_filters.FilterSet):

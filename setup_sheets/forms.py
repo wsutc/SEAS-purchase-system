@@ -1,8 +1,7 @@
 from django import forms
+from django_select2 import forms as s2forms
 
 from setup_sheets.models import PartRevision, SetupSheet
-
-from django_select2 import forms as s2forms
 
 
 class PartRevisionWidget(s2forms.Select2Widget):

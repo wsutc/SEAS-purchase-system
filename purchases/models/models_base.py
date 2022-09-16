@@ -1,15 +1,17 @@
 """For models with no ForeignKey relationships to other models."""
 from django.db import models, transaction
+from django.db.models import Count, F, Max
+from django.urls import reverse
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
-from django.urls import reverse
-from django.db.models import F, Max, Count
 
 from web_project.helpers import first_true
 
+
 class BaseModel(models.Model):
     """Base model for standardization. Includes generating slug."""
+
     name = models.CharField(max_length=50)
     slug = models.SlugField(unique=True, editable=False)
     created_date = models.DateTimeField(auto_now_add=True)
@@ -58,7 +60,7 @@ class RankManager(models.Manager):
             raise ValueError("Unable to set rank below '1'; already highest rank.")
         elif new_rank == obj.get_next_rank():
             raise ValueError(
-                "Unable to set rank above '{}'; already lowest rank.".format(obj.rank)
+                f"Unable to set rank above '{obj.rank}'; already lowest rank."
             )
 
         qs = self.get_queryset()
@@ -103,7 +105,7 @@ class RankManager(models.Manager):
 
         if (obj.get_next_rank() - 1) == current_rank:
             raise ValueError(
-                "Unable to move to end; '{}' already lowest rank.".format(current_rank)
+                f"Unable to move to end; '{current_rank}' already lowest rank."
             )
 
         qs = self.get_queryset()
@@ -166,7 +168,7 @@ class RankManager(models.Manager):
                 qsa = qsa | qsm
 
         for obj in qsa:
-            print("Rank[{}]: {}".format(obj.name, obj.rank))
+            print(f"Rank[{obj.name}]: {obj.rank}")
 
         # self.bulk_update(qsa, ["rank"])
 
@@ -208,7 +210,7 @@ class Status(BaseModel):
         return super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        value = super().delete(*args, **kwargs)
+        _ = super().delete(*args, **kwargs)
 
         self.__class__.objects.normalize_ranks("parent_model")
 
@@ -314,7 +316,7 @@ class TrackingWebhookMessage(models.Model):
         indexes = [models.Index(fields=["received_at"])]
 
 
-###--------------------------------------- Imported Data -------------------------------------
+# --------------------------------------- Imported Data -------------------------------------
 
 
 class Accounts(BaseModel):
@@ -387,14 +389,12 @@ class Accounts(BaseModel):
             ),
             models.UniqueConstraint("account", name="unique_account"),
         ]
+        verbose_name_plural = "Accounts"
+        ordering = ["account_title"]
 
     @property
     def identity_list(self):
         return [self.program_workday, self.grant, self.gift]
-
-    class Meta:
-        verbose_name_plural = "Accounts"
-        ordering = ["account_title"]
 
     @property
     def identity(self) -> str:
@@ -410,7 +410,7 @@ class Accounts(BaseModel):
     def __str__(self):
         list = [self.program_workday, self.grant, self.gift]
         value = first_true(list, True)
-        value = "{} | {}".format(value, self.account_title)
+        value = f"{value} | {self.account_title}"
         return value
 
 
@@ -439,7 +439,7 @@ class SpendCategory(BaseModel):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return "%s (%s) [%s%s]" % (
+        return "{} ({}) [{}{}]".format(
             self.code,
             self.description,
             self.object,

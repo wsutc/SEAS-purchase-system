@@ -1,13 +1,10 @@
+from django.core.validators import MinValueValidator  # , MaxValueValidator
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
 
-from django.core.validators import MinValueValidator  # , MaxValueValidator
+from purchases.models import Manufacturer, PurchaseRequest
 
-from purchases.models import (
-    Manufacturer,
-    PurchaseRequest,
-)
 
 # Create your models here.
 class Department(models.Model):
@@ -105,16 +102,15 @@ class Item(models.Model):
         self.set_tag()
 
     def set_tag(self):
-        if self.item_type == "equipment":
-            if not self.equipment_tag:
-                prefix = "SEAS"
-                department_prefix = self.department.tag_prefix
-                tag = (
-                    prefix + department_prefix + str(self.id + (10**3))
-                )  # Creates a number starting with 'SEAS' + department prefix and ending with a 4 character (10^4) unique ID
-                request = Item.objects.get(id=self.id)
-                request.equipment_tag = tag
-                request.save()
+        if self.item_type == "equipment" and not self.equipment_tag:
+            prefix = "SEAS"
+            department_prefix = self.department.tag_prefix
+            tag = (
+                prefix + department_prefix + str(self.id + (10**3))
+            )  # Creates a number starting with 'SEAS' + department prefix and ending with a 4 character (10^4) unique ID
+            request = Item.objects.get(id=self.id)
+            request.equipment_tag = tag
+            request.save()
 
     def __str__(self):
         return self.name

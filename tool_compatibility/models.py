@@ -1,7 +1,8 @@
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
+
 
 # Create your models here.
 class BaseModel(models.Model):
@@ -54,7 +55,7 @@ class Grade(BaseModel):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
-        string = "{} - {}".format(self.abbreviation, self.name)
+        string = f"{self.abbreviation} - {self.name}"
         return string
 
 
@@ -76,7 +77,7 @@ class Coating(BaseModel):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
-        string = "{} - {}".format(self.abbreviation, self.name)
+        string = f"{self.abbreviation} - {self.name}"
         return string
 
 
@@ -93,7 +94,7 @@ class Shape(BaseModel):
 
     def save(self, *args, **kwargs) -> None:
         if self._state.adding:
-            slug = "{}-{}".format(self.designation, self.name)
+            slug = f"{self.designation}-{self.name}"
             slug = slugify(slug, allow_unicode=True)
 
             self.slug = slug
@@ -101,7 +102,7 @@ class Shape(BaseModel):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
-        string = "{} - {}".format(self.designation, self.name)
+        string = f"{self.designation} - {self.name}"
         return string
 
 

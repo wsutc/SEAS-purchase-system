@@ -1,11 +1,12 @@
 from django.forms import formset_factory
 from django.shortcuts import render
-
-# from purchases.forms import NewPRIForm
-from .models import Item
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView
+
+# from purchases.forms import NewPRIForm
+from .models import Item
+
 
 # Create your views here.
 class ItemCreateView(CreateView):

@@ -10,9 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
-import environ
 import os
 from pathlib import Path
+
+import environ
 from django.contrib.messages import constants as message_constants
 
 # env = environ.Env()
@@ -35,7 +36,6 @@ APPS_DIR = BASE_DIR / "web_project"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
-
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -136,33 +136,31 @@ MEDIA_URL = "/media/"
 DATABASES = {
     "default": env.db(
         "DATABASE_URL",
-        default= {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
+        default={
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        },
     )
     # 'default': {
     #     'ENGINE': 'django.db.backends.sqlite3',
     #     'NAME': BASE_DIR / 'db.sqlite3',
     # }
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": env("DB_NAME"),
-        "USER": env("DB_USER"),
-        "PASSWORD": env("DB_PASSWORD"),
-        "HOST": env("DB_HOST"),
-        "PORT": env("DB_PORT"),
-        "CHARSET": "utf8mb4",
-        "COLLATION": "utf8mb4_unicode_ci",
-    },
-    "TEST": {"CHARSET": "utf8mb4", "COLLATION": "utf8mb4_unicode_ci"},
+    # "default": {
+    #     "ENGINE": "django.db.backends.mysql",
+    #     "NAME": env("DB_NAME"),
+    #     "USER": env("DB_USER"),
+    #     "PASSWORD": env("DB_PASSWORD"),
+    #     "HOST": env("DB_HOST"),
+    #     "PORT": env("DB_PORT"),
+    #     "CHARSET": "utf8mb4",
+    #     "COLLATION": "utf8mb4_unicode_ci",
+    # },
+    # "TEST": {"CHARSET": "utf8mb4", "COLLATION": "utf8mb4_unicode_ci"},
 }
 
 # AUTHENTICATION
 # --------------------------------------------------------------------------------
-AUTHENTICATION_BACKENDS = [
-    "django.contrib.auth.backends.ModelBackend"
-]
+AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.ModelBackend"]
 AUTH_USER_MODEL = "users.User"
 LOGIN_REDIRECT_URL = "/"
 LOGIN_URL = "account_login"
@@ -233,8 +231,7 @@ INTERNAL_IPS = ("127.0.0.1",)
 # EMAIL
 # -----------------------------------------------------------------------------
 EMAIL_BACKEND = env(
-    "DJANGO_EMAIL_BACKEND",
-    default="django.core.mail.backends.smtp.EmailBackend"
+    "DJANGO_EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend"
 )
 
 EMAIL_TIMEOUT = 5
@@ -273,7 +270,7 @@ LOGGING = {
             "{process} {thread} {message}"
             # "format": "%(levelname)s %(asctime)s %(module)s "
             # "%(process)d %(thread)d %(message)s"
-        }
+        },
     },
     "handlers": {
         "console": {
@@ -355,7 +352,6 @@ TRACKER_PARAMS = [
 # }
 
 
-
 # EASYPOST_KEY = env('EASYPOST_KEY')
 # AFTERSHIP_KEY = env('AFTERSHIP_KEY')
 # AFTERSHIP_WEBHOOK_SECRET = env('AFTERSHIP_WEBHOOK_SECRET')
@@ -363,7 +359,3 @@ TRACKER_PARAMS = [
 # SHIP24_WEBHOOK_SECRET = env('SHIP24_WEBHOOK_SECRET')
 
 # SMARTSHEET_SHEET_NAME = env('SMARTSHEET_SHEET_NAME')
-
-
-
-

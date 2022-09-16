@@ -10,9 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
-import environ
 import os
 from pathlib import Path
+
+import environ
 from django.contrib.messages import constants as message_constants
 
 env = environ.Env(DEBUG=(bool, False))
@@ -22,8 +23,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 env_path = os.path.join(BASE_DIR, ".env")
-
-print(env_path)
 
 environ.Env.read_env(env_path)
 

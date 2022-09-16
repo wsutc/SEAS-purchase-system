@@ -1,14 +1,14 @@
-import http.client, hashlib
+import hashlib
+import http.client
 import json
 
-# from typing import TypeVar
-
+from benedict import benedict
 from django.conf import settings
 from django.http import JsonResponse
 
-from benedict import benedict
-
 from purchases.exceptions import TrackerPreviouslyRegistered, TrackerRejectedUnknownCode
+
+# from typing import TypeVar
 
 
 def register_trackers(payload: list[tuple[str, str]]) -> dict[list[dict], list[dict]]:
@@ -30,25 +30,26 @@ def register_trackers(payload: list[tuple[str, str]]) -> dict[list[dict], list[d
     """
     try:
         tracker_responses = tracker_request("REGISTER", payload)
-    except:
+    except Exception:
         raise
 
     accepted_list = []
     for tracker in tracker_responses["accepted"]:
 
-        accepted = {}
-        accepted["response"] = True
-        accepted["message"] = None
-        accepted["tracker"] = TrackerObject.fromregister(tracker)
+        accepted = {
+            "response": True,
+            "message": None,
+            "tracker": TrackerObject.fromregister(tracker),
+        }
         accepted_list.append(accepted)
 
     rejected_list = []
     for tracker in tracker_responses["rejected"]:
-        rejected = {}
-        rejected["tracker"] = TrackerObject.fromregister(tracker)
-        # rejected['number'] = tracker.get('number',None)
-        rejected["code"] = tracker["error"].get("code", None)
-        rejected["message"] = tracker["error"].get("message", None)
+        rejected = {
+            "tracker": TrackerObject.fromregister(tracker),
+            "code": tracker["error"].get("code", None),
+            "message": tracker["error"].get("message", None),
+        }
         try:
             if rejected["code"] == -18019901:
                 raise TrackerPreviouslyRegistered(
@@ -63,7 +64,7 @@ def register_trackers(payload: list[tuple[str, str]]) -> dict[list[dict], list[d
         except TrackerPreviouslyRegistered as err:
             rejected["exception"] = err
             rejected_list.append(rejected)
-        except TrackerRejectedUnknownCode as err:
+        except TrackerRejectedUnknownCode:
             raise
 
     return {"accepted": accepted_list, "rejected": rejected_list}
@@ -154,8 +155,7 @@ def update_tracking_details(trackers: list[tuple[str, str]]) -> list[dict]:
     updated_trackers = []
     try:
         for row in data["accepted"]:
-            tracking = {}
-            tracking["tracker"] = TrackerObject.fromupdateresponse(row)
+            tracking = {"tracker": TrackerObject.fromupdateresponse(row)}
             if tracking["tracker"].status != "NotFound":
                 tracking["message"] = "accepted"
                 tracking["code"] = 0
@@ -163,7 +163,7 @@ def update_tracking_details(trackers: list[tuple[str, str]]) -> list[dict]:
                 tracking["message"] = "unknown"
                 tracking["code"] = -1000
             updated_trackers.append(tracking)
-    except:
+    except Exception:
         raise
 
     return updated_trackers
@@ -236,19 +236,3 @@ class TrackerObject:
         d["tracking_number"] = i.get_str("number", default=None)
 
         return cls(d)
-
-
-def parse_payload(payload: dict):
-    event_type = payload.get("event")
-    data = payload.get("data")
-
-    tracking_number = data.get("number")
-    carrier_code = data.get("carrier")
-    status = data["track_info"]["latest_status"]["status"]
-    sub_status = data["track_info"]["latest_status"]["sub_status"]
-    delivery_estimate = data["track_info"]["time_metrics"]["estimated_delivery_date"][
-        "from"
-    ]
-    last_update_date = data["track_info"]["latest_event"]["time_utc"]
-    events = data["track_info"]["tracking"]["providers"][0]["events"]
-    events_hash = data["track_info"]["tracking"]["providers"][0]["events_hash"]

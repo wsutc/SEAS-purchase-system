@@ -1,13 +1,28 @@
 # from urllib.parse import urlencode
+from http.client import HTTPResponse
+
+from django.contrib import messages
 from django.http import HttpRequest
+from django.shortcuts import redirect
 from django.urls import reverse
-# from django import apps
-from furl import furl
+
+# from setup_sheets.models import PartRevision
+from django.utils.text import slugify
 from django.views.generic import ListView, View
 from django.views.generic.list import MultipleObjectMixin
-from http.client import HTTPResponse
-from django.contrib import messages
-from django.shortcuts import redirect
+
+# from django_listview_filters.filters import (
+#     # PAGE_VAR,
+#     # ERROR_VAR,
+#     # IGNORED_PARAMS,
+#     ListViewFilter,
+#     # FieldListViewFilter,
+# )
+from django_listview_filters.mixins import FilterViewMixin
+
+# from django import apps
+from furl import furl
+
 # from django.core.exceptions import FieldError, ImproperlyConfigured, ValidationError
 # from django.db import models
 # from django.db.models import Count, Max, Min
@@ -33,8 +48,6 @@ from django.shortcuts import redirect
 # )
 # from purchases.models.models_metadata import Carrier  # , Vendor
 
-# from setup_sheets.models import PartRevision
-from django.utils.text import slugify
 
 # from setup_sheets.models import Part
 # from web_project import settings
@@ -46,15 +59,6 @@ from django.utils.text import slugify
 #     ListViewFilter,
 #     FieldListViewFilter,
 # )
-
-# from django_listview_filters.filters import (
-#     # PAGE_VAR,
-#     # ERROR_VAR,
-#     # IGNORED_PARAMS,
-#     ListViewFilter,
-#     # FieldListViewFilter,
-# )
-from django_listview_filters.mixins import FilterViewMixin
 
 
 def paginate(view: ListView, **kwargs) -> tuple[bool, HTTPResponse]:
@@ -83,7 +87,7 @@ def paginate(view: ListView, **kwargs) -> tuple[bool, HTTPResponse]:
     try:
         page_new = paginator.get_page(page)
     except Exception as err:
-        messages.error(view.request, message="unable to get page; {}".format(err))
+        messages.error(view.request, message=f"unable to get page; {err}")
         return (True, redirect(new_fragment.path))
 
     try:
@@ -100,11 +104,9 @@ def paginate(view: ListView, **kwargs) -> tuple[bool, HTTPResponse]:
             )
             return (True, redirect(new_fragment.url))
         else:
-            messages.debug(
-                view.request, "Page '{og}' was valid; no change made.".format(og=page)
-            )
+            messages.debug(view.request, f"Page '{page}' was valid; no change made.")
             return (False, redirect(new_fragment.url))
-    except:
+    except Exception:
         messages.warning(
             view.request, message="Warning: Error trying to fix page number."
         )
@@ -155,7 +157,7 @@ def truncate_string(input: str, num_char: int, postfix: str = "..."):
         new_string = input[:string_length]
         while new_string[-1:].isspace():
             new_string = new_string[:-1]
-        return "{}{}".format(new_string, postfix)
+        return f"{new_string}{postfix}"
     else:
         return input
 
@@ -193,6 +195,7 @@ class PaginatedListMixin(FilterViewMixin, MultipleObjectMixin, View):
         fragment = furl(self.request.get_full_path())
 
         return context
+
 
 def first_true(iterable, default=False, pred=None):
     """Returns the first true value in the iterable.

@@ -1,9 +1,17 @@
+from django.contrib import messages
+from django.contrib.auth.models import User
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
-from django.views.generic import DetailView, CreateView, ListView, DeleteView
-from django.contrib.auth.models import User
+from django.utils.text import slugify
+from django.views.generic import CreateView, DeleteView, DetailView, ListView
+from furl import furl
+
 from purchases.exceptions import Error
+from purchases.views import (  # , PartRevisionFilter, PartCreatedByFilter
+    PaginatedListMixin,
+)
+
 # from web_project.helpers import (
 #     ListViewFilter,
 #     # copy_no_page,
@@ -12,15 +20,8 @@ from purchases.exceptions import Error
 #     # tuple_based_filters,
 # )
 from setup_sheets.forms import PartRevisionForm, SetupSheetForm
-from setup_sheets.models import Part, SetupSheet, PartRevision
-from django.utils.text import slugify
-from django.contrib import messages
+from setup_sheets.models import Part, PartRevision, SetupSheet
 
-from furl import furl
-
-from purchases.views import (
-    PaginatedListMixin,
-)  # , PartRevisionFilter, PartCreatedByFilter
 
 # Create your views here.
 class SetupSheetDetailView(DetailView):

@@ -1,50 +1,36 @@
 import decimal
+import logging
 
 from django.conf import settings
-from django.db import models
-from phonenumber_field.modelfields import PhoneNumberField
 from django.contrib.auth.models import User
-from django.dispatch import receiver
+from django.db import models
+from django.db.models import Sum
 from django.db.models.signals import post_save
-from djmoney.models.fields import MoneyField
-from djmoney.money import Money
+from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
-from django.db.models import Sum
+from django_listview_filters._helpers import get_setting
+from djmoney.models.fields import MoneyField
+from djmoney.money import Money
+from furl import furl
+from phonenumber_field.modelfields import PhoneNumberField
 
 from purchases.exceptions import StatusCodeNotFound
-
-from furl import furl
-
 from purchases.tracking import TrackerObject
-from django_listview_filters._helpers import get_setting
 
-# from .models_metadata import (
-#     # BaseModel,
-#     # SpendCategory,
-#     # DocumentNumber,
-#     # Status,
-#     # Vendor,
-#     # Accounts,
-#     # Unit,
-#     # Urgency,
-#     # Department,
-# )
 from .models_base import (
+    Accounts,
     BaseModel,
-    Status,
     Carrier,
     Department,
+    DocumentNumber,
+    Status,
+    Unit,
     Urgency,
     Vendor,
-    Accounts,
-    DocumentNumber,
-    Unit,
 )
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -424,7 +410,7 @@ class Tracker(models.Model):
         tracking_patterns = get_setting("TRACKER_PARAMS", ["trackingnumber"])
 
         for pattern in tracking_patterns:
-            logger.info("{}".format(pattern))
+            logger.info(f"{pattern}")
 
         try:
             path = furl(self.carrier.tracking_link)
@@ -439,7 +425,7 @@ class Tracker(models.Model):
                 raise KeyError(path)
 
             return path.url
-        except:
+        except Exception:
             return None
 
     def update_tracker_fields(self, tracker_obj: TrackerObject) -> bool:
@@ -474,7 +460,7 @@ class Tracker(models.Model):
 
         if len(update_fields):
             count = qs.update(**update_fields)
-            return True if count > 0 else False
+            return count > 0
         else:
             return False
 
@@ -504,13 +490,14 @@ class Tracker(models.Model):
         return (created_events, updated_events)
 
     def __str__(self):
-        value = "{0} {1}".format(self.carrier, self.tracking_number)
+        value = f"{self.carrier} {self.tracking_number}"
         return str(value)
 
     def stop(self):
         tracker = self.__class__.objects.filter(pk=self.pk)
 
-        return True if tracker.update(active=False) else False
+        return bool(tracker.update(active=False))
+
 
 class TrackingEvent(models.Model):
     tracker = models.ForeignKey(Tracker, on_delete=models.CASCADE)
@@ -541,11 +528,13 @@ class TrackerStatusSteps(models.Model):
 
 class Shipment(BaseModel):
     order = models.ForeignKey(VendorOrder, on_delete=models.PROTECT)
-    tracker = models.ForeignKey(Tracker, on_delete=models.SET_NULL, blank=True, null=True)
+    tracker = models.ForeignKey(
+        Tracker, on_delete=models.SET_NULL, blank=True, null=True
+    )
     item = models.ManyToManyField(SimpleProduct, through="ShipmentSimpleProduct")
 
 
-###--------------------------------------- Accounting ----------------------------------------
+# --------------------------------------- Accounting ----------------------------------------
 
 
 class Balance(models.Model):
@@ -580,7 +569,7 @@ class Balance(models.Model):
         self.save()
 
     def __str__(self):
-        return "%s [%s]" % (self.account.account_title, self.balance.amount)
+        return f"{self.account.account_title} [{self.balance.amount}]"
 
 
 @receiver(post_save, sender=Balance)
@@ -604,7 +593,7 @@ class Transaction(models.Model):
         self.__original_total = self.total_value
 
     def __str__(self):
-        return "%s | %s [%s]" % (
+        return "{} | {} [{}]".format(
             self.balance.account.account_title,
             self.purchase_request,
             self.total_value.amount,

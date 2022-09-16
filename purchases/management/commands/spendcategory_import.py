@@ -1,11 +1,12 @@
-import csv, os
+import csv
+import os
 from logging import exception
-import MySQLdb
 
+import MySQLdb
+from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from purchases.models.models_metadata import SpendCategory
-from django.conf import settings
 
 
 class Command(BaseCommand):
@@ -40,7 +41,7 @@ class Command(BaseCommand):
                         self.stdout.write(
                             self.style.NOTICE('Updated "%s".' % object.name)
                         )
-                except:
+                except Exception:
                     self.stdout.write(
                         self.style.ERROR(
                             'Unable to create/update object "%s".' % row[1]

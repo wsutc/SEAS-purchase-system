@@ -1,4 +1,3 @@
-from urllib import request
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.shortcuts import redirect

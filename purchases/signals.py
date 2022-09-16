@@ -1,23 +1,21 @@
-from django.db.models.signals import post_save, pre_save, post_delete
-from django.contrib.auth.models import User
-from django.dispatch import receiver
-
 # import http.client, json
 # from django.conf import settings
 from django.contrib.auth.models import User
+from django.db.models.signals import post_delete, post_save, pre_save
+from django.dispatch import receiver
 
 from purchases.vendor_linking import link_from_identifier
+from web_project.helpers import first_true
 
 from .models import (
     Accounts,
     Department,
-    Status,
-    Requisitioner,
     PurchaseRequest,
+    Requisitioner,
     SimpleProduct,
+    Status,
 )
 
-from web_project.helpers import first_true
 
 def single_true(iterable) -> bool:
     """Return `True` if one and only one truthy value is present, else `False`."""
@@ -189,14 +187,14 @@ def re_normalize_ranks(sender, instance, **kwargs):
 #         Tracker.update(tracker)
 
 
-@receiver(post_save, sender=PurchaseRequest)
-def add_to_smartsheet(sender, instance, *args, **kwargs):
-    data = [
-        {
-            "Status": "Submitted",
-            "First Name": instance.requisitioner.user.first_name,
-            "Last Name": instance.requisitioner.user.last_name,
-            "Requestor": instance.requisitioner.user.email,
-            "Requestor WSU ID#": "sometext1",
-        }
-    ]
+# @receiver(post_save, sender=PurchaseRequest)
+# def add_to_smartsheet(sender, instance, *args, **kwargs):
+#     data = [
+#         {
+#             "Status": "Submitted",
+#             "First Name": instance.requisitioner.user.first_name,
+#             "Last Name": instance.requisitioner.user.last_name,
+#             "Requestor": instance.requisitioner.user.email,
+#             "Requestor WSU ID#": "sometext1",
+#         }
+#     ]

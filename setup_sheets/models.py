@@ -1,12 +1,13 @@
 from tkinter import CASCADE
-from django.db import models
 
 # from psutil import users
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
+from django.db import models
 from django.urls import reverse
-from purchases.models import Manufacturer
 from django.utils.text import slugify
+
+from purchases.models import Manufacturer
 
 # Create your models here.
 # class Manufacturer(models.Model):
@@ -109,7 +110,7 @@ class Part(BaseModel):
         return reverse("part_detail", kwargs=kwargs)
 
     def __str__(self) -> str:
-        value = "{part_number} | {name}".format(part_number=self.number, name=self.name)
+        value = f"{self.number} | {self.name}"
         return value
 
 

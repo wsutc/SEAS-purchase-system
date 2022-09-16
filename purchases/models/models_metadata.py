@@ -2,13 +2,8 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from . import (
-    SimpleProduct,
-    Shipment,
-    PurchaseRequest,
-    Accounts,
-    SpendCategory,
-)
+from . import Accounts, PurchaseRequest, Shipment, SimpleProduct, SpendCategory
+
 
 class ShipmentSimpleProduct(models.Model):
     shipment = models.ForeignKey(Shipment, on_delete=models.CASCADE)
@@ -35,4 +30,4 @@ class PurchaseRequestAccounts(models.Model):
     distribution_input = models.FloatField(default=100)
 
     def __str__(self):
-        return "%s | %s" % (self.accounts.program_workday, self.spend_category.code)
+        return f"{self.accounts.program_workday} | {self.spend_category.code}"
