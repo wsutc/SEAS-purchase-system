@@ -19,7 +19,7 @@ class TrackerPreviouslyRegistered(Error):
         super().__init__(self.message)
 
     def __str__(self) -> str:
-        return "{} -> {}".format(self.tracking_number, self.message)
+        return f"{self.tracking_number} -> {self.message}"
 
 
 class TrackerReturnedMultipleCarriers(Error):
@@ -37,7 +37,7 @@ class TrackerReturnedMultipleCarriers(Error):
         super().__init__(self.message)
 
     def __str__(self) -> str:
-        return "Tracker returned {} carriers.".format(self.carrier_count)
+        return f"Tracker returned {self.carrier_count} carriers."
 
 
 class TrackerRejectedUnknownCode(Error):
@@ -69,4 +69,4 @@ class StatusCodeNotFound(Error):
         super().__init__(self.message)
 
     def __str__(self) -> str:
-        return "'{}': {}".format(self.code, self.message)
+        return f"'{self.code}': {self.message}"

@@ -2,13 +2,12 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from . import Accounts, PurchaseRequest, Shipment, SimpleProduct, SpendCategory
+from . import Accounts, PurchaseRequest, SpendCategory
 
-
-class ShipmentSimpleProduct(models.Model):
-    shipment = models.ForeignKey(Shipment, on_delete=models.CASCADE)
-    item = models.ForeignKey(SimpleProduct, on_delete=models.CASCADE)
-    quanity = models.DecimalField(_("quantity"), max_digits=14, decimal_places=4)
+# class ShipmentSimpleProduct(models.Model):
+#     shipment = models.ForeignKey(Shipment, on_delete=models.CASCADE)
+#     item = models.ForeignKey(SimpleProduct, on_delete=models.CASCADE)
+#     quanity = models.DecimalField(_("quantity"), max_digits=14, decimal_places=4)
 
 
 class PurchaseRequestAccounts(models.Model):

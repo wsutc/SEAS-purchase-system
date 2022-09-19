@@ -28,8 +28,8 @@ Simple Products
                     {% else %}
                         <td>{{ o.name|truncatechars:35 }}</td>
                     {% endif %}
-                    
-                    {% if o.purchase_request.vendor.website %}                        
+
+                    {% if o.purchase_request.vendor.website %}
                         <td><a href="{{ o.purchase_request.vendor.website }}" target="_blank" rel="noopener noreferrer">{{ o.purchase_request.vendor.name }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a></td>
                     {% else %}
                         <td>{{ o.vendor.name }}</td>

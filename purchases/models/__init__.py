@@ -14,15 +14,14 @@ from .models_base import (
     Urgency,
     Vendor,
 )
-from .models_data import (
+from .models_data import (  # Shipment,
     Balance,
     PurchaseRequest,
     Requisitioner,
-    Shipment,
     SimpleProduct,
     Tracker,
     TrackingEvent,
     Transaction,
     VendorOrder,
 )
-from .models_metadata import PurchaseRequestAccounts, ShipmentSimpleProduct
+from .models_metadata import PurchaseRequestAccounts

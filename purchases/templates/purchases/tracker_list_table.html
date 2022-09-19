@@ -31,8 +31,12 @@
                   </td>
                   <td>{{ o.delivery_estimate|date:"SHORT_DATETIME_FORMAT" }}</td>
                   {% comment %} <td>{{ o.earliest_event_time }}</td> {% endcomment %}
-                  <td><a href="{{ o.purchase_request.get_absolute_url }}">{{ o.purchase_request }}</a></td>
-                  <td>{{ o.purchase_request.vendor.name|urlizespecify:o.purchase_request.vendor.get_absolute_url }}</td>
+                  <td><a href="{{ o.purchase_request.get_absolute_url }}">{{ o.purchase_request|default_if_none:"" }}</a></td>
+                  <td>
+                    {% if o.purchase_request %}
+                      {{ o.purchase_request.vendor.name|urlizespecify:o.purchase_request.vendor.get_absolute_url }}
+                    {% endif %}
+                  </td>
                   <td>
                       <a href="{% url 'update_tracker' o.pk %}?next={{ request.get_full_path }}"><i class="fa-solid fa-arrows-rotate px-1"></i></a>
                       <a href="{% url 'admin:purchases_tracker_change' o.pk %}"><i class="fa-solid fa-pencil px-1"></i></a>

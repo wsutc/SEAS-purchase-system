@@ -23,5 +23,5 @@ class Migration(migrations.Migration):
         #     model_name='accounts',
         #     name='account',
         #     field=models.CharField(help_text='in form XXXX-XXXX.', max_length=10, unique=True, verbose_name='account'),
-        # ),        
+        # ),
     ]

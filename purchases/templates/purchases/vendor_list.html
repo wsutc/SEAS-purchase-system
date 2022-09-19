@@ -20,7 +20,7 @@ All Vendors
             {% for v in object_list %}
             <tr>
                 <td><a href="{{ v.get_absolute_url }}">{{ v.name }}</td>
-                {% if v.website %}                        
+                {% if v.website %}
                     <td><a href="{{ v.website }}" target="_blank" rel="noopener noreferrer">{{ v.website }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a></td>
                 {% else %}
                     <td></td>

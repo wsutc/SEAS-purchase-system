@@ -10,7 +10,7 @@ from django.conf import settings
 sys.path.insert(
     0, os.path.abspath("../..")
 )  # 'C:/Users/karl.wooster/repos/wsutc/SEAS-purchase-system/purchases/')
-print("Path: {}".format(sys.path[0]))
+print(f"Path: {sys.path[0]}")
 
 os.environ["DJANGO_SETTINGS_MODULE"] = "web_project.settings"
 
@@ -25,7 +25,7 @@ django_setup()
 
 # os.environ.setdefault("DJANGO_SETTINGS_MODULE", settings_loc)
 
-print(getattr(settings, "BASE_DIR"))
+print(settings["BASE_DIR"])
 
 # print("Read Variable: {}".format(os.environ.get("DJANGO_SETTINGS_MODULE")))
 

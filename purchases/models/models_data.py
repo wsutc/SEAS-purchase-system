@@ -360,6 +360,14 @@ class SimpleProduct(models.Model):
         return name
 
 
+# class Shipment(BaseModel):
+#     order = models.ForeignKey(VendorOrder, on_delete=models.PROTECT)
+#     # tracker = models.ForeignKey(
+#     #     Tracker, on_delete=models.SET_NULL, blank=True, null=True
+#     # )
+#     item = models.ManyToManyField(SimpleProduct, through="ShipmentSimpleProduct")
+
+
 class Tracker(models.Model):
     id = models.CharField(max_length=100, primary_key=True, editable=False, null=False)
     active = models.BooleanField(default=True)
@@ -373,9 +381,10 @@ class Tracker(models.Model):
     status = models.CharField(max_length=50, blank=True, null=True)
     sub_status = models.CharField(max_length=50, editable=False, null=True)
     delivery_estimate = models.DateTimeField(blank=True, null=True)
-    # purchase_request = models.ForeignKey(
-    #     PurchaseRequest, on_delete=models.CASCADE, null=True
-    # )
+    purchase_request = models.ForeignKey(
+        PurchaseRequest, on_delete=models.CASCADE, null=True
+    )
+    # order_shipment = models.ForeignKey(Shipment, on_delete=models.CASCADE, null=True)
     earliest_event_time = models.DateTimeField(blank=True, null=True, editable=False)
     received = models.BooleanField(_("package received"), default=False)
     # simple_product = models.ManyToManyField(
@@ -524,14 +533,6 @@ class TrackerStatusSteps(models.Model):
     rank = models.PositiveSmallIntegerField(
         _("rank"), help_text=_("rank in sort order"), unique=True
     )
-
-
-class Shipment(BaseModel):
-    order = models.ForeignKey(VendorOrder, on_delete=models.PROTECT)
-    tracker = models.ForeignKey(
-        Tracker, on_delete=models.SET_NULL, blank=True, null=True
-    )
-    item = models.ManyToManyField(SimpleProduct, through="ShipmentSimpleProduct")
 
 
 # --------------------------------------- Accounting ----------------------------------------

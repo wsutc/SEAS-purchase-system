@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
             model_name="accounts",
             name="slug",
             field=models.SlugField(),
-        ),        
+        ),
         # migrations.RemoveField(
         #     model_name='accounts',
         #     name='slug',

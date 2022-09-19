@@ -2,5 +2,5 @@ from django.apps import AppConfig
 
 
 class ToolCompatibilityConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'tool_compatibility'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "tool_compatibility"
