@@ -81,6 +81,10 @@
                         <tr>
                             <td align="right">Phone</td>
                             <td>{{ object.vendor.phone }}</td>
+                            {% if object.vendororder_set.count == 1 %}
+                            <td align="right">Order</td>
+                            <td>{{ object.vendororder_set.first|urlizeobject }}</td>
+                            {% endif %}
                         </tr>
                         <tr>
                             <td align="right">Email</td>

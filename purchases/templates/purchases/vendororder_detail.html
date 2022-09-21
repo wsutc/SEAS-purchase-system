@@ -91,7 +91,7 @@
 {% block related_simpleproduct_table %}{% endblock related_simpleproduct_table %}
 
 {% block custom_tables %}
-  {% with object.trackers as trackers %}
+  {% with trackers as trackers %}
     {% if debug %}<div class="alert alert-debug">debug ->count:{{ trackers|length }}</div>{% endif %}
 
     <div class="h4">{% translate "Trackers" %}</div>
@@ -99,12 +99,12 @@
     {% include "purchases/tracker_list_table.html" with tracker_list=trackers %}
   {% endwith %}
 
-  {% with object.items as items %}
+  {% comment %} {% with object.items as items %}
   {% if debug %}<div class="alert alert-debug">debug ->count:{{ items|length }}</div>{% endif %}
 
   <div class="h4">{% translate "Items" %}</div>
 
   {% include "purchases/trackeritem_list_table.html" with object_list=items %}
-  {% endwith %}
+  {% endwith %} {% endcomment %}
 
 {% endblock custom_tables %}

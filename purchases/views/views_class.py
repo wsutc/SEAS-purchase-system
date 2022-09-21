@@ -35,7 +35,7 @@ from purchases.forms import (
     SimpleProductFormset,
     TrackerForm,
 )
-from purchases.models import (
+from purchases.models import (  # Transaction,
     Accounts,
     Balance,
     PurchaseRequest,
@@ -43,7 +43,6 @@ from purchases.models import (
     SimpleProduct,
     Status,
     Tracker,
-    Transaction,
     Vendor,
     VendorOrder,
     requisitioner_from_user,
@@ -84,18 +83,18 @@ class VendorOrderDetailView(SimpleView, DetailView):
     model = VendorOrder
     query_pk_and_slug = True
 
-    # def get_context_data(self, **kwargs):
-    #     context = super().get_context_data(**kwargs)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
 
-    #     # trackers = []
-    #     # object = self.get_object()
-    #     # for request in object.purchase_requests.all():
-    #     #     for tracker in request.tracker_set.all():
-    #     #         trackers.append(tracker)
+        trackers = []
+        object = self.get_object()
+        for request in object.purchase_requests.all():
+            for tracker in request.tracker_set.all():
+                trackers.append(tracker)
 
-    #     # context['trackers'] = trackers
+        context["trackers"] = trackers
 
-    #     return context
+        return context
 
 
 class VendorOrderListView(PaginatedListMixin, ListView):
@@ -317,7 +316,9 @@ class PurchaseRequestDetailView(SimpleView, DetailView):
             digits = count_digits(value)
             digits_list.append(digits)
 
-        context["simpleproducts_unitprice_maxdigits"] = max(digits_list)
+        context["simpleproducts_unitprice_maxdigits"] = (
+            max(digits_list) if len(digits_list) else 0
+        )
 
         return context
 
@@ -664,13 +665,13 @@ class BalancesDetailView(DetailView):
 #     #     pass
 
 
-class LedgersDetailView(DetailView):
-    model = Transaction
+# class LedgersDetailView(DetailView):
+#     model = Transaction
 
 
-class LedgersListView(PaginatedListMixin, ListView):
-    model = Transaction
-    template_name = "purchases/ledgers_list.html"
+# class LedgersListView(PaginatedListMixin, ListView):
+#     model = Transaction
+#     template_name = "purchases/ledgers_list.html"
 
 
 class TrackerListView(PaginatedListMixin, ListView):

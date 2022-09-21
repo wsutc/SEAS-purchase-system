@@ -1,9 +1,8 @@
-from .views_class import (
+from .views_class import (  # LedgersListView,
     AccountDetailView,
     BalancesDetailView,
     BalancesListView,
     CustomPurchaseRequestCreateView,
-    LedgersListView,
     OpenPurchaseRequestListView,
     PaginatedListMixin,
     PurchaseRequestCreateView,

@@ -125,6 +125,7 @@ INSTALLED_APPS = [
     "setup_sheets",
     "inventory",
     "tool_compatibility",
+    "accounts",
     "django_mysql",
     # 'bootstrap_modal_forms',
     "django_select2",

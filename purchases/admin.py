@@ -9,7 +9,7 @@ from django.utils.translation import gettext_lazy as _
 
 from purchases.tracking import update_tracking_details
 
-from .models import (
+from .models import (  # Transaction,
     AccountGroup,
     Accounts,
     Balance,
@@ -25,7 +25,6 @@ from .models import (
     Status,
     Tracker,
     TrackingEvent,
-    Transaction,
     Unit,
     Urgency,
     Vendor,
@@ -248,8 +247,8 @@ class AccountGroupAdmin(admin.ModelAdmin):
 
 
 class AccountGroupsListFilter(admin.SimpleListFilter):
-    title = _("engineering")
-    parameter_name = "is_engineering"
+    title = _("groups")
+    parameter_name = "accountgroup"
 
     def lookups(self, request, model_admin):
         qs = AccountGroup.objects.values_list("slug", "name")
@@ -257,8 +256,7 @@ class AccountGroupsListFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if value := self.value():
-            account_qs = AccountGroup.objects.filter(slug=value)
-            queryset = account_qs.first().accounts
+            queryset = queryset.filter(accountgroup__slug=value)
 
         return queryset
 
@@ -573,7 +571,7 @@ def add_first_event_time(modeladmin, request, queryset):
 
 @admin.register(Tracker)
 class TrackerAdmin(admin.ModelAdmin):
-    list_display = ["id", "status", "sub_status", "carrier"]
+    list_display = ["id", "status", "sub_status", "carrier", "earliest_event_time"]
     inlines = [TrackingEventInline]
     actions = [update_selected_trackers, add_first_event_time]
     list_filter = [TrackerCarrierListFilter, "status"]
@@ -627,9 +625,9 @@ class BalancesAdmin(admin.ModelAdmin):
     list_display = ["account", "balance", "updated_datetime"]
 
 
-@admin.register(Transaction)
-class TransactionAdmin(admin.ModelAdmin):
-    list_display = ["balance", "processed_datetime", "purchase_request", "total_value"]
+# @admin.register(Transaction)
+# class TransactionAdmin(admin.ModelAdmin):
+#     list_display = ["balance", "processed_datetime", "purchase_request", "total_value"]
 
 
 @admin.register(DocumentNumber)

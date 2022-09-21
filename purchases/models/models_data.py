@@ -152,7 +152,6 @@ class PurchaseRequest(models.Model):
         return reverse("purchaserequest_detail", kwargs=kwargs)
 
     def save(self, *args, **kwargs):
-        print(self._state.adding)
         if not self.number:
             doc_number, _ = DocumentNumber.objects.get_or_create(
                 document="PurchaseRequest",
@@ -162,8 +161,10 @@ class PurchaseRequest(models.Model):
                 },
             )
             self.number = doc_number.get_next_number()
-        value = self.number
-        self.slug = slugify(value, allow_unicode=True)
+        if not self.slug:
+            self.slug = slugify(self.number, allow_unicode=True)
+
+        self.set_totals()
 
         super().save(*args, **kwargs)
 
@@ -175,38 +176,45 @@ class PurchaseRequest(models.Model):
         #     pass
         # else:
         #     extended_price["extended_price__sum"] = 0
-        return extended_price
+        return extended_price["extended_price__sum"]
+
+    def set_totals(self):
+        self.subtotal = self.get_subtotal()
+        self.sales_tax = round(
+            (self.subtotal + self.shipping.amount)
+            * decimal.Decimal(self.sales_tax_rate),
+            2,
+        )
+        self.grand_total = self.subtotal + self.shipping.amount + self.sales_tax
 
     def update_totals(self):
         qs = PurchaseRequest.objects.filter(pk=self.pk)
-        subtotal = self.get_subtotal()["extended_price__sum"]
-        shipping = self.shipping
-        tax = round(
-            (subtotal + shipping.amount) * decimal.Decimal(self.sales_tax_rate), 2
-        )
-        total = subtotal + shipping.amount + tax
 
-        qs.update(subtotal=subtotal, sales_tax=tax, grand_total=total)
+        qs.update(
+            subtotal=self.subtotal,
+            sales_tax=self.sales_tax,
+            grand_total=self.grand_total,
+        )
         return
 
     def sales_tax_display(self):
         percent = self.sales_tax_rate * 100
         return "%s" % percent
 
-    def update_transactions(self):
-        if self.purchaserequestaccounts_set.first():
-            grand_total = self.grand_total
-            account = self.purchaserequestaccounts_set.first().accounts
-            balance, _ = Balance.objects.get_or_create(
-                account=account, defaults={"balance": 0, "starting_balance": 0}
-            )
-            transaction, created = Transaction.objects.get_or_create(
-                purchase_request=self,
-                defaults={"total_value": grand_total, "balance": balance},
-            )
-            if not created:
-                transaction.total_value = -grand_total
-                transaction.save()
+    # def update_transactions(self):
+    #     if self.purchaserequestaccounts_set.first():
+    #         grand_total = self.grand_total
+    #         account = self.purchaserequestaccounts_set.first().accounts
+    #         balance, _ = Balance.objects.get_or_create(
+    #             account=account, defaults={"balance": 0, "starting_balance": 0}
+    #         )
+    #         transaction, created = Transaction.objects.get_or_create(
+    #             purchase_request=self,
+    #             defaults={"total_value": grand_total, "balance": balance},
+    #         )
+    #         if not created:
+    #             transaction.total_value = -grand_total
+    #             transaction.save()
 
     def get_tracking_link(self):
         if stub := self.carrier.tracking_link:
@@ -557,17 +565,17 @@ class Balance(models.Model):
         self.save()
         return self.balance
 
-    def recalculate_balance(self):
-        transactions_sum = Transaction.objects.filter(balance=self).aggregate(
-            Sum("total_value")
-        )
-        if total_sum := transactions_sum.get("total_value__sum"):
-            new_balance = self.starting_balance.amount + total_sum
-        else:
-            new_balance = self.starting_balance
-        self.updated_datetime = timezone.now()
-        self.balance = new_balance
-        self.save()
+    # def recalculate_balance(self):
+    #     transactions_sum = Transaction.objects.filter(balance=self).aggregate(
+    #         Sum("total_value")
+    #     )
+    #     if total_sum := transactions_sum.get("total_value__sum"):
+    #         new_balance = self.starting_balance.amount + total_sum
+    #     else:
+    #         new_balance = self.starting_balance
+    #     self.updated_datetime = timezone.now()
+    #     self.balance = new_balance
+    #     self.save()
 
     def __str__(self):
         return f"{self.account.account_title} [{self.balance.amount}]"
@@ -580,22 +588,22 @@ def set_initial_balance(sender, instance, created, **kwargs):
         instance.save()
 
 
-class Transaction(models.Model):
-    balance = models.ForeignKey(Balance, on_delete=models.CASCADE)
-    purchase_request = models.OneToOneField(PurchaseRequest, on_delete=models.CASCADE)
-    processed_datetime = models.DateTimeField(auto_now_add=True)
-    total_value = MoneyField(max_digits=14, decimal_places=2, default_currency="USD")
+# class Transaction(models.Model):
+#     balance = models.ForeignKey(Balance, on_delete=models.CASCADE)
+#     purchase_request = models.OneToOneField(PurchaseRequest, on_delete=models.CASCADE)
+#     processed_datetime = models.DateTimeField(auto_now_add=True)
+#     total_value = MoneyField(max_digits=14, decimal_places=2, default_currency="USD")
 
-    class Meta:
-        ordering = ["-processed_datetime"]
+#     class Meta:
+#         ordering = ["-processed_datetime"]
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.__original_total = self.total_value
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         self.__original_total = self.total_value
 
-    def __str__(self):
-        return "{} | {} [{}]".format(
-            self.balance.account.account_title,
-            self.purchase_request,
-            self.total_value.amount,
-        )
+#     def __str__(self):
+#         return "{} | {} [{}]".format(
+#             self.balance.account.account_title,
+#             self.purchase_request,
+#             self.total_value.amount,
+#         )

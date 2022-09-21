@@ -3,12 +3,11 @@ from django.conf.urls.static import static
 from django.urls import include, path
 from django.views.generic import RedirectView
 
-from .views import (
+from .views import (  # LedgersListView,
     AccountDetailView,
     BalancesDetailView,
     BalancesListView,
     CustomPurchaseRequestCreateView,
-    LedgersListView,
     OpenPurchaseRequestListView,
     PurchaseRequestCreateView,
     PurchaseRequestDeleteView,
@@ -71,7 +70,7 @@ urlpatterns = [
     path("trackers/<slug:pk>/update-tracker/", update_tracker, name="update_tracker"),
     path("trackers/<slug:pk>/delete/", TrackerDeleteView.as_view(), name="tracker_delete"),
     path("accounts/<int:pk>/", AccountDetailView.as_view(), name="accounts_detail"),
-    path("purchases/account-transactions/<int:pk>/", LedgersListView.as_view(), name="ledger_list"),
+    # path("purchases/account-transactions/<int:pk>/", LedgersListView.as_view(), name="ledger_list"),
     path("account-balances/", BalancesListView.as_view(), name="balances_list"),
     path("account-balances/<int:pk>/", BalancesDetailView.as_view(), name="balances_detail"),
     path("account/<int:pk>/update/", update_balance, name="update_balance"),

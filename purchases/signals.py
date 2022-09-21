@@ -1,11 +1,12 @@
 # import http.client, json
 # from django.conf import settings
+from django.apps import apps
 from django.contrib.auth.models import User
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 
 from purchases.vendor_linking import link_from_identifier
-from web_project.helpers import first_true
+from web_project.helpers import first_true, get_app_name
 
 from .models import (
     Accounts,
@@ -64,6 +65,13 @@ def create_link(sender, instance, **kwargs):
 @receiver(post_delete, sender=Status)
 def re_normalize_ranks(sender, instance, **kwargs):
     sender.objects.normalize_ranks("parent_model", instance.__class__)
+
+
+@receiver(post_save, sender=PurchaseRequest)
+def create_account_transaction(sender, instance, created, **kwargs):
+    account_model = apps.get_model("accounts", "account")
+    account_obj = account_model.objects.get(account=instance.accounts.first().account)
+    _ = account_obj.transact(amount=instance.grand_total, purchase_request=instance)
 
 
 # @receiver(post_save, sender=Tracker)
