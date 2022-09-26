@@ -30,3 +30,26 @@ class PurchaseRequestAccounts(models.Model):
 
     def __str__(self):
         return f"{self.accounts.program_workday} | {self.spend_category.code}"
+
+
+class PurchaseRequestAccount(models.Model):
+    purchase_request = models.ForeignKey(PurchaseRequest, on_delete=models.CASCADE)
+    account = models.ForeignKey("accounts.account", on_delete=models.PROTECT)
+
+    spend_category = models.ForeignKey(SpendCategory, on_delete=models.PROTECT)
+
+    class DistributionType(models.TextChoices):
+        PERCENT = "P", _("Percent")
+        AMOUNT = "A", _("Amount")
+
+    distribution_type = models.CharField(
+        choices=DistributionType.choices, default=DistributionType.PERCENT, max_length=1
+    )
+
+    distribution_input = models.FloatField(default=100)
+
+    class Meta:
+        verbose_name_plural = _("purchase request accounts")
+
+    def __str__(self):
+        return f"{self.account.fund} | {self.spend_category.code}"

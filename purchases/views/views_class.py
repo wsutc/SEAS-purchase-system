@@ -24,6 +24,8 @@ from django_listview_filters.filters import (
 )
 from packaging import version as p_version
 
+import web_project
+from globals.models import DefaultValue
 from purchases.forms import (
     AddVendorForm,
     AddVendorOrderForm,
@@ -387,7 +389,15 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
 
     def get_initial(self):
         req_obj = requisitioner_from_user(self.request.user)
-        self.initial.update({"requisitioner": req_obj})
+        sales_tax_rate = DefaultValue.objects.get_value("salestaxrate")
+        instruction = DefaultValue.objects.get_value("purchaserequestinstructions")
+        self.initial.update(
+            {
+                "requisitioner": req_obj,
+                "sales_tax_rate": sales_tax_rate,
+                "instruction": instruction,
+            }
+        )
         return super().get_initial()
 
     def get_context_data(self, **kwargs):

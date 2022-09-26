@@ -127,6 +127,7 @@ INSTALLED_APPS = [
     "tool_compatibility",
     "accounts",
     "parts",
+    "globals",
     "django_mysql",
     # 'bootstrap_modal_forms',
     "django_select2",

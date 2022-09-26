@@ -19,6 +19,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from purchases.exceptions import StatusCodeNotFound
 from purchases.tracking import TrackerObject
+from web_project.fields import PercentageField
 
 from .models_base import (
     Accounts,
@@ -94,6 +95,9 @@ class PurchaseRequest(models.Model):
     need_by_date = models.DateField("Date Required (optional)", blank=True, null=True)
     tax_exempt = models.BooleanField("Tax Exempt?", default=False)
     accounts = models.ManyToManyField(Accounts, through="PurchaseRequestAccounts")
+    accounts_external = models.ManyToManyField(
+        "accounts.account", through="PurchaseRequestAccount"
+    )
     subtotal = MoneyField(
         "Subtotal", decimal_places=2, max_digits=14, default_currency="USD", default=0
     )
@@ -104,9 +108,7 @@ class PurchaseRequest(models.Model):
         default_currency="USD",
         default=0,
     )
-    sales_tax_rate = models.DecimalField(
-        max_digits=10, decimal_places=5, default=settings.DEFAULT_TAX_RATE
-    )
+    sales_tax_rate = models.DecimalField(max_digits=10, decimal_places=5)
     sales_tax = MoneyField(
         "Sales Tax ($)",
         decimal_places=2,
@@ -123,10 +125,7 @@ class PurchaseRequest(models.Model):
     )
     urgency = models.ForeignKey(Urgency, on_delete=models.PROTECT, default=1)
     justification = models.TextField("Justification", blank=False)
-    instruction = models.TextField(
-        "Special Instructions",
-        default=settings.DEFAULT_INSTRUCTIONS,
-    )
+    instruction = models.TextField("Special Instructions")
 
     class Meta:
         ordering = ["-created_date"]

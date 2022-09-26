@@ -123,6 +123,7 @@ class NewPRForm(forms.ModelForm):
             "sales_tax",
             "grand_total",
             "accounts",
+            "accounts_external",
             "tracker",
             "carrier",
             "tracking_number",
