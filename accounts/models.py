@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models import Sum
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
@@ -106,6 +107,9 @@ class Account(BaseModel):
         value = self.starting_balance.amount - result
 
         return value
+
+    def get_absolute_url(self):
+        return reverse("account_detail", kwargs={"slug": self.slug})
 
 
 class AccountGroup(BaseModel):

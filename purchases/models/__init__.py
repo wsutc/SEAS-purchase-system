@@ -23,4 +23,4 @@ from .models_data import (  # Shipment,; Transaction,
     TrackingEvent,
     VendorOrder,
 )
-from .models_metadata import PurchaseRequestAccounts
+from .models_metadata import PurchaseRequestAccount

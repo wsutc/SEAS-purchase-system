@@ -17,7 +17,7 @@ from .models import (  # Transaction,
     Department,
     DocumentNumber,
     PurchaseRequest,
-    PurchaseRequestAccounts,
+    PurchaseRequestAccount,
     Requisitioner,
     SimpleProduct,
     SpendCategory,
@@ -53,8 +53,8 @@ class SimpleProductInline(admin.TabularInline):
     extra = 0
 
 
-class PurchaseRequestAccountsInline(admin.TabularInline):
-    model = PurchaseRequestAccounts
+class PurchaseRequestAccountInline(admin.TabularInline):
+    model = PurchaseRequestAccount
     extra = 0
 
 
@@ -124,7 +124,7 @@ class PurchaseRequestAdmin(admin.ModelAdmin):
         "slug",
     ]
     list_editable = ["status"]
-    inlines = [SimpleProductInline, PurchaseRequestAccountsInline]
+    inlines = [SimpleProductInline, PurchaseRequestAccountInline]
     actions = [make_awaiting_approval, save_requests]  # ,update_trackers]
     search_fields = [
         "number",
@@ -228,9 +228,9 @@ class RequisitionerAdmin(admin.ModelAdmin):
         return obj.user.email
 
 
-class PurchaseRequestAccountsInline(admin.TabularInline):
-    model = PurchaseRequestAccounts
-    extra = 0
+# class PurchaseRequestAccountInline(admin.TabularInline):
+#     model = PurchaseRequestAccount
+#     extra = 0
 
 
 @admin.register(AccountGroup)
@@ -283,7 +283,7 @@ class HasSlugFilter(admin.SimpleListFilter):
 @admin.register(Accounts)
 class AccountsAdmin(admin.ModelAdmin):
     list_display = ["account", "account_title", "program_workday", "grant", "gift"]
-    inlines = [PurchaseRequestAccountsInline]
+    # inlines = [PurchaseRequestAccountInline]
     search_fields = ["account", "account_title", "program_workday", "grant", "gift"]
     list_filter = [
         # "program_workday__is_null",
@@ -299,9 +299,9 @@ class SpendCategoryAdmin(admin.ModelAdmin):
     list_display = ["code", "description", "object", "subobject"]
 
 
-@admin.register(PurchaseRequestAccounts)
-class PurchaseRequestAccountsAdmin(admin.ModelAdmin):
-    list_display = ["accounts", "purchase_request"]
+@admin.register(PurchaseRequestAccount)
+class PurchaseRequestAccountAdmin(admin.ModelAdmin):
+    list_display = ["account", "purchase_request"]
 
 
 @admin.register(Unit)

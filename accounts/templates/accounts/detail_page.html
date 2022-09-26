@@ -1,0 +1,95 @@
+{% extends 'purchases/layout.html' %}
+{% block title %}test{% endblock %}
+{% block content %}
+<body>
+<style>
+    .inline {
+      --bs-btn-padding-y: 0rem
+  }
+</style>
+
+{% block navigation %}
+    <div class="row mb-3">
+        <h1 class="wsu-c-heading col-sm">{% block header %}{% endblock %} <span class="header-em">{% block number %}{% endblock %}</span></h1>
+
+        {% comment %} {% block post_header %}{% endblock post_header %} {% endcomment %}
+
+        <div class="btn-group col-3" role="group" aria-label="Navigation">
+            <a href="{% block previous %}{% endblock %}" class="btn btn-secondary">Previous</a>
+            <a href="{% block edit %}{% endblock %}" class="btn btn-secondary">Edit</a>
+            <a href="{% block delete %}{% endblock %}" class="btn btn-secondary">Delete</a>
+            <a href="{% block next %}{% endblock %}" class="btn btn-secondary">Next</a>
+        </div>
+    </div>
+{% endblock navigation %}
+
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% block page %}{% endblock %}
+
+{% block related_pr_table %}
+{% if debug %}<div>debug ->count:{{ object.purchaserequest_set.count }}</div>{% endif %}
+
+{% include "purchases/purchaserequest_list_table.html" with object_list=object.purchaserequest_set.all %}
+
+{% endblock related_pr_table %}
+
+{% block related_simpleproduct_table %}
+<div class="col-12">
+    <div class="h2">Related Products</div>
+        <div class="bd-example-snippet bd-code-snippet">
+            <div class="bd-example">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Identifier</th>
+                            <th>Status</th>
+                            <th scope="col">Purchase Request</th>
+                            <th style="text-align: center;">Link</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% with object.purchaserequest_set as set %}
+                            {% for row in set.all %}
+                                {% with row.simpleproduct_set as rowset %}
+                                    {% for product in row_set.all %}
+                                        <tr>
+                                            <td>{{ product.name }}</td>
+                                            <td>{{ product.identifier|default_if_none:"" }}</td>
+                                            <td>{{ row.get_status_display }}</td>
+                                            <td><a href="{{ row.get_absolute_url }}">{{ row }}</a></td>
+                                            {% if product.link %}
+                                                <td style="text-align: center;">
+                                                    <a href="{{ product.link }}" target="_blank" rel="noopener noreferrer">
+                                                        <i class="fa-solid fa-up-right-from-square" ></i>
+                                                    </a>
+                                                </td>
+                                            {% else %}
+                                                <td></td>
+                                            {% endif %}
+                                            <td><a href="{% url 'copy_simpleproduct' pk=product.pk %}"><i class="fa-solid fa-copy"></i></a></td>
+                                        </tr>
+                                    {% endfor %}
+                                {% endwith %}
+                            {% endfor %}
+                        {% endwith %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% comment %} </div> {% endcomment %}
+{% endblock related_simpleproduct_table %}
+{% block custom_tables %}{% endblock custom_tables %}
+
+<div id="django-debug"><pre>{% debug %}</pre></div>
+</body>
+{% endblock %}

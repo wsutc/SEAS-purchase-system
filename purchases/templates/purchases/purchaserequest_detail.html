@@ -148,16 +148,37 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for budget in object.purchaserequestaccounts_set.all %}
+                    {% for budget in object.purchaserequestaccount_set.all %}
                         <tr>
-                            {% url 'accounts_detail' budget.accounts.pk as account_reverse %}
+                            <td>
+                              {% if budget.account.fund_type == "PG" %}
+                              <a href="{% url "account_detail" slug=budget.account.slug %}">
+                                {{ budget.account.fund }}
+                              </a>
+                              {% endif %}
+                            </td>
+                            <td>
+                              {% if budget.account.fund_type == "GF" %}
+                              <a href="{% url "account_detail" slug=budget.account.slug %}">
+                                {{ budget.account.fund }}
+                              </a>
+                              {% endif %}
+                            </td>
+                            <td>
+                              {% if budget.account.fund_type == "GR" %}
+                              <a href="{% url "account_detail" slug=budget.account.slug %}">
+                                {{ budget.account.fund }}
+                              </a>
+                              {% endif %}
+                            </td>
+                            {% comment %} {% url 'accounts_detail' budget.accounts.pk as account_reverse %}
                                 <td><a href="{{ account_reverse }}">{{ budget.accounts.program_workday }}</a></td>
                                 <td><a href="{{ account_reverse }}">{{ budget.accounts.gift }}</a></td>
-                                <td><a href="{{ account_reverse }}">{{ budget.accounts.grant }}</a></td>
+                                <td><a href="{{ account_reverse }}">{{ budget.accounts.grant }}</a></td> {% endcomment %}
                             <td>{{ budget.spend_category.code }}</td>
-                            {% if budget.distribution_type == 'percent' %}
+                            {% if budget.distribution_type == 'p' %}
                                 <td>{{ budget.distribution_input|percent:2 }}</td>
-                            {% elif budget.distribution_type == 'amount' %}
+                            {% elif budget.distribution_type == 'a' %}
                                 <td>{{ budget.distribution_input|currency }}</td>
                             {% endif %}
                         </tr>

@@ -24,6 +24,7 @@ urlpatterns = [
     path("setup-sheets/", include("setup_sheets.urls")),
     path("inventory/", include("inventory.urls")),
     path("tools/", include("tool_compatibility.urls")),
+    path("budget-accounts/", include("accounts.urls")),
     path("admin/", admin.site.urls),
     path("__debug__/", include("debug_toolbar.urls")),
 ]

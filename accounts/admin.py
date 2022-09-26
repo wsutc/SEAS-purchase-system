@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.shortcuts import redirect
 from django.utils.translation import gettext_lazy as _
 
 from .models import (
@@ -50,9 +51,21 @@ class AccountAdmin(admin.ModelAdmin):
         for q in queryset:
             q.current_balance = q.calculate_aggregate()
 
+            # q.save()
+
         count = queryset.bulk_update(queryset, ["current_balance"])
 
         self.message_user(request, f"{count} item(s) updated")
+
+    def response_change(self, request, obj, post_url_continue=...):
+        url = redirect(obj)
+
+        return url
+
+    def save_model(self, request, obj, form, change) -> None:
+        if change and "starting_balance" in form.changed_data:
+            obj.current_balance = obj.calculate_aggregate()
+        return super().save_model(request, obj, form, change)
 
 
 @admin.register(AccountGroup)

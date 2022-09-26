@@ -1,0 +1,46 @@
+{% extends './detail_page.html' %}
+{% block title %}
+  {{ object.fund }}
+{% endblock title %}
+{% block header %}Account{% endblock %}
+{% comment %} {% block previous %}{{ object.get_previous_by_sort_order.get_absolute_url }}{% endblock previous %}
+{% block next %}{{ object.get_next_by_tracking_number.get_absolute_url }}{% endblock next %} {% endcomment %}
+
+{% block navigation %}
+{% endblock navigation %}
+
+{% block page %}
+
+{% comment %} {% firstof object.program_workday object.grant object.gift 'none' as title_var %} {% endcomment %}
+
+<div class="container mt-4 mb-4">
+      <div class="card col">
+        <h4 class="card-header d-flex justify-content-between align-items-center">
+          <span class="header-em">{{ object.fund }}</span>
+          <div>
+            {% comment %} <a href="{% url 'update_tracker' object.pk %}"><i class="fa-solid fa-arrows-rotate fa-2xs"></i></a> {% endcomment %}
+            <a href="{% url 'admin:accounts_account_change' object.pk %}"><i class="fa-solid fa-pencil fa-2xs"></i></a>
+          </div>
+        </h4>
+        <div class="card-body">
+          <table>
+            <tr>
+              <td class="pe-2 fw-bold">Title</td>
+              <td>{{ object.name }}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td class="pe-2 fw-bold">Balance</td>
+              <td>{{ object.current_balance }}</td>
+              <td class="pe-2 fw-bold">Last Transaction</td>
+              <td>{{ object.changed_datetime }}</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+  </div>
+
+{% endblock %}
+
+{% comment %} {% block related_pr_table %}{% endblock related_pr_table %} {% endcomment %}
+{% block related_simpleproduct_table %}{% endblock related_simpleproduct_table %}

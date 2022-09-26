@@ -13,7 +13,7 @@ from .models import Department  # Requisitioner,; Urgency,
 from .models import (
     Carrier,
     PurchaseRequest,
-    PurchaseRequestAccounts,
+    PurchaseRequestAccount,
     SimpleProduct,
     Tracker,
     Vendor,
@@ -38,10 +38,8 @@ class VendorWidget(s2forms.Select2Widget):
 
 class AccountWidget(s2forms.ModelSelect2Widget):
     search_fields = [
-        "account_title__icontains",
-        "program_workday__icontains",
-        "grant__icontains",
-        "gift__icontains",
+        "name__icontains",
+        "fund__icontains",
     ]
 
 
@@ -227,20 +225,20 @@ SimpleProductFormset = inlineformset_factory(
 )
 
 
-class PurchaseRequestAccountsForm(forms.ModelForm):
+class PurchaseRequestAccountForm(forms.ModelForm):
     class Meta:
-        model = PurchaseRequestAccounts
+        model = PurchaseRequestAccount
         fields = "__all__"
         widgets = {
             "distribution_type": forms.RadioSelect(),
-            "accounts": AccountWidget(attrs={"class": "select-account"}),
+            "account": AccountWidget(attrs={"class": "select-account"}),
             "spend_category": SpendCategoryWidget(attrs={"class": "select-spendcat"}),
             "distribution_input": forms.TextInput(attrs={"style": "width:100%"}),
         }
 
 
-PurchaseRequestAccountsFormset = inlineformset_factory(
-    PurchaseRequest, PurchaseRequestAccounts, form=PurchaseRequestAccountsForm, extra=1
+PurchaseRequestAccountFormset = inlineformset_factory(
+    PurchaseRequest, PurchaseRequestAccount, form=PurchaseRequestAccountForm, extra=1
 )
 
 

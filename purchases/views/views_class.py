@@ -32,7 +32,7 @@ from purchases.forms import (
     CreateUserForm,
     CustomPurchaseRequestForm,
     NewPRForm,
-    PurchaseRequestAccountsFormset,
+    PurchaseRequestAccountFormset,
     SimpleProductCopyForm,
     SimpleProductFormset,
     TrackerForm,
@@ -403,7 +403,7 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["purchase_request_items_formset"] = SimpleProductFormset(prefix="items")
-        context["purchase_request_accounts_formset"] = PurchaseRequestAccountsFormset(
+        context["purchase_request_accounts_formset"] = PurchaseRequestAccountFormset(
             prefix="accounts"
         )
         # context['requisitioner'] = Requisitioner.objects.get(user=self.request.user)
@@ -416,7 +416,7 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
         purchase_request_items_formset = SimpleProductFormset(
             self.request.POST, prefix="items"
         )
-        purchase_request_accounts_formset = PurchaseRequestAccountsFormset(
+        purchase_request_accounts_formset = PurchaseRequestAccountFormset(
             self.request.POST, prefix="accounts"
         )
         if not (priValid := purchase_request_items_formset.is_valid()):
@@ -480,7 +480,7 @@ class CustomPurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["purchase_request_items_formset"] = SimpleProductFormset(prefix="items")
-        context["purchase_request_accounts_formset"] = PurchaseRequestAccountsFormset(
+        context["purchase_request_accounts_formset"] = PurchaseRequestAccountFormset(
             prefix="accounts"
         )
         # context['requisitioner'] = Requisitioner.objects.get(user=self.request.user)
@@ -493,7 +493,7 @@ class CustomPurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
         purchase_request_items_formset = SimpleProductFormset(
             self.request.POST, prefix="items"
         )
-        purchase_request_accounts_formset = PurchaseRequestAccountsFormset(
+        purchase_request_accounts_formset = PurchaseRequestAccountFormset(
             self.request.POST, prefix="accounts"
         )
         if not (priValid := purchase_request_items_formset.is_valid()):
@@ -559,7 +559,7 @@ class PurchaseRequestUpdateView(UpdateView):
             )
             context[
                 "purchase_request_accounts_formset"
-            ] = PurchaseRequestAccountsFormset(
+            ] = PurchaseRequestAccountFormset(
                 self.request.POST, instance=self.object, prefix="accounts"
             )
         else:
@@ -568,7 +568,7 @@ class PurchaseRequestUpdateView(UpdateView):
             )
             context[
                 "purchase_request_accounts_formset"
-            ] = PurchaseRequestAccountsFormset(instance=self.object, prefix="accounts")
+            ] = PurchaseRequestAccountFormset(instance=self.object, prefix="accounts")
         return context
 
     def form_valid(self, form):
