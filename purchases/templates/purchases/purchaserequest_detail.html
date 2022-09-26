@@ -111,16 +111,18 @@
                                         <tr></tr>
                                     {% endfor %}
                                     {% if object.tracker_set.count %}
-                                        {% comment %} {% with {% url 'tracker_list' %} as list %} {% endcomment %}
-                                            {% comment %} <tr><td>{% urlquery list ('purchase_request_id__exact', object.id) %}</td></tr> {% endcomment %}
                                         <tr>
                                             <td>
                                                 <a class="btn btn-secondary" href="{% urlquery 'tracker_list' 'purchase_request__id__exact' object.id %}">
-                                                    Show Trackers
+                                                  Show Trackers
                                                 </a>
                                             </td>
+                                            <td>
+                                              <a class="btn btn-secondary" href="{% urlquery 'create_tracker' 'purchase-request' object.slug %}">
+                                                Create Tracker
+                                              </a>
+                                            </td>
                                         </tr>
-                                        {% comment %} {% endwith %} {% endcomment %}
                                     {% endif %}
                                 </table>
                             </td>
@@ -152,9 +154,6 @@
                                 <td><a href="{{ account_reverse }}">{{ budget.accounts.program_workday }}</a></td>
                                 <td><a href="{{ account_reverse }}">{{ budget.accounts.gift }}</a></td>
                                 <td><a href="{{ account_reverse }}">{{ budget.accounts.grant }}</a></td>
-                            {% comment %} <td><a href="{% url 'accounts_detail' budget.accounts.pk %}">{{ budget.accounts.program_workday }}</a></td>
-                            <td>{{ budget.accounts.gift }}</td>
-                            <td>{{ budget.accounts.grant }}</td> {% endcomment %}
                             <td>{{ budget.spend_category.code }}</td>
                             {% if budget.distribution_type == 'percent' %}
                                 <td>{{ budget.distribution_input|percent:2 }}</td>
@@ -181,7 +180,6 @@
                         <th class="text-center" style="width: 10%;">Link</th>
                         <th class="text-center" style="width: 15%;">Identifier</th>
                         <th class="text-center">Manufacturer</th>
-                        {% comment %} <th class="text-center" style="width: 10%;">Vendor ID</th> {% endcomment %}
                         <th class="text-center" style="width:  5%;">QTY</th>
                         <th class="text-center" style="width: 10%;">Unit</th>
                         <th class="text-center" style="width: 10%;">Unit Price</th>
@@ -189,13 +187,11 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in object.simpleproduct_set.all %}
+                    {% for item in object.simpleproduct_set.all|dictsort:"rank" %}
                         <tr>
                             <td>
                                 <div>
                                     <span class="text-truncate copyText" id="{{ item.pk }}Description">{{ item.name }}</span>
-                                    {% comment %} <input style="width: 100%" class="text text-truncate" type="text" value="{{ item.name }}" id="{{ item.pk }}Input"> {% endcomment %}
-                                    {% comment %} <a href="#" class="copyButton" id="{{ item.pk }}DescriptionButton"><i class="fa-solid fa-paste"></i></a> {% endcomment %}
                                 </div>
                             </td>
                             {% if item.link %}
@@ -209,7 +205,6 @@
                             {% endif %}
                             <td align="center">{{ item.identifier|default_if_none:"" }}</td>
                             <td>{{ item.manufacturer|default_if_none:"" }}</td>
-                            {% comment %} <td align="center">{{ item.vendor_number|default_if_none:"" }}</td> {% endcomment %}
                             <td align="center">{{ item.quantity|floatformat }}</td>
                             <td align="center">{{ item.unit.unit }}</td>
                             <td>{{ item.unit_price|usd_accounting:simpleproducts_unitprice_maxdigits }}</td>

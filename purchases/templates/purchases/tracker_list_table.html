@@ -27,7 +27,9 @@
                       {% endif %}
                   </td>
                   <td class="text-truncate">
-                    {{ o.status|default_if_none:""|camel_case_split }}{% if not o.status == 'Delivered' %} | {{ o.latest_event.location }}{% endif %}
+                    {% if o.status %}
+                      {{ o.status|camel_case_split }}{% if not o.status == 'Delivered' %} | {{ o.latest_event.location }}{% endif %}
+                    {% endif %}
                   </td>
                   <td>{{ o.delivery_estimate|date:"SHORT_DATETIME_FORMAT" }}</td>
                   {% comment %} <td>{{ o.earliest_event_time }}</td> {% endcomment %}

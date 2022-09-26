@@ -41,7 +41,7 @@
                 </ul> {% endcomment %}
               </td>
               {% comment %} <td>{{ o.get_status_display }}</td> {% endcomment %}
-              <td>{{ o.grand_total }}</td>
+              <td>{{ o.grand_total|usd_accounting }}</td>
               <td>{{ o.tracker_set.first.status|camel_case_split }}</td>
               <td class="text-center">
                 <a href="{% url 'update_pr' slug=o.slug %}"><i class="fa-solid fa-pencil px-1"></i></a>

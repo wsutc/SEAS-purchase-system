@@ -60,13 +60,13 @@
       </div>
   </div>
 
-  {% with object.trackeritem_set.all as items %}
+  {% comment %} {% with object.trackeritem_set.all as items %}
     {% if debug %}<div class="alert alert-debug">debug ->count:{{ items|length }}</div>{% endif %}
 
     <div class="h4">{% translate "Items" %}</div>
 
     {% include "purchases/trackeritem_list_table.html" with object_list=items %}
-  {% endwith %}
+  {% endwith %} {% endcomment %}
 
   <div class="col-12">
     <div class="h2">Events</div>
@@ -96,11 +96,8 @@
         </div>
     </div>
 
-{% endblock %}
+{% endblock page %}
 
 {% block related_pr_table %}{% endblock related_pr_table %}
 {% block related_simpleproduct_table %}
-
-
-
 {% endblock related_simpleproduct_table %}

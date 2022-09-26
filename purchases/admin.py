@@ -607,6 +607,7 @@ class SimpleProductAdmin(admin.ModelAdmin):
         "purchase_request",
         "quantity",
         "unit_price",
+        "rank",
     ]
     list_editable = ["unit_price", "quantity"]
     list_filter = ["purchase_request"]

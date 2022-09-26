@@ -684,14 +684,19 @@ class TrackerListView(PaginatedListMixin, ListView):
         ("purchase_request", RelatedFieldListViewFilter),
     ]
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
-
 
 class TrackerCreateView(CreateView):
     form_class = TrackerForm
     template_name = "purchases/tracker_create.html"
+
+    def get_initial(self):
+        purchase_request_param = self.request.GET.get("purchase-request", None)
+        if purchase_request_param:
+            purchase_request = get_object_or_404(
+                PurchaseRequest, slug=purchase_request_param
+            )
+
+        return {"purchase_request": purchase_request}
 
     def form_valid(self, form):
         if hasattr(form, "message"):

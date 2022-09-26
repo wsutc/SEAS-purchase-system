@@ -202,6 +202,11 @@ def replace(value: str, chars: str) -> str:
 
 @register.simple_tag
 def urlquery(path: str, param_name: str, param_val: str) -> str:
+    """Include query in tag
+
+    {% url "name" "param_name" param %}
+
+    output: /reversed/path/?param_name=param"""
     path_reverse = reverse(path)
     fragment = furl(path_reverse)
     fragment.args[param_name] = param_val

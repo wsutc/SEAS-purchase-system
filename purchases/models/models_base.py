@@ -6,6 +6,7 @@ from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
 
+from web_project.fields import PercentageField
 from web_project.helpers import first_true
 
 
@@ -232,7 +233,8 @@ def something(something: Status):
 
 class Vendor(BaseModel):
     wsu_discount = models.BooleanField("Does WSU get a discount?", default=False)
-    discount_percentage = models.FloatField(default=0)
+    # discount_percentage = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    discount_percentage = PercentageField(max_digits=15, decimal_places=2, default=0)
     website = models.URLField("URL/Link to Vendor Website")
     # vendor_logo = models.ImageField("Vendor Logo (optional)",blank=True)
     phone = PhoneNumberField("Vendor Phone Number", null=False, blank=True)
