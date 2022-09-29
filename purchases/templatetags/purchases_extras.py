@@ -190,6 +190,27 @@ def urlizeobject(object, autoescape=True):
         return mark_safe(tag)
 
 
+@register.filter(needs_autoescape=True)
+def urlizespecifyobject(value: str, object, autoescape=True):
+    """Create a link for an object using it's `get_absolute_url` method, if it has one.
+
+    :param object: The object/model to create a link for
+    :type object: models.Model
+    :return: If <object> has a `get_absolute_url` method, return a link tag in the form '<a href="{{ object.get_absolute_url }}">{{ value }}</a>';
+        if no method exists, return {{ object }}.
+    :rtype: str, marked safe
+    """
+    text = str(value)
+    try:
+        url = object.get_absolute_url()
+    except Exception:
+        return text
+    else:
+        tag = f'<a href="{url}">{text}</a>'
+
+        return mark_safe(tag)
+
+
 @register.filter
 @stringfilter
 def replace(value: str, chars: str) -> str:

@@ -298,11 +298,11 @@ class DocumentNumber(models.Model):
 
     def get_next_number(self):
         prefix = self.prefix
-        padding_exponent = self.padding_digits - 1
         next_counter = self.next_counter
-        number = prefix + str(next_counter + (10**padding_exponent))
+        padded_counter = str(next_counter).zfill(self.padding_digits)
+        number = f"{prefix}{padded_counter}"
 
-        self.next_counter = next_counter + 1
+        self.next_counter += 1
         self.last_number = number
 
         self.save()

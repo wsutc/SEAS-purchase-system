@@ -49,7 +49,12 @@ from purchases.models import (  # Transaction,
     VendorOrder,
     requisitioner_from_user,
 )
-from web_project.helpers import PaginatedListMixin, redirect_to_next, truncate_string
+from web_project.helpers import (
+    PaginatedListMixin,
+    max_decimal_places,
+    redirect_to_next,
+    truncate_string,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -128,57 +133,47 @@ class SimpleProductListView(PaginatedListMixin, ListView):
     ]
 
     def get_context_data(self, **kwargs):
-        """Add context for max digits of unit price field for formatting."""
+
         context = super().get_context_data(**kwargs)
 
-        def count_digits(value) -> int:
-            string = f"{float(value)}"
-            parts = string.split(".")
-            if len(parts) > 1:
-                decimals = parts[1]
-                return len(decimals)
-            else:
-                return 0
-
+        # TODO: make this more elegant
+        # sort vendor as lower case (python sorts lower different than upper by default)
         filter_name = "purchase_request__vendor"
 
         dlf_version_str = version("django_listview_filters")
 
+        # django-listview-filters added `get_filter_by_name` method after 0.0.1b0.dev1
         if p_version.parse(dlf_version_str) <= p_version.parse("0.0.1b0.dev1"):
-            filter = [
-                filter
-                for filter in self.filter_specs
-                if filter.field_path == filter_name
-            ][0]
+            if len(self.filter_specs) > 0:
+                for filter_spec in self.filter_specs:
+                    filter = (
+                        filter_spec if filter_spec.field_path == filter_name else None
+                    )
+            else:
+                filter = None
         else:
             filter = self.get_filter_by_name(filter_name)
 
-        filter.lookup_choices = sorted(
-            filter.lookup_choices, key=lambda x: x[1].lower()
-        )
+        if filter:
+            filter.lookup_choices = sorted(
+                filter.lookup_choices, key=lambda x: x[1].lower()
+            )
 
-        if settings.DEBUG:
-            for counter, choice in enumerate(filter.lookup_choices):
-                logger.debug(f"Choice {counter}: {choice}")
+            if settings.DEBUG:
+                for counter, choice in enumerate(filter.lookup_choices):
+                    logger.debug(f"Choice {counter}: {choice}")
 
+        # add context for max digits of unit price field for formatting
         qs = context["object_list"]
 
         unitprice_values = qs.values_list("unit_price", flat=True)
 
-        digits_list = []
-        for value in unitprice_values:
-            digits = count_digits(value)
-            digits_list.append(digits)
-
-        logger.debug(f"Object List Length: {len(digits_list)}")
-
-        context["unitprice_maxdigits"] = max(digits_list)
+        context["unitprice_maxdigits"] = max_decimal_places(unitprice_values)
 
         return context
 
 
 class SimpleProductPRListView(SimpleProductListView):
-    # queryset = SimpleProduct.objects.order_by("purchase_request__vendor", "name")
     list_filter = []
 
     def get_queryset(self):
@@ -187,7 +182,7 @@ class SimpleProductPRListView(SimpleProductListView):
         purchase_request = PurchaseRequest.objects.filter(slug=slug)
         qs = qs.filter(purchase_request__in=purchase_request)
 
-        logger.warning(f"Purchase Request: {purchase_request.first()}")
+        logger.info(f"Purchase Request: {purchase_request.first()}")
 
         return qs
 
@@ -295,32 +290,36 @@ class PurchaseRequestDetailView(SimpleView, DetailView):
     query_pk_and_slug = True
 
     def get_context_data(self, **kwargs):
-        """Add context for max digits of unit price field for formatting."""
         context = super().get_context_data(**kwargs)
 
-        def count_digits(value) -> int:
-            string = f"{float(value)}"
-            parts = string.split(".")
-            if len(parts) > 1:
-                decimals = parts[1]
-                return len(decimals)
-            else:
-                return 0
-
-        # context["purchase_request_statuses"] = get_status_choices()
-
+        # Add context for max digits of unit price field for formatting
         unitprice_values = self.object.simpleproduct_set.values_list(
             "unit_price", flat=True
         )
 
-        digits_list = []
-        for value in unitprice_values:
-            digits = count_digits(value)
-            digits_list.append(digits)
-
-        context["simpleproducts_unitprice_maxdigits"] = (
-            max(digits_list) if len(digits_list) else 0
+        context["simpleproducts_unitprice_maxdigits"] = max_decimal_places(
+            unitprice_values
         )
+
+        # add context for fund type column
+        budgets = []
+        for budget in self.object.purchaserequestaccount_set.all():
+            match budget.account.fund_type:
+                case "PG":
+                    funds = [budget.account, "", ""]
+                case "GF":
+                    funds = ["", budget.account, ""]
+                case "GR":
+                    funds = ["", "", budget.account]
+            budget_dict = {
+                "funds_list": funds,
+                "spend_category": budget.spend_category_ext,
+                "distribution_type": budget.distribution_type,
+                "distribution": budget.distribution_input,
+            }
+            budgets.append(budget_dict)
+
+        context["budgets"] = budgets
 
         return context
 

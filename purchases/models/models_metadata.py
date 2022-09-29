@@ -37,6 +37,9 @@ class PurchaseRequestAccount(models.Model):
     account = models.ForeignKey("accounts.account", on_delete=models.PROTECT)
 
     spend_category = models.ForeignKey(SpendCategory, on_delete=models.PROTECT)
+    spend_category_ext = models.ForeignKey(
+        "accounts.spendcategory", on_delete=models.PROTECT, null=True
+    )
 
     class DistributionType(models.TextChoices):
         PERCENT = "P", _("Percent")

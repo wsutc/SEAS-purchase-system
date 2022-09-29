@@ -164,3 +164,17 @@ class Transaction(BaseTransaction):
     purchase_request = models.OneToOneField(
         "purchases.purchaserequest", on_delete=models.CASCADE
     )
+
+
+class SpendCategory(BaseModel):
+    name = models.CharField(_("workday ID"), unique=True, max_length=15)
+    description = models.TextField(_("workday description"))
+    object = models.CharField(max_length=50)
+    subobject = models.CharField(max_length=50)
+
+    class Meta:
+        verbose_name_plural = _("spend categories")
+        ordering = ["name"]
+
+    def __str__(self):
+        return f"{self.name} ({self.description}) [{self.object}{self.subobject}]"

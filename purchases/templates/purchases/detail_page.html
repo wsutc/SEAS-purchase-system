@@ -1,7 +1,7 @@
 {% extends 'purchases/layout.html' %}
 {% block title %}test{% endblock %}
 {% block content %}
-<body>
+
 <style>
     .inline {
       --bs-btn-padding-y: 0rem
@@ -90,6 +90,6 @@
 {% endblock related_simpleproduct_table %}
 {% block custom_tables %}{% endblock custom_tables %}
 
-<div id="django-debug"><pre>{% debug %}</pre></div>
-</body>
+{% comment %} <div id="django-debug"><pre>{% debug %}</pre></div> {% endcomment %}
+
 {% endblock %}

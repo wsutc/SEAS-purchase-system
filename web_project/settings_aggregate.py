@@ -88,6 +88,10 @@ LOGGING = {
             "handlers": ["console"],
             "level": "INFO",
         },
+        # "settings": {
+        #     "handlers": ["console"],
+        #     "level": "DEBUG",
+        # },
     },
 }
 
@@ -100,6 +104,23 @@ TEMPLATE_DEBUG = True
 MESSAGE_LEVEL = message_constants.DEBUG
 
 ALLOWED_HOSTS = ["127.0.0.1", "33af-69-166-40-1.ngrok.io"]
+
+if DEBUG:
+    import logging
+
+    logging.basicConfig(level="INFO")
+    import mimetypes
+
+    js_path = "/toolbar.js"
+    old_js = mimetypes.guess_type(js_path, True)
+    logging.info(f"Old js type: {old_js}")
+
+    mimetypes.add_type("text/javascript", ".js", True)
+
+    new_js = mimetypes.guess_type(js_path, True)
+    logging.info(f"New js type: {new_js}")
+
+DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
 
 
 # Application definition
@@ -134,11 +155,11 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",

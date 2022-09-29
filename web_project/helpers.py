@@ -209,3 +209,13 @@ def first_true(iterable, default=False, pred=None):
     # first_true([a,b,c], x) --> a or b or c or x
     # first_true([a,b], x, f) --> a if f(a) else b if f(b) else x
     return next(filter(pred, iterable), default)
+
+
+def max_decimal_places(numbers: list[float]) -> int:
+    def get_decimal_length(num):
+        parts = f"{float(num)}".split(".")
+        return len(parts[1]) if len(parts) > 1 else 0
+
+    string_values = (get_decimal_length(x) for x in numbers)
+
+    return max(string_values)

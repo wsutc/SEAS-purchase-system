@@ -1,0 +1,42 @@
+<ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
+    <li>
+      <a href="#" class="nav-link px-2 link-secondary dropdown-toggle" id="dropdownPurchaseRequests" data-bs-toggle="dropdown" aria-expanded="false">
+        Purchase Requests
+      </a>
+      <ul class="dropdown-menu" aria-labelledby="dropdownPurchaseRequests">
+        <a href="{% url 'new_pr' %}" class="nav-link px-2 link-dark">New</a>
+        <a href="{% url 'open_pr' %}" class="nav-link px-2 link-dark">List Open</a>
+        <a href="{% url 'home' %}" class="nav-link px-2 link-dark">List All</a>
+        <a href="{% url 'tracker_list' %}" class="nav-link px-2 link-dark">Trackers</a>
+        <a href="{% url 'simpleproducts' %}" class="nav-link px-2 link-dark">Items</a>
+      </ul>
+    </li>
+    <li>
+      <a href="#" class="nav-link px-2 link-secondary dropdown-toggle" id="dropdownVendors" data-bs-toggle="dropdown" aria-expanded="false">
+        Vendors
+      </a>
+      <ul class="dropdown-menu" aria-labelledby="dropdownVendors">
+        <a href="{% url 'all_vendors' %}" class="nav-link px-2 link-dark">List</a>
+        <a href="{% url 'vendororder_current_list' %}" class="nav-link px-2 link-dark">Current Orders</a>
+      </ul>
+    </li>
+    <li><a href="{% url 'all_requisitioners' %}" class="nav-link px-2 link-dark">Requisitioners</a></li>
+    <li>
+      <a href="#" class="nav-link px-2 link-secondary dropdown-toggle" id="dropdownSetups" data-bs-toggle="dropdown" aria-expanded="false">
+        Part Setups
+      </a>
+      <ul class="dropdown-menu" aria-labelledby="dropdownSetups">
+        <a href="{% url 'list_part' %}" class="nav-link px-2 link-dark">Parts</a>
+        <a href="{% url 'create_new_setup_sheet' %}" class="nav-link px-2 link-dark">Create New</a>
+        <a href="{% url 'list_setupsheet' %}" class="nav-link px-2 link-dark">Setup Sheets</a>
+      </ul>
+    </li>
+    <li>
+      <a href="#" class="nav-link px-2 link-secondary dropdown-toggle" id="dropdownTools" data-bs-toggle="dropdown" aria-expanded="false">
+        Tools
+      </a>
+      <ul class="dropdown-menu" aria-labelledby="dropdownTools">
+        <a href="{% url 'holder_list' %}" class="nav-link px-2 link-dark">Holders</a>
+      </ul>
+    </li>
+  </ul>
