@@ -4,6 +4,8 @@ from django import forms
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from web_project.helpers import Percent
+
 
 class PercentageField(models.DecimalField):
     """Enter and display percentages out of 100 but store them out of 1 in db as decimals"""
@@ -33,11 +35,7 @@ class PercentageField(models.DecimalField):
         super().__init__(verbose_name, name, **kwargs)
 
     def formfield(self, **kwargs):
-        defaults = {
-            "max_digits": self.max_digits,
-            "decimal_places": self.human_decimal_places,
-            "form_class": forms.DecimalField,
-        }
+        defaults = {"form_class": forms.DecimalField}
         defaults.update(kwargs)
         return super().formfield(**defaults)
 
@@ -45,7 +43,7 @@ class PercentageField(models.DecimalField):
         if value is None:
             return value
 
-        number = Decimal(str(value)) * Decimal("100")
+        number = Percent(value, self.human_decimal_places)
 
         return number
 
@@ -54,11 +52,7 @@ class PercentageField(models.DecimalField):
         if value is None:
             return value
 
-        number = round(Decimal(str(value)) * Decimal(".01"), self.decimal_places)
+        number = Percent.fromform(value, self.human_decimal_places)
         setattr(model_instance, self.attname, number)
 
         return number
-
-    def __str__(self) -> str:
-        value = super().__str__()
-        return value

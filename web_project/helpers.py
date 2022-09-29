@@ -1,4 +1,5 @@
 # from urllib.parse import urlencode
+from decimal import Decimal
 from http.client import HTTPResponse
 
 from django.contrib import messages
@@ -218,4 +219,35 @@ def max_decimal_places(numbers: list[float]) -> int:
 
     string_values = (get_decimal_length(x) for x in numbers)
 
-    return max(string_values)
+    try:
+        return max(string_values)
+    except ValueError:
+        return 0
+
+
+class Percent:
+    def __init__(
+        self,
+        dec: Decimal,
+        decimal_places: int = None,
+    ):
+        self.per_hundred = Decimal(str(dec)) * Decimal("100")
+        self.per_one = dec
+        self.has_decimal_places = False
+        if decimal_places:
+            self.per_hundred = round(self.per_hundred, decimal_places)
+            self.per_one = round(self.per_one, decimal_places + 2)
+            self.decimal_places = decimal_places
+            self.has_decimal_places = True
+
+    @classmethod
+    def fromform(cls, val: Decimal, decimal_places: int = None):
+        dec = Decimal(str(val)) * Decimal(".01")
+        return cls(dec, decimal_places)
+
+    def __mul__(self, other):
+        return self.per_one * other
+
+    def __str__(self):
+        value = self.per_hundred
+        return str(value)

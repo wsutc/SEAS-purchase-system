@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('purchases', '0100_purchaserequestaccount_spend_category_ext'),
-        ('accounts', '0005_auto_20220926_1632'),
+        # ('accounts', '0005_auto_20220926_1632'),
     ]
 
     operations = [

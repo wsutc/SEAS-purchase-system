@@ -232,7 +232,9 @@ class PurchaseRequestAccountForm(forms.ModelForm):
         widgets = {
             "distribution_type": forms.RadioSelect(),
             "account": AccountWidget(attrs={"class": "select-account"}),
-            "spend_category": SpendCategoryWidget(attrs={"class": "select-spendcat"}),
+            "spend_category_ext": SpendCategoryWidget(
+                attrs={"class": "select-spendcat"}
+            ),
             "distribution_input": forms.TextInput(attrs={"style": "width:100%"}),
         }
 

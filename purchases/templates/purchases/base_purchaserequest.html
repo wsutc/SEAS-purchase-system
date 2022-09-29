@@ -49,7 +49,7 @@
                 <table id="account-table" class="table table-striped">
                     <thead class="text-bg-secondary text-center">
                         <td>{{ purchase_request_accounts_formset.form.account.label }}</td>
-                        <td>{{ purchase_request_accounts_formset.form.spend_category.label }}</td>
+                        <td>{{ purchase_request_accounts_formset.form.spend_category_ext.label }}</td>
                         <td class="col-2">{{ purchase_request_accounts_formset.form.distribution_type.label }}</td>
                         <td class="col-1">{{ purchase_request_accounts_formset.form.distribution_input.label }}</td>
                         <td>{{ purchase_request_accounts_formset.form.DELETE.label }}</td>
@@ -59,7 +59,7 @@
                             {{ account.id }}
                             <tr class="account-row">
                                 <td>{{ account.account }}</td>
-                                <td>{{ account.spend_category }}</td>
+                                <td>{{ account.spend_category_ext }}</td>
                                 <td>{{ account.distribution_type }}</td>
                                 <td>{{ account.distribution_input }}</td>
                                 <td>{{ account.DELETE }}</td>

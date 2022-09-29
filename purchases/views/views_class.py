@@ -49,6 +49,7 @@ from purchases.models import (  # Transaction,
     VendorOrder,
     requisitioner_from_user,
 )
+from purchases.models.models_metadata import PurchaseRequestAccount
 from web_project.helpers import (
     PaginatedListMixin,
     max_decimal_places,
@@ -320,6 +321,15 @@ class PurchaseRequestDetailView(SimpleView, DetailView):
             budgets.append(budget_dict)
 
         context["budgets"] = budgets
+
+        dist_types = {
+            "percent": PurchaseRequestAccount.DistributionType.PERCENT,
+            "amount": PurchaseRequestAccount.DistributionType.AMOUNT,
+        }
+
+        context["distribution_types"] = dist_types
+
+        context["sales_tax_perc"] = self.object.sales_tax_perc * self.object.subtotal
 
         return context
 

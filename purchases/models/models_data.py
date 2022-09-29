@@ -94,8 +94,8 @@ class PurchaseRequest(models.Model):
     created_date = models.DateTimeField("Created Date", auto_now_add=True)
     need_by_date = models.DateField("Date Required (optional)", blank=True, null=True)
     tax_exempt = models.BooleanField("Tax Exempt?", default=False)
-    accounts = models.ManyToManyField(Accounts, through="PurchaseRequestAccounts")
-    accounts_external = models.ManyToManyField(
+    # accounts = models.ManyToManyField(Accounts, through="PurchaseRequestAccounts")
+    accounts = models.ManyToManyField(
         "accounts.account", through="PurchaseRequestAccount"
     )
     subtotal = MoneyField(
@@ -109,6 +109,9 @@ class PurchaseRequest(models.Model):
         default=0,
     )
     sales_tax_rate = models.DecimalField(max_digits=10, decimal_places=5)
+    sales_tax_perc = PercentageField(
+        max_digits=10, decimal_places=2, blank=True, default=0
+    )
     sales_tax = MoneyField(
         "Sales Tax ($)",
         decimal_places=2,
