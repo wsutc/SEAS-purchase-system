@@ -91,7 +91,8 @@
                         <td class="col-1">{{ purchase_request_items_formset.form.unit_price.label }}</td>
                         <td class="col-1">{{ purchase_request_items_formset.form.quantity.label }}</td>
                         <td class="col-1">{{ purchase_request_items_formset.form.unit.label }}</td>
-                        <td>{{ purchase_request_items_formset.form.DELETE.label }}</td>
+                        <td>{{ purchase_request_items_formset.form.taxable.label }}</td>
+                        <td>Delete</td>
                     </thead>
                     <tbody id="item-table-body" class="{{ purchase_request_items_formset.prefix }}">
                         {% for item in purchase_request_items_formset %}
@@ -105,7 +106,8 @@
                                 <td>{{ item.unit_price.errors }}{{ item.unit_price }}</td>
                                 <td>{{ item.quantity.errors }}{{ item.quantity }}</td>
                                 <td>{{ item.unit.errors }}{{ item.unit }}</td>
-                                <td>{{ item.DELETE }}
+                                <td class="text-center">{{ item.taxable.errors }}{{ item.taxable }}</td>
+                                <td class="text-center">{{ item.DELETE }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>

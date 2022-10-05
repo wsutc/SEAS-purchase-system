@@ -185,6 +185,7 @@ class SimpleProductForm(forms.ModelForm):
             "unit_price",
             "quantity",
             "unit",
+            "taxable",
         )
         widgets = {
             "name": forms.TextInput(attrs={"style": "width:100%"}),

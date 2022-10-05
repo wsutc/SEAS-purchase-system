@@ -34,6 +34,8 @@ from .models_base import (
 )
 
 logger = logging.getLogger(__name__)
+if settings.DEBUG:
+    logger.setLevel("DEBUG")
 
 
 class Requisitioner(models.Model):
@@ -86,6 +88,7 @@ def status_code(key: int) -> str:
 
 
 class PurchaseRequest(models.Model):
+    log_name = "PurchaseRequest"
     id = models.AutoField(primary_key=True, editable=False)
     slug = models.SlugField(max_length=255, default="", editable=False)
     requisitioner = models.ForeignKey(Requisitioner, on_delete=models.PROTECT)
@@ -108,10 +111,10 @@ class PurchaseRequest(models.Model):
         default_currency="USD",
         default=0,
     )
-    sales_tax_rate = models.DecimalField(max_digits=10, decimal_places=5)
-    sales_tax_perc = PercentageField(
-        max_digits=10, decimal_places=2, blank=True, default=0
-    )
+    sales_tax_rate = PercentageField(max_digits=10, decimal_places=2)
+    # sales_tax_perc = PercentageField(
+    #     max_digits=10, decimal_places=2, blank=True, default=0
+    # )
     sales_tax = MoneyField(
         "Sales Tax ($)",
         decimal_places=2,
@@ -180,10 +183,26 @@ class PurchaseRequest(models.Model):
         #     extended_price["extended_price__sum"] = 0
         return extended_price["extended_price__sum"]
 
+    def get_taxable_subtotal(self):
+        extended_price = (
+            SimpleProduct.objects.filter(purchase_request_id=self.id)
+            .filter(taxable=True)
+            .aggregate(Sum("extended_price", default=0))
+        )
+        # if extended_price["extended_price__sum"] != None:
+        #     pass
+        # else:
+        #     extended_price["extended_price__sum"] = 0
+        return extended_price["extended_price__sum"]
+
     def set_totals(self):
+        log_name = f"{self.log_name}.set_totals"
         self.subtotal = self.get_subtotal()
+        taxable_subtotal = self.get_taxable_subtotal()
+        logger.debug(f"{log_name}.sales_tax_rate: {self.sales_tax_rate}")
+        logger.debug(f"{log_name}.sales_tax_rate type: {type(self.sales_tax_rate)}")
         self.sales_tax = round(
-            (self.subtotal + self.shipping) * self.sales_tax_rate,
+            (taxable_subtotal + self.shipping) * self.sales_tax_rate,
             2,
         )
         self.grand_total = self.subtotal + self.shipping + self.sales_tax
@@ -191,16 +210,18 @@ class PurchaseRequest(models.Model):
     def update_totals(self):
         qs = PurchaseRequest.objects.filter(pk=self.pk)
 
+        qs.first().set_totals()
+
         qs.update(
             subtotal=self.subtotal,
             sales_tax=self.sales_tax,
             grand_total=self.grand_total,
         )
-        return
+        # return
 
-    def sales_tax_display(self):
-        percent = self.sales_tax_rate * 100
-        return "%s" % percent
+    # def sales_tax_display(self):
+    #     percent = self.sales_tax_rate * 100
+    #     return "%s" % percent
 
     # def update_transactions(self):
     #     if self.purchaserequestaccounts_set.first():
@@ -458,6 +479,7 @@ class SimpleProduct(models.Model):
     extended_price = MoneyField(
         max_digits=14, decimal_places=2, default_currency="USD", blank=True
     )
+    taxable = models.BooleanField(_("taxable"), default=True)
     rank = models.SmallIntegerField(_("in pr ordering"), editable=False)
 
     class Meta:

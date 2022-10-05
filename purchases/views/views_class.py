@@ -329,7 +329,7 @@ class PurchaseRequestDetailView(SimpleView, DetailView):
 
         context["distribution_types"] = dist_types
 
-        context["sales_tax_perc"] = self.object.sales_tax_perc * self.object.subtotal
+        # context["sales_tax_perc"] = self.object.sales_tax_perc * self.object.subtotal
 
         return context
 

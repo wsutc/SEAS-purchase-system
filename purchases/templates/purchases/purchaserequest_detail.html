@@ -182,6 +182,7 @@
         <th class="text-center" style="width: 10%;">Unit</th>
         <th class="text-center" style="width: 10%;">Unit Price</th>
         <th class="text-center" style="width: 10%;">Extended Price</th>
+        <th></th>
       </tr>
     </thead>
     <tbody>
@@ -205,6 +206,7 @@
           <td align="center">{{ item.unit.unit }}</td>
           <td>{{ item.unit_price|usd_accounting:simpleproducts_unitprice_maxdigits }}</td>
           <td>{{ item.extended_price.amount|usd_accounting }}</td>
+          <td>{% if item.taxable %}<i class="fa-solid fa-asterisk" data-fa-transform="shrink-6"></i>{% endif %}</td>
         </tr>
       {% empty %}
         <tr><td colspan="100%" class="text-center">Please edit Purchase Request to add items.</td></tr>
@@ -223,14 +225,14 @@
       </tr>
       <tr>
         <td colspan="4"></td>
-        <td colspan="3" class="text-end">Sales Tax ({{ object.sales_tax_rate }}%)</td>
+        <td colspan="3" class="text-end">Sales Tax ({{ object.sales_tax_rate }})</td>
         <td>{{ object.sales_tax|usd_accounting }}</td>
       </tr>
-      <tr>
+      {% comment %} <tr>
         <td colspan="4"></td>
-        <td colspan="3" class="text-end">Sales Tax Perc ({{ object.sales_tax_perc }}%)</td>
+        <td colspan="3" class="text-end">Sales Tax Perc ({{ object.sales_tax_perc }})</td>
         <td>{{ sales_tax_perc|usd_accounting }}</td>
-      </tr>
+      </tr> {% endcomment %}
       <tr>
         <td colspan="4"></td>
         <td colspan="3" class="text-end">Grand Total</td>

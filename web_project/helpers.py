@@ -228,26 +228,36 @@ def max_decimal_places(numbers: list[float]) -> int:
 class Percent:
     def __init__(
         self,
-        dec: Decimal,
+        value,
         decimal_places: int = None,
     ):
-        self.per_hundred = Decimal(str(dec)) * Decimal("100")
-        self.per_one = dec
+        per_hundred_dec = Decimal(str(value)) * Decimal("100")
+        # self.per_hundred = f"{per_hundred_dec}%"
+        self.per_hundred = per_hundred_dec
+        self.value = Decimal(value)
         self.has_decimal_places = False
         if decimal_places:
-            self.per_hundred = round(self.per_hundred, decimal_places)
-            self.per_one = round(self.per_one, decimal_places + 2)
+            per_hundred_dec = round(per_hundred_dec, decimal_places)
+            # self.per_hundred = f"{per_hundred_dec}%"
+            self.per_hundred = per_hundred_dec
+            self.value = round(value, decimal_places + 2)
             self.decimal_places = decimal_places
             self.has_decimal_places = True
 
     @classmethod
     def fromform(cls, val: Decimal, decimal_places: int = None):
+        """Create Percent from human-entry (out of 100)"""
         dec = Decimal(str(val)) * Decimal(".01")
-        return cls(dec, decimal_places)
+        return cls(dec, decimal_places=decimal_places)
 
     def __mul__(self, other):
-        return self.per_one * other
+        """Multiply using the ratio (out of 1) instead of human-readable out of 100"""
+        return self.value * other
+
+    def __repr__(self) -> str:
+        value = f"Percentage('{self.value}', '{self.__str__}')"
+        return value
 
     def __str__(self):
-        value = self.per_hundred
-        return str(value)
+        value = f"{self.per_hundred}%"
+        return value
