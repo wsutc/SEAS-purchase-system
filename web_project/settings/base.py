@@ -101,7 +101,7 @@ _LOCAL_APPS = [
 ]
 
 if DEBUG:
-    logging.warning("'partnumberss' removed from INSTALLED_APPS")
+    logging.warning("'partnumbers' removed from INSTALLED_APPS")
 
 INSTALLED_APPS = _DJANGO_APPS + _THIRD_PARTY_APPS + _LOCAL_APPS
 

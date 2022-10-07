@@ -16,7 +16,7 @@ class Vendor(BaseModel):
         _("discount"),
         help_text=_("percent discount, if available"),
         max_digits=15,
-        decimal_places=0,
+        field_decimal_places=0,
         default=0,
     )
     website = models.URLField(_("website"), help_text=_("URL/Link to Vendor Website"))

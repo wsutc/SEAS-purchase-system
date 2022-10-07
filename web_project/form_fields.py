@@ -30,9 +30,9 @@ class PercentageField(forms.DecimalField):
         val = Decimal(val_str)
         val = Percent(val)
 
-        logger.info(f"PercentageField.clean return value: {val.value}")
+        logger.info(f"PercentageField.clean return value: {val.per_hundred}")
 
-        return val.value
+        return val.per_hundred
 
     def to_python(self, value):
         logger.debug(f"PercentageField.to_python.value: {value}")

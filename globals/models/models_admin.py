@@ -48,6 +48,12 @@ class DefaultValue(models.Model):
 
     type_field = "data_type"
 
+    @property
+    def search_name(self):
+        name = self.name
+        stripped_lower = "".join(name.split()).lower()
+        return stripped_lower
+
     def clean(self) -> None:
         super().clean()
 

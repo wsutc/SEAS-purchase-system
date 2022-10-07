@@ -17,9 +17,11 @@ from djmoney.money import Money
 from furl import furl
 from phonenumber_field.modelfields import PhoneNumberField
 
+from globals.models.models_admin import DefaultValue
 from purchases.exceptions import StatusCodeNotFound
 from purchases.tracking import TrackerObject
 from web_project.fields import PercentageField
+from web_project.helpers import Percent
 
 from .models_base import (
     Accounts,
@@ -111,7 +113,7 @@ class PurchaseRequest(models.Model):
         default_currency="USD",
         default=0,
     )
-    sales_tax_rate = PercentageField(max_digits=10, decimal_places=2)
+    sales_tax_rate = PercentageField(max_digits=10, field_decimal_places=4)
     # sales_tax_perc = PercentageField(
     #     max_digits=10, decimal_places=2, blank=True, default=0
     # )
@@ -211,10 +213,11 @@ class PurchaseRequest(models.Model):
 
         # Money's __mul__ method uses moneyed's `force_decimal` method which does `Decimal(str(other))`
         # Since str(Percent()) includes '%', the following line fails unless '.value' is added
-        if isinstance(self.sales_tax_rate, decimal.Decimal):
-            tax_rate = self.sales_tax_rate
-        else:
+        if isinstance(self.sales_tax_rate, Percent):
             tax_rate = self.sales_tax_rate.value
+        else:
+            tax_rate = self.sales_tax_rate
+        # tax_rate = self.sales_tax_rate
         sales_tax_raw = taxable_amount * tax_rate
         self.sales_tax = round(sales_tax_raw, 2)
 

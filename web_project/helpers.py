@@ -180,40 +180,64 @@ def max_decimal_places(numbers: list[float]) -> int:
         return 0
 
 
+def set_zero(value: (float | Decimal | str)) -> Decimal:
+    decimal_from_string = Decimal(str(value))
+
+    _, decimal_digits, _ = decimal_from_string.as_tuple()
+
+    if len(decimal_digits) == 1 and decimal_digits[0] == 0:
+        return Decimal()
+    else:
+        return decimal_from_string
+
+
+def ratio_to_whole(ratio: Decimal) -> Decimal:
+    return Decimal(str(ratio)) * Decimal("100")
+
+
+def whole_to_ratio(whole: Decimal) -> Decimal:
+    return Decimal(str(whole)) * Decimal("0.01")
+
+
 class Percent:
     def __init__(
         self,
         value,
-        decimal_places: int = None,
+        field_decimal_places: int = None,
     ):
-        per_hundred_dec = Decimal(str(value)) * Decimal("100")
-        # self.per_hundred = f"{per_hundred_dec}%"
-        self.per_hundred = per_hundred_dec
-        self.value = Decimal(value)
-        self.has_decimal_places = False
-        if decimal_places:
-            per_hundred_dec = round(per_hundred_dec, decimal_places)
-            # self.per_hundred = f"{per_hundred_dec}%"
-            self.per_hundred = per_hundred_dec
-            self.value = round(value, decimal_places + 2)
-            self.decimal_places = decimal_places
+        new_value = value
+        per_hundred_dec = ratio_to_whole(value)
+
+        if field_decimal_places:
+            new_value = round(new_value, field_decimal_places + 2)
+            per_hundred_dec = round(per_hundred_dec, field_decimal_places)
+            self.decimal_places = field_decimal_places
             self.has_decimal_places = True
+        else:
+            self.has_decimal_places = False
+
+        self.value = set_zero(new_value)
+        self.per_hundred = set_zero(per_hundred_dec)
 
     @classmethod
-    def fromform(cls, val: Decimal, decimal_places: int = None):
+    def fromform(cls, val: Decimal, field_decimal_places: int = None):
         """Create Percent from human-entry (out of 100)"""
-        dec = Decimal(str(val)) * Decimal(".01")
-        return cls(dec, decimal_places=decimal_places)
+        dec = whole_to_ratio(val)
+        return cls(dec, field_decimal_places=field_decimal_places)
 
     def __mul__(self, other):
         """Multiply using the ratio (out of 1) instead of human-readable out of 100"""
-        if isinstance(other, Money):
-            return Money(self.value * other.amount, other.currency)
-        else:
-            return self.value * other
+        return self.value.__mul__(other)
+
+    def __float__(self):
+        return float(self.value)
+
+    def as_tuple(self):
+        dec_tuple = self.value.as_tuple()
+        return dec_tuple
 
     def __repr__(self) -> str:
-        value = f"Percentage('{self.value}', '{self.__str__}')"
+        value = f"Percentage('{self.value}', '{self.per_hundred}%')"
         return value
 
     def __str__(self):

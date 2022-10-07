@@ -597,7 +597,7 @@ class PurchaseRequestUpdateView(UpdateView):
 
         self.object.save()
 
-        self.object.update_totals()
+        # self.object.update_totals() # this is duplicating work, right?
 
         return redirect(self.object)
 
