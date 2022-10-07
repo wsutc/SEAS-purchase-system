@@ -37,6 +37,7 @@ from .views_functions import (  # appendAsList,; item_rows,; fill_pr_pdf,
     tracking_webhook,
     update_balance,
     update_pr_status,
+    update_purchase_request_totals,
     update_tracker,
     update_tracking_details,
 )

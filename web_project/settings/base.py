@@ -10,29 +10,24 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
+import logging
 import os
 from pathlib import Path
 
 import environ
+from django.apps import apps
 from django.contrib.messages import constants as message_constants
 
-# env = environ.Env()
 env = environ.Env(DEBUG=(bool, False))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-READ_DOT_ENV_FILE = env.bool("DJANGO_READ_DOT_ENV_FILE", default=False)
+READ_DOT_ENV_FILE = True  # env.bool("DJANGO_READ_DOT_ENV_FILE", default=False)
 if READ_DOT_ENV_FILE:
     env.read_env(str(BASE_DIR / ".env"))
 
 APPS_DIR = BASE_DIR / "web_project"
-
-# env_path = os.path.join(BASE_DIR, ".env")
-
-# print(env_path)
-
-# environ.Env.read_env(env_path)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
@@ -44,22 +39,35 @@ SECRET_KEY = env.str("DJANGO_SECRET_KEY", default="!!!SET DJANGO_SECRET_KEY!!!")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DJANGO_DEBUG", False)
 TEMPLATE_DEBUG = env.bool("DJANGO_TEMPLATE_DEBUG", False)
-# DEBUG = True
-# TEMPLATE_DEBUG = True
 
 if DEBUG:
+    logging.basicConfig(level="DEBUG")
     MESSAGE_LEVEL = message_constants.DEBUG
+    import mimetypes
+
+    js_path = "/toolbar.js"
+    old_js = mimetypes.guess_type(js_path, True)
+    logging.debug(f"Old js type: {old_js}")
+
+    mimetypes.add_type("text/javascript", ".js", True)
+
+    new_js = mimetypes.guess_type(js_path, True)
+    logging.debug(f"New js type: {new_js}")
 else:
+    logging.basicConfig(level="WARNING")
     MESSAGE_LEVEL = message_constants.WARNING
 
-ALLOWED_HOSTS = ["127.0.0.1", "33af-69-166-40-1.ngrok.io"]
+DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
+
+
+ALLOWED_HOSTS = ["127.0.0.1", ".ngrok.io"]
 
 
 # Application definition
 
 # CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 
-DJANGO_APPS = [
+_DJANGO_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -68,7 +76,8 @@ DJANGO_APPS = [
     "django.contrib.staticfiles",
 ]
 
-THIRD_PARTY_APPS = [
+_THIRD_PARTY_APPS = [
+    "debug_toolbar",
     "django_listview_filters",
     "phonenumber_field",
     "djmoney",
@@ -76,18 +85,23 @@ THIRD_PARTY_APPS = [
     "django_select2",
 ]
 
-LOCAL_APPS = [
+_LOCAL_APPS = [
+    "accounts",
+    "globals",
+    "inventory",
+    # "parts",
     "purchases",
     "setup_sheets",
-    "inventory",
     "tool_compatibility",
-    "accounts",
-    "parts",
 ]
 
-INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+if DEBUG:
+    logging.warning("'parts' removed from INSTALLED_APPS")
+
+INSTALLED_APPS = _DJANGO_APPS + _THIRD_PARTY_APPS + _LOCAL_APPS
 
 MIDDLEWARE = [
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -120,7 +134,7 @@ TEMPLATES = [
     },
 ]
 
-FORM_RENDERER = "django.forms.renderers.TemplateSetting"
+# FORM_RENDERER = "django.forms.renderers.TemplateSetting"
 
 WSGI_APPLICATION = "web_project.wsgi.application"
 
@@ -130,40 +144,42 @@ WSGI_APPLICATION = "web_project.wsgi.application"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
 
+logging.debug(f"{apps.app_configs.get('MEDIA_URL')}")
+
 
 # Database
 # ----------------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-DATABASES = {
-    "default": env.db(
-        "DATABASE_URL",
-        default={
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        },
-    )
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': BASE_DIR / 'db.sqlite3',
-    # }
-    # "default": {
-    #     "ENGINE": "django.db.backends.mysql",
-    #     "NAME": env("DB_NAME"),
-    #     "USER": env("DB_USER"),
-    #     "PASSWORD": env("DB_PASSWORD"),
-    #     "HOST": env("DB_HOST"),
-    #     "PORT": env("DB_PORT"),
-    #     "CHARSET": "utf8mb4",
-    #     "COLLATION": "utf8mb4_unicode_ci",
-    # },
-    # "TEST": {"CHARSET": "utf8mb4", "COLLATION": "utf8mb4_unicode_ci"},
-}
+# DATABASES = {
+#     "default": env.db(
+#         "DATABASE_URL",
+#         default={
+#             "ENGINE": "django.db.backends.sqlite3",
+#             "NAME": BASE_DIR / "db.sqlite3",
+#         },
+#     )
+#     # 'default': {
+#     #     'ENGINE': 'django.db.backends.sqlite3',
+#     #     'NAME': BASE_DIR / 'db.sqlite3',
+#     # }
+#     # "default": {
+#     #     "ENGINE": "django.db.backends.mysql",
+#     #     "NAME": env("DB_NAME"),
+#     #     "USER": env("DB_USER"),
+#     #     "PASSWORD": env("DB_PASSWORD"),
+#     #     "HOST": env("DB_HOST"),
+#     #     "PORT": env("DB_PORT"),
+#     #     "CHARSET": "utf8mb4",
+#     #     "COLLATION": "utf8mb4_unicode_ci",
+#     # },
+#     # "TEST": {"CHARSET": "utf8mb4", "COLLATION": "utf8mb4_unicode_ci"},
+# }
 
 # AUTHENTICATION
 # --------------------------------------------------------------------------------
 AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.ModelBackend"]
-AUTH_USER_MODEL = "users.User"
+# AUTH_USER_MODEL = "users.User"
 LOGIN_REDIRECT_URL = "/"
 LOGIN_URL = "account_login"
 
@@ -214,7 +230,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
-STATIC_URL = "/"
+STATIC_URL = "static/"
 STATIC_ROOT = str(BASE_DIR / "staticfiles")
 STATICFILES_DIRS = [str(APPS_DIR / "static")]
 STATICFILES_FINDERS = [
@@ -241,7 +257,7 @@ EMAIL_TIMEOUT = 5
 
 # ADMINS
 # -------------------------------------------------------------------------------
-ADMIN_URL = "admin/"
+# ADMIN_URL = "admin/"
 
 
 # LOGGING
@@ -327,8 +343,8 @@ FILTERVIEW_SHOW_ALL = False
 # CUSTOM
 # -------------------------------------------------------------------
 
-DEFAULT_TAX_RATE = ".087"
-DEFAULT_INSTRUCTIONS = "Because grand total amount does not include shipping/handling and tax costs, Dr. Mo approves if total costs exceeds grand total amount."
+# DEFAULT_TAX_RATE = ".087"
+# DEFAULT_INSTRUCTIONS = "Because grand total amount does not include shipping/handling and tax costs, Dr. Mo approves if total costs exceeds grand total amount."
 
 _17TRACK_KEY = env.str("_17TRACK_KEY", default="!!!MISSING API KEY!!!")
 
@@ -345,19 +361,3 @@ TRACKER_PARAMS = [
     "tracking_number",
     "strorigtracknum",
 ]
-
-# Constance
-
-# CONSTANCE_CONFIG = {
-#     'DEFAULT_TAX_RATE': ('.086','Default Sales Tax Rate (8.6 is entered as .086'),
-#     'DEFAULT_INSTRUCTIONS': ('Because grand total amount does not include shipping/handling and tax costs, Dr. Mo approves if total costs exceeds grand total amount.','Default "Instructions" on Purchase Requests')
-# }
-
-
-# EASYPOST_KEY = env('EASYPOST_KEY')
-# AFTERSHIP_KEY = env('AFTERSHIP_KEY')
-# AFTERSHIP_WEBHOOK_SECRET = env('AFTERSHIP_WEBHOOK_SECRET')
-# SHIP24_KEY = env('SHIP24_KEY')
-# SHIP24_WEBHOOK_SECRET = env('SHIP24_WEBHOOK_SECRET')
-
-# SMARTSHEET_SHEET_NAME = env('SMARTSHEET_SHEET_NAME')

@@ -38,6 +38,7 @@ from .views import (  # LedgersListView,
     tracking_webhook,
     update_balance,
     update_pr_status,
+    update_purchase_request_totals,
     update_tracker,
 )
 
@@ -63,6 +64,7 @@ urlpatterns = [
     path("purchase-request/<slug:slug>/update-status", update_pr_status, name="update_pr_status"),
     path("purchase-request/<slug:slug>/delete", PurchaseRequestDeleteView.as_view(), name="delete_pr"),
     path("purchase-request/<slug:slug>/pdf", generate_pr_pdf, name="generate_pdf"),
+    path("purchase-request/<slug:slug>/update-totals", update_purchase_request_totals, name="update_pr_totals"),
     path("webhooks/tracking/BJD3ZX4b1gNvcIAOhGeTiE6kcC0ugjp/", tracking_webhook),
     path("trackers/", TrackerListView.as_view(), name="tracker_list"),
     path("trackers/new/", TrackerCreateView.as_view(), name="create_tracker"),

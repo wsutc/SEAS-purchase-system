@@ -68,7 +68,7 @@ class Account(BaseModel):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        value = f"{self.account} | {self.name}"
+        value = f"{self.fund} | {self.name}"
         return value
 
     def transact(self, amount: MoneyField, purchase_request) -> "Transaction":

@@ -68,31 +68,31 @@ def re_normalize_ranks(sender, instance, **kwargs):
     sender.objects.normalize_ranks("parent_model", instance.__class__)
 
 
-@receiver(post_save, sender=PurchaseRequest)
-def create_account_transaction(sender, instance, created, **kwargs):
-    # account_model = apps.get_model("accounts", "account")
-    instance_accounts = instance.accounts.all()
-    total_amount = instance.grand_total
+# @receiver(post_save, sender=PurchaseRequest)
+# def create_account_transaction(sender, instance, created, **kwargs):
+#     # account_model = apps.get_model("accounts", "account")
+#     instance_accounts = instance.accounts.all()
+#     total_amount = instance.grand_total
 
-    def input(account):
-        return account.distribution_input
+#     def input(account):
+#         return account.distribution_input
 
-    def input_type(account):
-        return account.distribution_type
+#     def input_type(account):
+#         return account.distribution_type
 
-    dist_type = PurchaseRequestAccount.DistributionType
+#     dist_type = PurchaseRequestAccount.DistributionType
 
-    for account in instance_accounts:
-        purchaserequestaccount = instance.purchaserequestaccount_set.get(
-            account=account
-        )
-        account_share = (
-            input(purchaserequestaccount)
-            if input_type(purchaserequestaccount) == dist_type.AMOUNT
-            else input(purchaserequestaccount) * total_amount
-        )
-        # account_obj = account_model.objects.get(account=account.account)
-        _ = account.transact(amount=account_share, purchase_request=instance)
+#     for account in instance_accounts:
+#         purchaserequestaccount = instance.purchaserequestaccount_set.get(
+#             account=account
+#         )
+#         account_share = (
+#             input(purchaserequestaccount)
+#             if input_type(purchaserequestaccount) == dist_type.AMOUNT
+#             else input(purchaserequestaccount) * total_amount
+#         )
+#         # account_obj = account_model.objects.get(account=account.account)
+#         _ = account.transact(amount=account_share, purchase_request=instance)
 
 
 # @receiver(post_save, sender=Tracker)

@@ -473,3 +473,28 @@ def update_tracker(request, pk, *args, **kwargs):
     # url = tracker if not fragment.args.has_key("next") else fragment.args.get("next")
 
     return redirect(url)
+
+
+def update_purchase_request_totals(request, slug):
+
+    redirect_url = redirect_to_next(request, "purchaserequest_detail", slug=slug)
+    return_redirect = redirect(redirect_url)
+
+    purchase_request = PurchaseRequest.objects.get(slug=slug)
+
+    try:
+        subtotal, tax, grand_total = purchase_request.update_totals()
+
+        messages.success(
+            request,
+            "Purchase request totals updated ->\n"
+            + f"Subtotal: {subtotal}; Sales Tax: {tax}; Grand Total: {grand_total}",
+        )
+    except Exception as err:
+        messages.error(
+            request,
+            f"Unable to update total of purchase request {purchase_request.number}\n"
+            + f"{err}",
+        )
+
+    return return_redirect

@@ -91,8 +91,8 @@
                         <td class="col-1">{{ purchase_request_items_formset.form.unit_price.label }}</td>
                         <td class="col-1">{{ purchase_request_items_formset.form.quantity.label }}</td>
                         <td class="col-1">{{ purchase_request_items_formset.form.unit.label }}</td>
-                        <td>{{ purchase_request_items_formset.form.taxable.label }}</td>
-                        <td>Delete</td>
+                        <td class="text-center">{{ purchase_request_items_formset.form.taxable.label }}</td>
+                        <td class="text=center">Delete</td>
                     </thead>
                     <tbody id="item-table-body" class="{{ purchase_request_items_formset.prefix }}">
                         {% for item in purchase_request_items_formset %}
@@ -122,7 +122,8 @@
                         <td>{{ purchase_request_items_formset.empty_form.unit_price }}</td>
                         <td>{{ purchase_request_items_formset.empty_form.quantity }}</td>
                         <td>{{ purchase_request_items_formset.empty_form.unit }}</td>
-                        <td>{{ purchase_request_items_formset.empty_form.DELETE }}</td>
+                        <td class="text-center">{{ purchase_request_items_formset.empty_form.taxable }}</td>
+                        <td class="text-center">{{ purchase_request_items_formset.empty_form.DELETE }}</td>
                     </tr>
                 </table>
                 <button id="add-item" type="button" class="btn btn-secondary"><i class="fa-solid fa-plus"></i></button>

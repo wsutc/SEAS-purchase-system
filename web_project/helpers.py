@@ -1,4 +1,3 @@
-# from urllib.parse import urlencode
 from decimal import Decimal
 from http.client import HTTPResponse
 
@@ -6,60 +5,11 @@ from django.contrib import messages
 from django.http import HttpRequest
 from django.shortcuts import redirect
 from django.urls import reverse
-
-# from setup_sheets.models import PartRevision
-from django.utils.text import slugify
 from django.views.generic import ListView, View
 from django.views.generic.list import MultipleObjectMixin
-
-# from django_listview_filters.filters import (
-#     # PAGE_VAR,
-#     # ERROR_VAR,
-#     # IGNORED_PARAMS,
-#     ListViewFilter,
-#     # FieldListViewFilter,
-# )
 from django_listview_filters.mixins import FilterViewMixin
-
-# from django import apps
+from djmoney.money import Money
 from furl import furl
-
-# from django.core.exceptions import FieldError, ImproperlyConfigured, ValidationError
-# from django.db import models
-# from django.db.models import Count, Max, Min
-# from django.apps import apps
-# from purchases.exceptions import Error, StatusCodeNotFound
-
-# from purchases.models.models_apis import Tracker
-# from django.contrib.auth.models import User
-# from django.db.models import QuerySet, Field
-# from django.contrib.admin.utils import (
-#     # get_model_from_relation,
-#     get_fields_from_path,
-#     # prepare_lookup_value,
-#     # reverse_field_path,
-#     # lookup_spawns_duplicates,
-# )
-
-# from purchases.models.models_data import (
-#     PurchaseRequest,
-#     Requisitioner,
-#     status_code,
-#     status_reverse,
-# )
-# from purchases.models.models_metadata import Carrier  # , Vendor
-
-
-# from setup_sheets.models import Part
-# from web_project import settings
-
-# from web_project.filters import (
-#     PAGE_VAR,
-#     ERROR_VAR,
-#     IGNORED_PARAMS,
-#     ListViewFilter,
-#     FieldListViewFilter,
-# )
 
 
 def paginate(view: ListView, **kwargs) -> tuple[bool, HTTPResponse]:
@@ -119,6 +69,11 @@ def redirect_to_next(request: HttpRequest, default_redirect, **kwargs) -> HTTPRe
     """Allows for intermediate pages to redirect to the page indicated by the 'next' parameter of the request.
 
     Especially useful for update and delete views.
+
+    :param slug: slug of object to redirect to
+    :type slug: string, optional
+    :return: response to redirect to
+    :rtype: HttpRequest
     """
     fragment = furl(request.get_full_path())
     if next := fragment.args.get("next", None):
@@ -252,7 +207,10 @@ class Percent:
 
     def __mul__(self, other):
         """Multiply using the ratio (out of 1) instead of human-readable out of 100"""
-        return self.value * other
+        if isinstance(other, Money):
+            return Money(self.value * other.amount, other.currency)
+        else:
+            return self.value * other
 
     def __repr__(self) -> str:
         value = f"Percentage('{self.value}', '{self.__str__}')"

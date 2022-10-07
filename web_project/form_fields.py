@@ -8,8 +8,8 @@ from django.conf import settings
 from web_project.helpers import Percent
 
 logger = logging.getLogger(__name__)
-if settings.DEBUG:
-    logger.setLevel("DEBUG")
+# if settings.DEBUG:
+#     logger.setLevel("DEBUG")
 
 
 class PercentageField(forms.DecimalField):

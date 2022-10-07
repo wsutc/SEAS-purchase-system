@@ -181,7 +181,7 @@ class PurchaseRequest(models.Model):
         #     pass
         # else:
         #     extended_price["extended_price__sum"] = 0
-        return extended_price["extended_price__sum"]
+        return Money(extended_price["extended_price__sum"], "USD")
 
     def get_taxable_subtotal(self):
         extended_price = (
@@ -193,31 +193,46 @@ class PurchaseRequest(models.Model):
         #     pass
         # else:
         #     extended_price["extended_price__sum"] = 0
-        return extended_price["extended_price__sum"]
+        return Money(extended_price["extended_price__sum"], "USD")
 
     def set_totals(self):
+        """Set totals for purchase request
+
+        :return: tuple of subtotal, sales tax, grand total
+        """
         log_name = f"{self.log_name}.set_totals"
         self.subtotal = self.get_subtotal()
         taxable_subtotal = self.get_taxable_subtotal()
         logger.debug(f"{log_name}.sales_tax_rate: {self.sales_tax_rate}")
         logger.debug(f"{log_name}.sales_tax_rate type: {type(self.sales_tax_rate)}")
-        self.sales_tax = round(
-            (taxable_subtotal + self.shipping) * self.sales_tax_rate,
-            2,
-        )
+        taxable_amount = taxable_subtotal + self.shipping
+        logger.debug(f"{log_name}.taxable_amount: {taxable_amount}")
+        logger.debug(f"{log_name}.taxable_amount type: {type(taxable_amount)}")
+
+        # Money's __mul__ method uses moneyed's `force_decimal` method which does `Decimal(str(other))`
+        # Since str(Percent()) includes '%', the following line fails unless '.value' is added
+        if isinstance(self.sales_tax_rate, decimal.Decimal):
+            tax_rate = self.sales_tax_rate
+        else:
+            tax_rate = self.sales_tax_rate.value
+        sales_tax_raw = taxable_amount * tax_rate
+        self.sales_tax = round(sales_tax_raw, 2)
+
         self.grand_total = self.subtotal + self.shipping + self.sales_tax
+
+        return self.subtotal, self.sales_tax, self.grand_total
 
     def update_totals(self):
         qs = PurchaseRequest.objects.filter(pk=self.pk)
 
-        qs.first().set_totals()
+        totals = qs.first().set_totals()
 
         qs.update(
             subtotal=self.subtotal,
             sales_tax=self.sales_tax,
             grand_total=self.grand_total,
         )
-        # return
+        return totals
 
     # def sales_tax_display(self):
     #     percent = self.sales_tax_rate * 100
@@ -497,7 +512,7 @@ class SimpleProduct(models.Model):
     def save(self, *args, **kwargs):
         self.extended_price = self.extend_price()
 
-        self.purchase_request.update_totals()
+        # self.purchase_request.update_totals()
 
         if self._state.adding:
             self.rank = self.get_next_rank()
