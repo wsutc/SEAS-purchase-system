@@ -234,9 +234,7 @@ def something(something: Status):
 class Vendor(BaseModel):
     wsu_discount = models.BooleanField("Does WSU get a discount?", default=False)
     # discount_percentage = models.DecimalField(max_digits=15, decimal_places=2, default=0)
-    discount_percentage = PercentageField(
-        field_decimal_places=2, max_digits=15, default=0
-    )
+    discount_percentage = PercentageField(decimal_places=2, max_digits=15, default=0)
     website = models.URLField("URL/Link to Vendor Website")
     # vendor_logo = models.ImageField("Vendor Logo (optional)",blank=True)
     phone = PhoneNumberField("Vendor Phone Number", null=False, blank=True)

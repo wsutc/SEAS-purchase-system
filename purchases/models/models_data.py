@@ -113,10 +113,12 @@ class PurchaseRequest(models.Model):
         default_currency="USD",
         default=0,
     )
-    sales_tax_rate = PercentageField(max_digits=10, field_decimal_places=4)
-    # sales_tax_perc = PercentageField(
-    #     max_digits=10, decimal_places=2, blank=True, default=0
-    # )
+    sales_tax_rate = models.DecimalField(
+        _("sales tax rate"), max_digits=10, decimal_places=4, null=True
+    )
+    new_st = PercentageField(
+        _("new sales tax"), max_digits=10, decimal_places=4, blank=True, null=True
+    )
     sales_tax = MoneyField(
         "Sales Tax ($)",
         decimal_places=2,
@@ -172,6 +174,8 @@ class PurchaseRequest(models.Model):
             self.slug = slugify(self.number, allow_unicode=True)
 
         self.set_totals()
+
+        logger.info(f"Model.save() sales_tax_rate: {self.sales_tax_rate}")
 
         super().save(*args, **kwargs)
 

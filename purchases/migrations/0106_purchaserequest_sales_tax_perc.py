@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='purchaserequest',
             name='sales_tax_perc',
-            field=web_project.fields.PercentageField(blank=True, field_decimal_places=6, default=0, max_digits=10),
+            field=web_project.fields.PercentageField(blank=True, decimal_places=6, default=0, max_digits=10),
         ),
     ]

@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
             name='DefaultValues',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('tax_rate', web_project.fields.PercentageField(field_decimal_places=6, max_digits=10, verbose_name='default sales tax rate')),
+                ('tax_rate', web_project.fields.PercentageField(decimal_places=6, max_digits=10, verbose_name='default sales tax rate')),
                 ('purchase_request_instructions', models.TextField(verbose_name='default purchase request instructions')),
             ],
         ),

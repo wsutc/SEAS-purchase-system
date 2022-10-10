@@ -180,6 +180,19 @@ def max_decimal_places(numbers: list[float]) -> int:
         return 0
 
 
+def trim_trailing_zeros(value: (float | Decimal | str)) -> Decimal:
+    if isinstance(value, Decimal):
+        _, _, exponent = value.as_tuple()
+    else:
+        _, _, exponent = Decimal(value).as_tuple()
+
+    if exponent < 0:
+        new_str = str(value).rstrip("0")
+        return Decimal(new_str)
+    else:
+        return Decimal(value)
+
+
 def set_zero(value: (float | Decimal | str)) -> Decimal:
     decimal_from_string = Decimal(str(value))
 
@@ -203,17 +216,18 @@ class Percent:
     def __init__(
         self,
         value,
-        field_decimal_places: int = None,
+        decimal_places: int = None,
     ):
-        new_value = value
-        per_hundred_dec = ratio_to_whole(value)
+        new_value = trim_trailing_zeros(value)
+        per_hundred_dec = trim_trailing_zeros(ratio_to_whole(value))
 
-        if field_decimal_places:
-            new_value = round(new_value, field_decimal_places + 2)
-            per_hundred_dec = round(per_hundred_dec, field_decimal_places)
-            self.decimal_places = field_decimal_places
+        if decimal_places:
+            new_value = round(new_value, decimal_places + 2)
+            per_hundred_dec = round(per_hundred_dec, decimal_places)
+            self.decimal_places = decimal_places
             self.has_decimal_places = True
         else:
+            self.decimal_places = None
             self.has_decimal_places = False
 
         self.value = set_zero(new_value)
@@ -223,7 +237,7 @@ class Percent:
     def fromform(cls, val: Decimal, field_decimal_places: int = None):
         """Create Percent from human-entry (out of 100)"""
         dec = whole_to_ratio(val)
-        return cls(dec, field_decimal_places=field_decimal_places)
+        return cls(dec, decimal_places=field_decimal_places)
 
     def __mul__(self, other):
         """Multiply using the ratio (out of 1) instead of human-readable out of 100"""
@@ -236,10 +250,23 @@ class Percent:
         dec_tuple = self.value.as_tuple()
         return dec_tuple
 
+    def is_finite(self):
+        return self.value.is_finite()
+
     def __repr__(self) -> str:
         value = f"Percentage('{self.value}', '{self.per_hundred}%')"
         return value
 
-    def __str__(self):
-        value = f"{self.per_hundred}%"
-        return value
+    # def __str__(self):
+    #     value = f"{self.per_hundred}"
+    #     return value
+
+
+def is_number(s):
+    if s is None:
+        return False
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False

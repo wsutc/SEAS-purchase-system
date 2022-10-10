@@ -595,11 +595,13 @@ class PurchaseRequestUpdateView(UpdateView):
         purchase_request_items_formset.save(commit=True)
         purchase_request_accounts_formset.save(commit=True)
 
-        self.object.save()
+        # self.object.save()
 
         # self.object.update_totals() # this is duplicating work, right?
 
-        return redirect(self.object)
+        # return redirect(self.object)
+
+        return super().form_valid(form)
 
     def form_invalid(self, form):
         context = self.get_context_data()

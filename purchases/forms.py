@@ -3,11 +3,13 @@ from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.forms.models import inlineformset_factory
+from django.utils.translation import gettext_lazy as _
 from django_select2 import forms as s2forms
 from phonenumber_field.formfields import PhoneNumberField
 
 from purchases.exceptions import TrackerPreviouslyRegistered, TrackerRejectedUnknownCode
 from purchases.tracking import register_trackers
+from web_project.form_fields import PercentageFieldOld
 
 from .models import Department  # Requisitioner,; Urgency,
 from .models import (
@@ -101,6 +103,8 @@ class CreateUserForm(UserCreationForm):
 
 
 class NewPRForm(forms.ModelForm):
+    sales_tax_rate = PercentageFieldOld(max_digits=10, decimal_places=4, required=True)
+
     class Meta:
         model = PurchaseRequest
         # name = 'this is a test'
@@ -343,7 +347,7 @@ class TrackerForm(forms.ModelForm):
 
         # get carrier by code; on the off chance that there's an unrecognized code, create a new carrier
         if carrier:
-            self.carrier, _ = Carrier.objects.get_or_create(
+            self.carrier, bleh = Carrier.objects.get_or_create(
                 carrier_code=response_dict["tracker"].carrier_code,
                 defaults={"name": response_dict["tracker"].carrier_name},
             )
