@@ -1,2 +1,1 @@
---index-url https://test.pypi.org/simple/
-django-listview-filters>=0.0.1b0.dev1
+git+git://github.com/wsutc/django-listview-filters
