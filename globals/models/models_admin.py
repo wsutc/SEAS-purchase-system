@@ -8,7 +8,9 @@ from django.utils.translation import gettext_lazy as _
 
 
 class SettingsManager(models.Manager):
-    def get_value(self, setting_name: str) -> str | int | float:
+    def get_value(
+        self, setting_name: str, default: (str | int | float) = None
+    ) -> str | int | float:
         """Return setting value given correctly spelled setting_name
 
         :param setting_name: Setting name, must be correctly spelled; white space and capitalization ignored
@@ -24,10 +26,9 @@ class SettingsManager(models.Manager):
         )
         if len(objs) > 0:
             obj = objs.first()
+            return obj.value
         else:
-            raise KeyError("Setting Not Found")
-
-        return obj.value
+            return default
 
 
 class DefaultValue(models.Model):
@@ -47,6 +48,12 @@ class DefaultValue(models.Model):
     objects = SettingsManager()
 
     type_field = "data_type"
+
+    @property
+    def search_name(self):
+        name = self.name
+        stripped_lower = "".join(name.split()).lower()
+        return stripped_lower
 
     def clean(self) -> None:
         super().clean()

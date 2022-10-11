@@ -225,7 +225,7 @@
       </tr>
       <tr>
         <td colspan="4"></td>
-        <td colspan="3" class="text-end">Sales Tax ({{ object.sales_tax_rate }})</td>
+        <td colspan="3" class="text-end">Sales Tax ({{ object.sales_tax_rate|numeric2percent:2 }})</td>
         <td>{{ object.sales_tax|usd_accounting }}</td>
       </tr>
       {% comment %} <tr>

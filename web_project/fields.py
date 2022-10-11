@@ -1,21 +1,31 @@
 import logging
-from decimal import Decimal
 
-from django import forms
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from web_project import form_fields
-from web_project.helpers import Percent
+from web_project.helpers import plog
 
 logger = logging.getLogger(__name__)
-# if settings.DEBUG:
-#     logger.setLevel("DEBUG")
+log_kwargs = {
+    "logger": logger,
+}
+if settings.DEBUG:
+    logger.setLevel("DEBUG")
+
+    log_kwargs.update(level=logging.DEBUG)
+else:
+    log_kwargs.update(level=logger.root.level)
 
 
-class PercentageField(models.DecimalField):
-    """Enter and display percentages out of 100 but store them out of 1 in db as decimals"""
+class SimplePercentageField(models.DecimalField):
+    """Enter and display percentages out of 100 but store them out of 1 in db as decimals
+
+    Because this is based on `models.DecimalField`, `decimal_places` applies to what is stored
+    in the db (/1), not what is shown or typed in (/100). With that said, add two (2) to whatever
+    is desired in the form for proper validation.
+    """
 
     description = _(
         "percentage (max {max_digits} digits; {decimal_places} decimal places"
@@ -30,8 +40,10 @@ class PercentageField(models.DecimalField):
         decimal_places=None,
         **kwargs,
     ):
-        self.human_decimal_places = decimal_places
-        decimal_places = int(decimal_places) + 2
+        if decimal_places is not None:
+            self.humanize_decimal_places = int(decimal_places) - 2
+        else:
+            self.humanize_decimal_places = None
 
         kwargs.update(
             {
@@ -43,28 +55,13 @@ class PercentageField(models.DecimalField):
         super().__init__(verbose_name, name, **kwargs)
 
     def formfield(self, **kwargs):
-        defaults = {"form_class": form_fields.PercentageField}
+        log_kwargs["path"] = f"{logger.name}.formfield"
+        defaults = {"form_class": form_fields.SimplePercentageField}
+        kwargs.update(
+            decimal_places=self.decimal_places - 2,
+        )
         defaults.update(kwargs)
+
+        plog(text="Decimal Places", value=kwargs["decimal_places"], **log_kwargs)
+
         return super().formfield(**defaults)
-
-    def from_db_value(self, value, expression, connection):
-        logger.debug(f"models.PercentageField.from_db_value.value: {self} -> {value}")
-        if value is None:
-            return value
-
-        number = Percent(value, decimal_places=self.human_decimal_places)
-
-        return number
-
-    def pre_save(self, model_instance, add):
-        log_name = f"{self.log_name}.pre_save"
-        logger.debug(f"{log_name}.self: {self}")
-        value = super().pre_save(model_instance, add)
-        if value is None:
-            return value
-
-        logger.debug(f"{log_name}.value: {value}")
-        number = Percent(value, self.human_decimal_places)
-        setattr(model_instance, self.attname, number.value)
-
-        return number.value

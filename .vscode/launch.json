@@ -58,6 +58,17 @@
           ],
           "django": true,
           "justMyCode": true
+        },
+        {
+          "name": "Django: Custom",
+          "type": "python",
+          "request": "launch",
+          "program": "${workspaceFolder}\\manage.py",
+          "args": [
+            "print_sales_tax_values",
+          ],
+          "django": true,
+          "justMyCode": true
         }
     ]
 }

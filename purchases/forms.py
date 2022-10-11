@@ -1,17 +1,20 @@
 from django import forms
-from django.contrib import messages
+
+# from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.forms.models import inlineformset_factory
+from django.utils.translation import gettext_lazy as _
 from django_select2 import forms as s2forms
 from phonenumber_field.formfields import PhoneNumberField
 
 from purchases.exceptions import TrackerPreviouslyRegistered, TrackerRejectedUnknownCode
 from purchases.tracking import register_trackers
+from web_project.form_fields import SimplePercentageField
 
-from .models import Department  # Requisitioner,; Urgency,
 from .models import (
     Carrier,
+    Department,
     PurchaseRequest,
     PurchaseRequestAccount,
     SimpleProduct,
@@ -103,15 +106,12 @@ class CreateUserForm(UserCreationForm):
 class NewPRForm(forms.ModelForm):
     class Meta:
         model = PurchaseRequest
-        # name = 'this is a test'
         widgets = {
             "justification": forms.Textarea(attrs={"rows": 2}),
             "instruction": forms.Textarea(attrs={"rows": 2}),
-            # 'requisitioner': forms.TextInput(),
-            # 'sales_tax_rate': PercentInput(),
             "requisitioner": RequisitionerWidget(attrs={"class": "select-input"}),
             "vendor": VendorWidget(attrs={"class": "select-input"}),
-            # 'carrier': CarrierWidget(attrs={'class':'select-input'})
+            "need_by_date": forms.SelectDateWidget(),
         }
         exclude = [
             "created_date",
@@ -343,7 +343,7 @@ class TrackerForm(forms.ModelForm):
 
         # get carrier by code; on the off chance that there's an unrecognized code, create a new carrier
         if carrier:
-            self.carrier, _ = Carrier.objects.get_or_create(
+            self.carrier, bleh = Carrier.objects.get_or_create(
                 carrier_code=response_dict["tracker"].carrier_code,
                 defaults={"name": response_dict["tracker"].carrier_name},
             )

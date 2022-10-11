@@ -18,6 +18,8 @@ import environ
 from django.apps import apps
 from django.contrib.messages import constants as message_constants
 
+from web_project.helpers import plog
+
 env = environ.Env(DEBUG=(bool, False))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,7 +27,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 READ_DOT_ENV_FILE = True  # env.bool("DJANGO_READ_DOT_ENV_FILE", default=False)
 if READ_DOT_ENV_FILE:
-    env.read_env(str(BASE_DIR / ".env"))
+    env_file = Path(BASE_DIR / ".env")
+    if env_file.is_file():
+        env.read_env(env_file)
 
 APPS_DIR = BASE_DIR / "web_project"
 
@@ -57,11 +61,16 @@ else:
     logging.basicConfig(level="WARNING")
     MESSAGE_LEVEL = message_constants.WARNING
 
+# logging.debug(f"last 4 of secret key: {SECRET_KEY[-4:]}")
+
+plog(logging, logging.DEBUG, logging.__name__, "last 4 of secret key", SECRET_KEY[-4:])
+
+
 DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
 
+ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["127.0.0.1"])
 
-ALLOWED_HOSTS = ["127.0.0.1", ".ngrok.io"]
-
+logging.debug(f"ALLOWED_HOSTS: {ALLOWED_HOSTS}")
 
 # Application definition
 
@@ -83,20 +92,21 @@ _THIRD_PARTY_APPS = [
     "djmoney",
     "django_mysql",
     "django_select2",
+    "widget_tweaks",
 ]
 
 _LOCAL_APPS = [
     "accounts",
     "globals",
     "inventory",
-    # "parts",
+    # "partnumbers",
     "purchases",
     "setup_sheets",
     "tool_compatibility",
 ]
 
 if DEBUG:
-    logging.warning("'parts' removed from INSTALLED_APPS")
+    logging.warning("'partnumbers' removed from INSTALLED_APPS")
 
 INSTALLED_APPS = _DJANGO_APPS + _THIRD_PARTY_APPS + _LOCAL_APPS
 
@@ -144,37 +154,27 @@ WSGI_APPLICATION = "web_project.wsgi.application"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
 
-logging.debug(f"{apps.app_configs.get('MEDIA_URL')}")
+logging.debug(f"MEDIA_URL: {apps.app_configs.get('MEDIA_URL')}")
 
 
 # Database
 # ----------------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-# DATABASES = {
-#     "default": env.db(
-#         "DATABASE_URL",
-#         default={
-#             "ENGINE": "django.db.backends.sqlite3",
-#             "NAME": BASE_DIR / "db.sqlite3",
-#         },
-#     )
-#     # 'default': {
-#     #     'ENGINE': 'django.db.backends.sqlite3',
-#     #     'NAME': BASE_DIR / 'db.sqlite3',
-#     # }
-#     # "default": {
-#     #     "ENGINE": "django.db.backends.mysql",
-#     #     "NAME": env("DB_NAME"),
-#     #     "USER": env("DB_USER"),
-#     #     "PASSWORD": env("DB_PASSWORD"),
-#     #     "HOST": env("DB_HOST"),
-#     #     "PORT": env("DB_PORT"),
-#     #     "CHARSET": "utf8mb4",
-#     #     "COLLATION": "utf8mb4_unicode_ci",
-#     # },
-#     # "TEST": {"CHARSET": "utf8mb4", "COLLATION": "utf8mb4_unicode_ci"},
-# }
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": env.str("DB_NAME"),
+        "USER": env.str("DB_USER"),
+        "PASSWORD": env.str("DB_PASSWORD"),
+        "HOST": env.str("DB_HOST"),
+        "PORT": env.str("DB_PORT"),
+        "OPTIONS": {
+            "charset": "utf8mb4",
+        },
+        "TEST": {"CHARSET": "utf8mb4", "COLLATION": "utf8mb4_unicode_ci"},
+    },
+}
 
 # AUTHENTICATION
 # --------------------------------------------------------------------------------
@@ -191,6 +191,7 @@ PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.PBKDF2PasswordHasher",
     "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
     "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
+    "django.contrib.auth.hashers.ScryptPasswordHasher",
 ]
 
 # Password validation
@@ -283,19 +284,19 @@ LOGGING = {
             "format": "{levelname} `{module}` {message}",
             "style": "{",
         },
-        "verbose": {
-            "format": "{levelname} {asctime} {module} "
-            "{process} {thread} {message}"
-            # "format": "%(levelname)s %(asctime)s %(module)s "
-            # "%(process)d %(thread)d %(message)s"
-        },
+        # "verbose": {
+        #     "format": "{levelname} {asctime} {module} "
+        #     "{process} {thread} {message}"
+        #     # "format": "%(levelname)s %(asctime)s %(module)s "
+        #     # "%(process)d %(thread)d %(message)s"
+        # },
     },
     "handlers": {
         "console": {
             "level": "DEBUG",
-            # "filters": ["require_debug_true"],
+            "filters": ["require_debug_true"],
             "class": "logging.StreamHandler",
-            "formatter": "verbose",
+            "formatter": "simple",
         },
         "django.server": {
             "level": "INFO",
