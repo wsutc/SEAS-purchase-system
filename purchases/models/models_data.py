@@ -17,10 +17,9 @@ from djmoney.money import Money
 from furl import furl
 from phonenumber_field.modelfields import PhoneNumberField
 
-from globals.models.models_admin import DefaultValue
 from purchases.exceptions import StatusCodeNotFound
 from purchases.tracking import TrackerObject
-from web_project.fields import PercentageField
+from web_project.fields import SimplePercentageField
 from web_project.helpers import Percent
 
 from .models_base import (
@@ -113,12 +112,12 @@ class PurchaseRequest(models.Model):
         default_currency="USD",
         default=0,
     )
-    sales_tax_rate = models.DecimalField(
+    sales_tax_rate = SimplePercentageField(
         _("sales tax rate"), max_digits=10, decimal_places=4, null=True
     )
-    new_st = PercentageField(
-        _("new sales tax"), max_digits=10, decimal_places=4, blank=True, null=True
-    )
+    # new_st = PercentageField(
+    #     _("new sales tax"), max_digits=10, decimal_places=4, blank=True, null=True
+    # )
     sales_tax = MoneyField(
         "Sales Tax ($)",
         decimal_places=2,

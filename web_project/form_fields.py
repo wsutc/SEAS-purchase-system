@@ -1,118 +1,94 @@
 import logging
-import re
-from decimal import Decimal
 
 from django import forms
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
-from web_project.helpers import Percent, is_number
+from web_project.helpers import Percent, is_number, plog
+
+# import re
+# from decimal import Decimal
+
 
 logger = logging.getLogger(__name__)
 if settings.DEBUG:
     logger.setLevel("DEBUG")
 
+    log_kwargs = {
+        "logger": logger,
+        "level": logging.DEBUG,
+    }
+else:
+    log_kwargs = {
+        "logger": logger,
+        "level": logging.root.level,
+    }
 
-class PercentageFieldOld(forms.DecimalField):
-    log_name = "PercentageField"
 
-    # def clean(self, value):
-    #     log_name = f"{self.log_name}.clean"
-    #     logger.debug(f"{log_name} value: {value}")
-    #     logger.debug(f"{log_name} decimal_places: {self.decimal_places}")
-    #     val = super().clean(value)
+class PercentInput(forms.NumberInput):
+    attrs = {"class": "percent", "step": 0.1}
 
-    #     logger.debug(f"{log_name} after clean value: {val}")
-    #     logger.debug(f"{log_name} after clean value type: {type(val)}")
 
-    #     if not isinstance(val, Percent):
-    #         val_str = re.sub(r"[^0-9.]", "", str(val))
-
-    #         logger.debug(f"{log_name} val_str: {val_str}")
-
-    #         if val_str.count(".") > 1:
-    #             raise ValueError(f"Invalid percent input '{value}'; too many '.'.")
-
-    #         val = Decimal(val_str)
-    #         val = Percent(val)
-
-    #         logger.info(f"{log_name} return value: {val}")
-
-    #     return val
+class SimplePercentageField(forms.DecimalField):
+    widget = PercentInput()
 
     def to_python(self, value):
-        log_name = f"{self.log_name}.to_python"
-        logger.debug(f"{log_name} value: {value}")
+        log_kwargs["path"] = f"{logger.name}.to_python"
+        plog(text="value", value=value, **log_kwargs)
+
         val = super().to_python(value)
-        logger.debug(f"PercentageField.to_python.val: {val}")
-        logger.debug(f"PercentageField.to_python.val type: {type(val)}")
+
+        val_type = type(val) if settings.DEBUG else None
+        plog(text=f"after super() val [{val_type}]", value=val, **log_kwargs)
+
         if isinstance(val, Percent):
             return val.value
         elif is_number(val):
             new_val = Percent.fromform(val)
 
-            logger.debug(
-                f"PercentageField.to_python is_number Percent: {new_val.value}"
+            rvalue = new_val.value
+
+            rtype = type(rvalue) if settings.DEBUG else None
+            plog(text=f"is_number return val [{rtype}]", value=rvalue, **log_kwargs)
+
+            return rvalue
+        else:
+            rtype = type(val)
+            raise ValidationError(
+                _("Invalid value type: %(rtype)s"),
+                code="invalid",
+                params={"rtype": rtype},
             )
 
-            return new_val.value
-        else:
-            return val
-
     def prepare_value(self, value):
-        logger.debug(f"PercentageField.prepare_value.value: {value}")
+        log_kwargs["path"] = f"{logger.name}.prepare_value"
+        value_type = type(value) if settings.DEBUG else None
+        plog(text=f"incoming value [{value_type}]", value=value, **log_kwargs)
+
         val = super().prepare_value(value)
-        logger.debug(f"PercentageField.prepare_value.val: {val}")
-        logger.debug(f"PercentageField.prepare_value.val type: {type(val)}")
+        val_type = type(val) if settings.DEBUG else None
+
+        plog(text=f"after super() val [{val_type}]", value=val, **log_kwargs)
+
         if isinstance(val, Percent):
             return val.per_hundred
         elif is_number(val):
             if isinstance(val, str):
                 new_val = Percent.fromform(val)
-                logger.debug(
-                    f"PercentageField.prepare_value is_number is string Percent: {new_val}"
-                )
-                return new_val.per_hundred
+
+                return_value = new_val.per_hundred
+                rtype = type(return_value) if settings.DEBUG else None
+
+                plog(text=f"return value [{rtype}]", value=return_value, **log_kwargs)
+
+                return return_value
             else:
-                return Percent(val).per_hundred
+                rvalue = Percent(val).per_hundred
+
+                rtype = type(rvalue) if settings.DEBUG else None
+                plog(text=f"return value [{rtype}]", value=rvalue, **log_kwargs)
+
+                return rvalue
         else:
             return val
-
-
-class PercentageField(forms.DecimalField):
-    log_name = "PercentageField"
-
-    def to_python(self, value):
-        log_name = f"{self.log_name}.to_python"
-        logger.debug(f"{log_name} value: {value}")
-        val = super().to_python(value)
-        logger.debug(f"PercentageField.to_python.val: {val}")
-        logger.debug(f"PercentageField.to_python.val type: {type(val)}")
-        if isinstance(val, Percent):
-            return val
-        elif is_number(val):
-            new_val = Percent.fromform(val)
-
-            logger.debug(f"PercentageField.to_python is_number Percent: {new_val}")
-
-            return new_val
-        else:
-            return val
-
-    # def prepare_value(self, value):
-    #     logger.debug(f"PercentageField.prepare_value.value: {value}")
-    #     val = super().prepare_value(value)
-    #     logger.debug(f"PercentageField.prepare_value.val: {val}")
-    #     logger.debug(f"PercentageField.prepare_value.val type: {type(val)}")
-    #     if isinstance(val, Percent):
-    #         return val.per_hundred
-    #     elif is_number(val):
-    #         if isinstance(val, str):
-    #             new_val = Percent.fromform(val)
-    #             logger.debug(
-    #                 f"PercentageField.prepare_value is_number is string Percent: {new_val}"
-    #             )
-    #             return new_val.per_hundred
-    #         else:
-    #             return Percent(val).per_hundred
-    #     else:
-    #         return val

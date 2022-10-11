@@ -1,5 +1,6 @@
 from django import forms
-from django.contrib import messages
+
+# from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.forms.models import inlineformset_factory
@@ -9,11 +10,11 @@ from phonenumber_field.formfields import PhoneNumberField
 
 from purchases.exceptions import TrackerPreviouslyRegistered, TrackerRejectedUnknownCode
 from purchases.tracking import register_trackers
-from web_project.form_fields import PercentageFieldOld
+from web_project.form_fields import SimplePercentageField
 
-from .models import Department  # Requisitioner,; Urgency,
 from .models import (
     Carrier,
+    Department,
     PurchaseRequest,
     PurchaseRequestAccount,
     SimpleProduct,
@@ -103,7 +104,9 @@ class CreateUserForm(UserCreationForm):
 
 
 class NewPRForm(forms.ModelForm):
-    sales_tax_rate = PercentageFieldOld(max_digits=10, decimal_places=4, required=True)
+    sales_tax_rate = SimplePercentageField(
+        max_digits=10, decimal_places=4, required=True
+    )
 
     class Meta:
         model = PurchaseRequest
@@ -115,7 +118,8 @@ class NewPRForm(forms.ModelForm):
             # 'sales_tax_rate': PercentInput(),
             "requisitioner": RequisitionerWidget(attrs={"class": "select-input"}),
             "vendor": VendorWidget(attrs={"class": "select-input"}),
-            # 'carrier': CarrierWidget(attrs={'class':'select-input'})
+            # 'carrier': CarrierWidget(attrs={'class':'select-input'}),
+            "need_by_date": forms.SelectDateWidget(),
         }
         exclude = [
             "created_date",
