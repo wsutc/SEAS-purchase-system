@@ -1,3 +1,4 @@
+import logging
 from decimal import Decimal
 from http.client import HTTPResponse
 
@@ -257,9 +258,9 @@ class Percent:
         value = f"Percentage('{self.value}', '{self.per_hundred}%')"
         return value
 
-    # def __str__(self):
-    #     value = f"{self.per_hundred}"
-    #     return value
+    def __str__(self):
+        value = f"{self.per_hundred}%"
+        return value
 
 
 def is_number(s):
@@ -270,3 +271,10 @@ def is_number(s):
         return True
     except ValueError:
         return False
+
+
+def plog(
+    logger: logging.Logger, level: int, path: str, text: str, value: (str | float)
+):
+    message = f"`{path}` {text}: {value}"
+    logger.log(level, message)

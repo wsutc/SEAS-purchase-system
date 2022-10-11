@@ -1,4 +1,6 @@
+import datetime
 import logging
+from decimal import Decimal
 from importlib.metadata import version
 
 from django.conf import settings
@@ -400,11 +402,16 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
         req_obj = requisitioner_from_user(self.request.user)
         sales_tax_rate = DefaultValue.objects.get_value("salestaxrate")
         instruction = DefaultValue.objects.get_value("purchaserequestinstructions")
+        day_offset = DefaultValue.objects.get_value("needbyoffset", default=21)
+        date_today = datetime.datetime.today()
+        day_delta = datetime.timedelta(days=int(day_offset))
+        need_by_date = date_today + day_delta
         self.initial.update(
             {
                 "requisitioner": req_obj,
-                "sales_tax_rate": sales_tax_rate,
+                "sales_tax_rate": Decimal(sales_tax_rate),
                 "instruction": instruction,
+                "need_by_date": need_by_date,
             }
         )
         return super().get_initial()

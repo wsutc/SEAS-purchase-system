@@ -15,11 +15,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='purchaserequest',
             name='sales_tax_rate',
-            field=web_project.fields.PercentageField(decimal_places=2, max_digits=10),
+            field=web_project.fields.SimplePercentageField(decimal_places=2, max_digits=10),
         ),
         migrations.AlterField(
             model_name='vendor',
             name='discount_percentage',
-            field=web_project.fields.PercentageField(decimal_places=2, max_digits=15),
+            field=web_project.fields.SimplePercentageField(decimal_places=2, max_digits=15),
         ),
     ]

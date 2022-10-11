@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='vendor',
             name='discount_percentage',
-            field=web_project.fields.PercentageField(decimal_places=0, default=0, max_digits=15),
+            field=web_project.fields.SimplePercentageField(decimal_places=0, default=0, max_digits=15),
         ),
     ]

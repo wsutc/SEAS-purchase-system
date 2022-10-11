@@ -18,6 +18,8 @@ import environ
 from django.apps import apps
 from django.contrib.messages import constants as message_constants
 
+from web_project.helpers import plog
+
 env = environ.Env(DEBUG=(bool, False))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -59,7 +61,10 @@ else:
     logging.basicConfig(level="WARNING")
     MESSAGE_LEVEL = message_constants.WARNING
 
-logging.debug(f"last 4 of secret key: {SECRET_KEY[-4:]}")
+# logging.debug(f"last 4 of secret key: {SECRET_KEY[-4:]}")
+
+plog(logging, logging.DEBUG, logging.__name__, "last 4 of secret key", SECRET_KEY[-4:])
+
 
 DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
 
