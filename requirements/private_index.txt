@@ -1,4 +1,4 @@
 # git+git://github.com/wsutc/django-listview-filters.git
 
--i https://test.pypi.org/simple/
-django-listview-filters>=0.0.1b0.dev1
+# -i https://test.pypi.org/simple/
+django-listview-filters>=0.0.1b0.dev1 --install-option="--index-url=https://test.pypi.org/simple/"
