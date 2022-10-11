@@ -4,7 +4,7 @@ django[argon2]==4.0.3
 # django-constance>=2.9.0
 django-environ>=0.8.1
 django-import-export>=2.8.0
---index-url https://test.pypi.org/simple/
+--extra-index-url https://test.pypi.org/simple/
 django-listview-filters>=0.0.1b0.dev1
 django-money>=2.1.1
 django-phonenumber-field>=6.1.0
