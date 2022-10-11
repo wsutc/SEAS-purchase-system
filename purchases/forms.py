@@ -104,21 +104,13 @@ class CreateUserForm(UserCreationForm):
 
 
 class NewPRForm(forms.ModelForm):
-    sales_tax_rate = SimplePercentageField(
-        max_digits=10, decimal_places=4, required=True
-    )
-
     class Meta:
         model = PurchaseRequest
-        # name = 'this is a test'
         widgets = {
             "justification": forms.Textarea(attrs={"rows": 2}),
             "instruction": forms.Textarea(attrs={"rows": 2}),
-            # 'requisitioner': forms.TextInput(),
-            # 'sales_tax_rate': PercentInput(),
             "requisitioner": RequisitionerWidget(attrs={"class": "select-input"}),
             "vendor": VendorWidget(attrs={"class": "select-input"}),
-            # 'carrier': CarrierWidget(attrs={'class':'select-input'}),
             "need_by_date": forms.SelectDateWidget(),
         }
         exclude = [

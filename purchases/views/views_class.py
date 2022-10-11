@@ -1,5 +1,6 @@
 import datetime
 import logging
+from decimal import Decimal
 from importlib.metadata import version
 
 from django.conf import settings
@@ -408,7 +409,7 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
         self.initial.update(
             {
                 "requisitioner": req_obj,
-                "sales_tax_rate": sales_tax_rate,
+                "sales_tax_rate": Decimal(sales_tax_rate),
                 "instruction": instruction,
                 "need_by_date": need_by_date,
             }

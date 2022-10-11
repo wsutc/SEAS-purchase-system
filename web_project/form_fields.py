@@ -7,10 +7,6 @@ from django.utils.translation import gettext_lazy as _
 
 from web_project.helpers import Percent, is_number, plog
 
-# import re
-# from decimal import Decimal
-
-
 logger = logging.getLogger(__name__)
 if settings.DEBUG:
     logger.setLevel("DEBUG")
@@ -26,12 +22,25 @@ else:
     }
 
 
-class PercentInput(forms.NumberInput):
-    attrs = {"class": "percent", "step": 0.1}
-
-
 class SimplePercentageField(forms.DecimalField):
-    widget = PercentInput()
+    def __init__(
+        self,
+        *,
+        max_value=None,
+        min_value=None,
+        max_digits=None,
+        decimal_places=None,
+        **kwargs,
+    ):
+        log_kwargs["path"] = f"{logger.name}.SimplePercentageField"
+        plog(text="Decimal Places", value=decimal_places, **log_kwargs)
+        if "widget" not in kwargs:
+            step = 10 ** (-1 * decimal_places)
+            kwargs["widget"] = forms.NumberInput(
+                attrs={"class": "percent", "step": step}
+            )
+        self.max_digits, self.decimal_places = max_digits, decimal_places
+        super().__init__(max_value=max_value, min_value=min_value, **kwargs)
 
     def to_python(self, value):
         log_kwargs["path"] = f"{logger.name}.to_python"

@@ -5,10 +5,18 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from web_project import form_fields
+from web_project.helpers import plog
 
 logger = logging.getLogger(__name__)
+log_kwargs = {
+    "logger": logger,
+}
 if settings.DEBUG:
-    logger.setLevel("INFO")
+    logger.setLevel("DEBUG")
+
+    log_kwargs.update(level=logging.DEBUG)
+else:
+    log_kwargs.update(level=logger.root.level)
 
 
 class SimplePercentageField(models.DecimalField):
@@ -47,9 +55,13 @@ class SimplePercentageField(models.DecimalField):
         super().__init__(verbose_name, name, **kwargs)
 
     def formfield(self, **kwargs):
+        log_kwargs["path"] = f"{logger.name}.formfield"
         defaults = {"form_class": form_fields.SimplePercentageField}
         kwargs.update(
-            decimal_places=self.decimal_places,
+            decimal_places=self.decimal_places - 2,
         )
         defaults.update(kwargs)
+
+        plog(text="Decimal Places", value=kwargs["decimal_places"], **log_kwargs)
+
         return super().formfield(**defaults)
