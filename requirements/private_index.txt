@@ -1,1 +1,1 @@
-git+git://github.com/wsutc/django-listview-filters
+git+git://github.com/wsutc/django-listview-filters.git
