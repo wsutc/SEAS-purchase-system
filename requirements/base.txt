@@ -4,7 +4,7 @@ django[argon2]
 # django-constance>=2.9.0
 django-environ>=0.8.1
 django-import-export>=2.8.0
-django-listview-filters==0.0.1b0.dev1
+django-listview-filters --install-option -i https://test.pypi.org/simple/ django-listview-filters
 django-money>=2.1.1
 django-phonenumber-field>=6.1.0
 django-select2>=7.10.0
