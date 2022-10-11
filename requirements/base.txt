@@ -16,4 +16,4 @@ Pillow>=9.1.1
 python-benedict>=0.25.2
 reportlab>=3.6.10
 # django-bootstrap-modal-forms>=2.2.0
-smartsheet-python-sdk>=2.105.1
+# smartsheet-python-sdk>=2.105.1
