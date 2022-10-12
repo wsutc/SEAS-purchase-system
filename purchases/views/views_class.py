@@ -24,6 +24,8 @@ from django_listview_filters.filters import (
     ChoicesFieldListViewFilter,
     RelatedFieldListViewFilter,
 )
+
+# from django_listview_filters.mixins import FilterViewMixin
 from packaging import version as p_version
 
 import web_project
