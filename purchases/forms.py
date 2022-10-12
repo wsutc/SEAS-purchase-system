@@ -8,7 +8,6 @@ from django_select2 import forms as s2forms
 from djmoney.forms import MoneyWidget
 from phonenumber_field.formfields import PhoneNumberField
 
-from pleasinghelpers.forms import PleasingMoneyField, PleasingMoneyWidget
 from purchases.exceptions import TrackerPreviouslyRegistered, TrackerRejectedUnknownCode
 from purchases.tracking import register_trackers
 
@@ -111,8 +110,7 @@ class NewPRForm(forms.ModelForm):
             "instruction": forms.Textarea(attrs={"rows": 2}),
             "requisitioner": RequisitionerWidget(attrs={"class": "select-input"}),
             "vendor": VendorWidget(attrs={"class": "select-input"}),
-            "need_by_date": DatePickerInput(),  # attrs={"class": "form-control select-datepicker"}),
-            # "shipping": PleasingMoneyWidget(attrs={"class": "input-group-text"}),
+            "need_by_date": DatePickerInput(),  # attrs={"class": "form-control select-datepicker"}), needs to be applied to entire group
         }
         exclude = [
             "created_date",
