@@ -1,4 +1,6 @@
 from bootstrap_datepicker_plus.widgets import DatePickerInput
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Submit
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
@@ -294,6 +296,16 @@ class TrackerForm(forms.ModelForm):
             "carrier": CarrierWidget(attrs={"class": "select-carrier"}),
         }
         exclude = ["events", "shipment_id", "status", "delivery_estimate"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_id = "id-TrackerForm"
+        self.helper.form_class = "simpleform"
+        self.helper.form_method = "post"
+        self.helper.form_action = "save"
+
+        self.helper.add_input(Submit("save", _("save")))
 
     def clean(self):
         tracking_number = self.cleaned_data.get("tracking_number")

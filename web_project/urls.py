@@ -20,11 +20,12 @@ from django.views.generic import RedirectView
 
 urlpatterns = [
     path("", RedirectView.as_view(url="purchases/")),
+    path("budget-accounts/", include("accounts.urls")),
+    path("inventory/", include("inventory.urls")),
+    # path("parts/", include("parts.urls")), # uses admin exclusively
     path("purchases/", include("purchases.urls")),
     path("setup-sheets/", include("setup_sheets.urls")),
-    path("inventory/", include("inventory.urls")),
     path("tools/", include("tool_compatibility.urls")),
-    path("budget-accounts/", include("accounts.urls")),
     path("admin/", admin.site.urls),
     path("__debug__/", include("debug_toolbar.urls")),
 ]
