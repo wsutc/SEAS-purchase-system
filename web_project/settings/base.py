@@ -102,14 +102,11 @@ _LOCAL_APPS = [
     "accounts",
     "globals",
     "inventory",
-    # "partnumbers",
+    "partnumbers",
     "purchases",
     "setup_sheets",
     "tool_compatibility",
 ]
-
-if DEBUG:
-    logging.warning("'partnumbers' removed from INSTALLED_APPS")
 
 INSTALLED_APPS = _DJANGO_APPS + _THIRD_PARTY_APPS + _LOCAL_APPS
 
