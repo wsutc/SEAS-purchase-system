@@ -87,6 +87,8 @@ _DJANGO_APPS = [
 
 _THIRD_PARTY_APPS = [
     "bootstrap_datepicker_plus",
+    "crispy_bootstrap5",
+    "crispy_forms",
     "debug_toolbar",
     "django_listview_filters",
     "phonenumber_field",
@@ -341,6 +343,9 @@ PHONENUMBER_DEFAULT_FORMAT = "NATIONAL"
 
 FILTERVIEW_SHOW_UNUSED_FILTERS = False
 FILTERVIEW_SHOW_ALL = False
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # CUSTOM
 # -------------------------------------------------------------------

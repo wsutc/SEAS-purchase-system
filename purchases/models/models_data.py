@@ -201,7 +201,7 @@ class PurchaseRequest(models.Model):
         return Money(extended_price["extended_price__sum"], "USD")
 
     def set_totals(self):
-        """Set totals for purchase request
+        """Set totals for purchase request; does NOT save
 
         :return: tuple of subtotal, sales tax, grand total
         """
@@ -234,9 +234,9 @@ class PurchaseRequest(models.Model):
         totals = qs.first().set_totals()
 
         qs.update(
-            subtotal=self.subtotal,
-            sales_tax=self.sales_tax,
-            grand_total=self.grand_total,
+            subtotal=totals[0],
+            sales_tax=totals[1],
+            grand_total=totals[2],
         )
         return totals
 
