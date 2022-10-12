@@ -86,6 +86,7 @@ _DJANGO_APPS = [
 ]
 
 _THIRD_PARTY_APPS = [
+    "bootstrap_datepicker_plus",
     "debug_toolbar",
     "django_listview_filters",
     "phonenumber_field",

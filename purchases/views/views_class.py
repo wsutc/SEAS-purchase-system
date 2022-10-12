@@ -414,7 +414,9 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
                 "need_by_date": need_by_date,
             }
         )
-        return super().get_initial()
+
+        initial_values = super().get_initial()
+        return initial_values
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

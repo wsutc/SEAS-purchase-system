@@ -1,16 +1,15 @@
+from bootstrap_datepicker_plus.widgets import DatePickerInput
 from django import forms
-
-# from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.forms.models import inlineformset_factory
 from django.utils.translation import gettext_lazy as _
 from django_select2 import forms as s2forms
+from djmoney.forms import MoneyWidget
 from phonenumber_field.formfields import PhoneNumberField
 
 from purchases.exceptions import TrackerPreviouslyRegistered, TrackerRejectedUnknownCode
 from purchases.tracking import register_trackers
-from web_project.form_fields import SimplePercentageField
 
 from .models import (
     Carrier,
@@ -111,7 +110,7 @@ class NewPRForm(forms.ModelForm):
             "instruction": forms.Textarea(attrs={"rows": 2}),
             "requisitioner": RequisitionerWidget(attrs={"class": "select-input"}),
             "vendor": VendorWidget(attrs={"class": "select-input"}),
-            "need_by_date": forms.SelectDateWidget(),
+            "need_by_date": DatePickerInput(),  # attrs={"class": "form-control select-datepicker"}), needs to be applied to entire group
         }
         exclude = [
             "created_date",
