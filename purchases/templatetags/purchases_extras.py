@@ -35,6 +35,9 @@ def usd_accounting(value: float, decimals: int = 2, autoescape=True):
 
     For USD; adds whitespace between $ and numbers to right align digits and left align $.
     """
+    if value is None:
+        return value
+
     if autoescape:
         value = conditional_escape(value)
 
