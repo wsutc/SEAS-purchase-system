@@ -1,12 +1,12 @@
 import datetime
 import logging
 from decimal import Decimal
-from importlib.metadata import version
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import User
+from django.db.models import ExpressionWrapper, F, OuterRef, Subquery, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
@@ -19,14 +19,12 @@ from django.views.generic import (
     UpdateView,
 )
 from django.views.generic.detail import SingleObjectMixin
-from django_listview_filters.filters import (
-    AllValuesFieldListFilter,
+from django_listview_filters.filters import (  # AllValuesFieldListFilter,
     ChoicesFieldListViewFilter,
     RelatedFieldListViewFilter,
 )
-from packaging import version as p_version
+from djmoney.models.fields import MoneyField
 
-import web_project
 from globals.models import DefaultValue
 from purchases.forms import (
     AddVendorForm,
@@ -52,12 +50,13 @@ from purchases.models import (  # Transaction,
     requisitioner_from_user,
 )
 from purchases.models.models_metadata import PurchaseRequestAccount
-from web_project.helpers import (
+from web_project.helpers import (  # truncate_string,
     PaginatedListMixin,
     max_decimal_places,
     redirect_to_next,
-    truncate_string,
 )
+
+# from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +97,10 @@ class VendorOrderDetailView(SimpleView, DetailView):
 
         trackers = []
         object = self.get_object()
-        for request in object.purchase_requests.all():
+
+        prs = object.purchase_requests.all()
+
+        for request in prs:
             for tracker in request.tracker_set.all():
                 trackers.append(tracker)
 
@@ -117,6 +119,29 @@ class VendorOrderListView(PaginatedListMixin, ListView):
         ("purchase_requests__status", ChoicesFieldListViewFilter),
         # ("o.purchase_requests.last.tracker_set.last.status"),
     ]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+
+        # add total of PR grand totals as new field `calculated_total`
+        prs = (
+            PurchaseRequest.objects.filter(pk__in=OuterRef("purchase_requests"))
+            .order_by()
+            .values("pk")
+        )
+        calculated_total = prs.annotate(calc_total=Sum("grand_total")).values(
+            "calc_total"
+        )
+
+        qs = qs.annotate(calculated_total=Subquery(calculated_total),).annotate(
+            difference=ExpressionWrapper(
+                F("calculated_total")
+                - (F("subtotal") + F("shipping") + F("sales_tax")),
+                output_field=MoneyField(),
+            )
+        )
+
+        return qs
 
 
 class VendorOrderCurrentListView(VendorOrderListView):
@@ -143,10 +168,11 @@ class SimpleProductListView(PaginatedListMixin, ListView):
         # sort vendor as lower case (python sorts lower different than upper by default)
         filter_name = "purchase_request__vendor"
 
-        dlf_version_str = version("django_listview_filters")
-
-        # django-listview-filters added `get_filter_by_name` method after 0.0.1b0.dev1
-        if p_version.parse(dlf_version_str) <= p_version.parse("0.0.1b0.dev1"):
+        # django-listview-filters added `get_filter_by_name` in later versions
+        # (should be removed)
+        try:
+            filter = self.get_filter_by_name(filter_name)
+        except Exception:
             if len(self.filter_specs) > 0:
                 for filter_spec in self.filter_specs:
                     filter = (
@@ -154,8 +180,6 @@ class SimpleProductListView(PaginatedListMixin, ListView):
                     )
             else:
                 filter = None
-        else:
-            filter = self.get_filter_by_name(filter_name)
 
         if filter:
             filter.lookup_choices = sorted(
@@ -220,10 +244,6 @@ class PurchaseRequestListView(PurchaseRequestListViewBase):
 
 
 class RequisitionerPurchaseRequestListView(PurchaseRequestListViewBase):
-    # filters = [
-    #     ("status", {'field':'status', 'parent_model':PurchaseRequest}),
-    #     ("vendor", {'model':Vendor, 'parent_model':PurchaseRequest, 'field':'purchaserequest', 'order_by':'name'}),
-    # ]
     list_filter = [
         ("status", ChoicesFieldListViewFilter),
         ("vendor", RelatedFieldListViewFilter),

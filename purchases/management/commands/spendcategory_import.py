@@ -1,8 +1,6 @@
 import csv
 import os
-from logging import exception
 
-import MySQLdb
 from django.conf import settings
 from django.core.management.base import BaseCommand
 

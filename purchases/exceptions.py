@@ -41,7 +41,9 @@ class TrackerReturnedMultipleCarriers(Error):
 
 
 class TrackerRejectedUnknownCode(Error):
-    """Exception raised when API request rejects a tracker with an unrecognized error code."""
+    """Exception raised when API request rejects a tracker
+    with an unrecognized error code.
+    """
 
     def __init__(
         self,

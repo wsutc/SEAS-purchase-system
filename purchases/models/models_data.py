@@ -1,8 +1,12 @@
 import decimal
 import logging
+from datetime import date
+from pathlib import Path
 
+import shortuuid
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.validators import FileExtensionValidator
 from django.db import models, transaction
 from django.db.models import Count, F, Max, Sum
 from django.db.models.signals import post_save
@@ -17,10 +21,10 @@ from djmoney.money import Money
 from furl import furl
 from phonenumber_field.modelfields import PhoneNumberField
 
+from globals.validators import PDF_EXTS
 from purchases.exceptions import StatusCodeNotFound
 from purchases.tracking import TrackerObject
 from web_project.fields import SimplePercentageField
-from web_project.helpers import Percent
 
 from .models_base import (
     Accounts,
@@ -33,6 +37,9 @@ from .models_base import (
     Urgency,
     Vendor,
 )
+
+# from web_project.helpers import Percent
+
 
 logger = logging.getLogger(__name__)
 if settings.DEBUG:
@@ -63,11 +70,13 @@ class Requisitioner(models.Model):
 
 
 def getsimpleattrs(object):
-    """Return list of attributes of <object> that are not callable or private (starting with '__')
+    """Return list of attributes of <object> that are not callable or private
+    (starting with '__')
 
     :param object: An object with attributes
     :type object: object
-    :return: List of attributes from object excluding callables or private (starting with '__')
+    :return: List of attributes from object excluding callables or private
+    (starting with '__')
     :rtype: list
     """
     variables = [
@@ -80,7 +89,9 @@ def getsimpleattrs(object):
 
 
 def status_code(key: int) -> str:
-    """Return two-character code (lowered) (e.g. 'rc' for 'Received') given status key (e.g. 8)."""
+    """Return two-character code (lowered) (e.g. 'rc' for 'Received') given
+    status key (e.g. 8).
+    """
     for class_variable in getsimpleattrs(PurchaseRequest):
         if getattr(PurchaseRequest, class_variable) == key:
             return class_variable
@@ -214,13 +225,14 @@ class PurchaseRequest(models.Model):
         logger.debug(f"{log_name}.taxable_amount: {taxable_amount}")
         logger.debug(f"{log_name}.taxable_amount type: {type(taxable_amount)}")
 
-        # Money's __mul__ method uses moneyed's `force_decimal` method which does `Decimal(str(other))`
-        # Since str(Percent()) includes '%', the following line fails unless '.value' is added
-        if isinstance(self.sales_tax_rate, Percent):
-            tax_rate = self.sales_tax_rate.value
-        else:
-            tax_rate = self.sales_tax_rate
-        # tax_rate = self.sales_tax_rate
+        # Money's __mul__ method uses moneyed's `force_decimal` method
+        # which does `Decimal(str(other))`
+        # Since str(Percent()) includes '%', the following line fails unless
+        # '.value' is added
+        # if isinstance(self.sales_tax_rate, Percent):
+        #     tax_rate = self.sales_tax_rate.value
+        # else:
+        tax_rate = self.sales_tax_rate
         sales_tax_raw = taxable_amount * tax_rate
         self.sales_tax = round(sales_tax_raw, 2)
 
@@ -269,10 +281,31 @@ class PurchaseRequest(models.Model):
         return self.number
 
 
+def vendor_order_attachments_path(instance, filename):
+    file_extension = Path(filename).suffix
+
+    new_filename = shortuuid.uuid()
+    today = date.today()
+    year = today.strftime("/%Y")
+    month = today.strftime("/%m")
+
+    rpath = f"uploads/{year}/{month}/{new_filename}{file_extension}"
+
+    return rpath
+
+
 class VendorOrder(BaseModel):
     name = models.CharField(verbose_name=_("order number"), max_length=50)
     vendor = models.ForeignKey(Vendor, on_delete=models.PROTECT, blank=False)
     link = models.URLField(verbose_name=_("link"), blank=True)
+    approved_request = models.FileField(
+        _("approved purchase request"),
+        help_text=_("pdf"),
+        upload_to=vendor_order_attachments_path,
+        validators=[FileExtensionValidator(PDF_EXTS)],
+        blank=True,
+    )
+
     purchase_requests = models.ManyToManyField(
         PurchaseRequest, verbose_name=_("purchase_requests")
     )
@@ -424,8 +457,8 @@ class RankManager(models.Manager):
         with transaction.atomic():
             qs.filter(pk=obj.pk).update(rank=obj.get_next_rank())
 
-            # if current_rank == obj.rank:
-            #     raise ValueError("Unable to move to end; '{}' already lowest rank.".format(current_rank))
+            # if current_rank == obj.rank: raise ValueError("Unable to move to end; '{}'
+            #     already lowest rank.".format(current_rank))
 
             qs.filter(parent_model=obj.parent_model, rank__gt=current_rank,).order_by(
                 "rank"
@@ -625,9 +658,9 @@ class Tracker(models.Model):
 
     def update_tracker_fields(self, tracker_obj: TrackerObject) -> bool:
         """Updates <tracker> using <fields>"""
-        qs = Tracker.objects.filter(
-            pk=self.pk
-        )  # using `queryset.update` prevents using `model.save`, therefore, no `post_save` signal
+        # using `queryset.update` prevents using `model.save`, therefore, no `post_save`
+        # signal
+        qs = Tracker.objects.filter(pk=self.pk)
 
         update_fields = (
             {}
@@ -721,7 +754,7 @@ class TrackerStatusSteps(models.Model):
     )
 
 
-# --------------------------------------- Accounting ----------------------------------------
+# --------------------------------------- Accounting ----------------------------------
 
 
 class Balance(models.Model):

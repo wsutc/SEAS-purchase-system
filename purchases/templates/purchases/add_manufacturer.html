@@ -1,13 +1,9 @@
 {% extends "purchases/layout.html" %}
 {% load widget_tweaks %}
-{% block title %}
-    Add a Manufacturer
-{% endblock %}
+{% block title %}Add a Manufacturer{% endblock %}
 {% block content %}
-
-<h1 name class="wsu-c-heading">Add a Manufacturer</h1>
-
-<form method="POST" class="row g-3">
+  <h1 name class="wsu-c-heading">Add a Manufacturer</h1>
+  <form method="POST" class="row g-3">
     {% csrf_token %}
     <div class="col-md-6">
       <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
@@ -18,20 +14,22 @@
       {{ form.website|add_class:'form-control' }}
     </div>
     <div class="row g-3">
-        <div class="col-3">
-            <div class="form-check">
-                <label class="form-check-label" for="{{ form.wsu_discount.id_for_label }}">{{ form.wsu_discount.label }}</label>
-                {{ form.wsu_discount|add_class:'form-check-input' }}
-            </div>
+      <div class="col-3">
+        <div class="form-check">
+          <label class="form-check-label" for="{{ form.wsu_discount.id_for_label }}">{{ form.wsu_discount.label }}</label>
+          {{ form.wsu_discount|add_class:'form-check-input' }}
         </div>
-        <div class="col-3">
-            <label for="{{ form.discount_percentage.id_for_label }}" class="form-label">{{ form.discount_percentage.label }}</label>
-            {{ form.discount_percentage|add_class:'form-control' }}
-        </div>
-        <div class="col-6">
-            <label for="{{ form.phone.id_for_label }}" class="form-label">{{ form.phone.label }}</label>
-            {{ form.phone|add_class:'form-control'|attr:"placeholder:+12345678901" }}
-        </div>
+      </div>
+      <div class="col-3">
+        <label for="{{ form.discount_percentage.id_for_label }}" class="form-label">
+          {{ form.discount_percentage.label }}
+        </label>
+        {{ form.discount_percentage|add_class:'form-control' }}
+      </div>
+      <div class="col-6">
+        <label for="{{ form.phone.id_for_label }}" class="form-label">{{ form.phone.label }}</label>
+        {{ form.phone|add_class:'form-control'|attr:"placeholder:+12345678901" }}
+      </div>
     </div>
     <div class="col-12">
       <button type="submit" class="save btn btn-primary">Save</button>
