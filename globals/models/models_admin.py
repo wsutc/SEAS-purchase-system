@@ -4,8 +4,6 @@ from django.db.models import Value
 from django.db.models.functions import Lower, Replace
 from django.utils.translation import gettext_lazy as _
 
-# from web_project.fields import PercentageField
-
 
 class SettingsManager(models.Manager):
     def get_value(
@@ -13,7 +11,8 @@ class SettingsManager(models.Manager):
     ) -> str | int | float:
         """Return setting value given correctly spelled setting_name
 
-        :param setting_name: Setting name, must be correctly spelled; white space and capitalization ignored
+        :param setting_name: Setting name, must be correctly spelled; white space and
+        capitalization ignored
         :type setting_name: str
         :return: Setting value; type checking should be
         :rtype: str"""

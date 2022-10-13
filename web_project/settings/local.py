@@ -1,4 +1,4 @@
-from .base import *
+from .base import *  # noqa: F40
 from .base import env
 
 # GENERAL

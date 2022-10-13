@@ -401,13 +401,10 @@ class CarrierAdmin(admin.ModelAdmin):
 
 @admin.action(description="Move Up 1")
 def move_up_one(modeladmin: admin.ModelAdmin, request, queryset):
-    if queryset.count() != 1:
-        # messages.error(request, message="Exactly one item can be chose for reordering; {} chosen.".format(count))
+    if count := queryset.count() != 1:
         modeladmin.message_user(
             request,
-            message="Exactly one item can be chose for reordering; {} chosen.".format(
-                queryset.count()
-            ),
+            message=f"Exactly one item can be chose for reordering; {count} chosen.",
         )
         return
 
@@ -421,13 +418,10 @@ def move_up_one(modeladmin: admin.ModelAdmin, request, queryset):
 
 @admin.action(description="Move Down 1")
 def move_down_one(modeladmin: admin.ModelAdmin, request, queryset):
-    if queryset.count() != 1:
-        # messages.error(request, message="Exactly one item can be chose for reordering; {} chosen.".format(count))
+    if count := queryset.count() != 1:
         modeladmin.message_user(
             request,
-            message="Exactly one item can be chose for reordering; {} chosen.".format(
-                queryset.count()
-            ),
+            message=f"Exactly one item can be chose for reordering; {count} chosen.",
         )
         return
 
@@ -624,11 +618,6 @@ class SimpleProductAdmin(admin.ModelAdmin):
 @admin.register(Balance)
 class BalancesAdmin(admin.ModelAdmin):
     list_display = ["account", "balance", "updated_datetime"]
-
-
-# @admin.register(Transaction)
-# class TransactionAdmin(admin.ModelAdmin):
-#     list_display = ["balance", "processed_datetime", "purchase_request", "total_value"]
 
 
 @admin.register(DocumentNumber)

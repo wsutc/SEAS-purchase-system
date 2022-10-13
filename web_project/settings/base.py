@@ -199,7 +199,7 @@ PASSWORD_HASHERS = [
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",  # noqa: 501
     },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
@@ -346,9 +346,6 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # CUSTOM
 # -------------------------------------------------------------------
-
-# DEFAULT_TAX_RATE = ".087"
-# DEFAULT_INSTRUCTIONS = "Because grand total amount does not include shipping/handling and tax costs, Dr. Mo approves if total costs exceeds grand total amount."
 
 _17TRACK_KEY = env.str("_17TRACK_KEY", default="!!!MISSING API KEY!!!")
 

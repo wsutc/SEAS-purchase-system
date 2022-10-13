@@ -2,54 +2,54 @@
 {% load i18n %}
 <div class="col">
   <table class="table table-striped">
-      <thead>
-          <tr class="text-center">
-              <th>{% translate "Vendor" %}</th>
-              <th>{% translate "Order Number" %}</th>
-              <th>{% translate "Invoice" %}</th>
-              <th>{% translate "Due Date" %}</th>
-              <th>{% translate "Subtotal" %}</th>
-              <th>{% translate "Shipping" %}</th>
-              <th>{% translate "Sales Tax" %}</th>
-              <th>{% translate "Grand Total" %}</th>
-              <th>{% translate "Calculated Total" %}</th>
-              <th>{% translate "Tracker" %}</th>
-              <th></th>
-          </tr>
-      </thead>
-      <tbody>
-          {% for o in object_list %}
-              <tr>
-                <td>{{ o.vendor|urlizeobject }}</td>
-                <td class="text-center">{{ o.name|urlizespecify:o.get_absolute_url }}</td>
-                <td>{{ o.invoice_number }}</td>
-                <td>{{ o.invoice_due_date|date:"SHORT_DATE_FORMAT" }}</td>
-                <td>{{ o.subtotal|usd_accounting }}</td>
-                <td>{{ o.shipping|usd_accounting }}</td>
-                <td>{{ o.sales_tax|usd_accounting }}</td>
-                <td
-                  {% if o.difference > 0 %} class="table-warning"
-                  {% elif o.difference < 0 %} class="table-danger"
-                  {% else %} class="table-success"
-                  {% endif %}>
-                  {{ o.grand_total|usd_accounting }}
-                </td>
-                <td>{{ o.calculated_total|usd_accounting }}</td>
-                <td>{{ o.purchase_requests.last.tracker_set.last.status|camel_case_split }}</td>
-                <td>
-                    <div class="btn-group">
-                        <a class="btn-link" href="{% url "admin:purchases_vendororder_change" o.pk %}?next={{ request.get_full_path }}">
-                            <i class="fa-solid fa-pencil px-1"></i>
-                        </a>
-                        <a class="btn-link" href="{% url "admin:purchases_vendororder_delete" o.pk %}">
-                            <i class="fa-solid fa-trash-can px-1"></i>
-                        </a>
-                    <div class="btn-group">
-                </td>
-              </tr>
-          {% empty %}
-              <tr><td colspan="100%" class="text-center">No matching orders.</td></tr>
-          {% endfor %}
-      </tbody>
+    <thead>
+      <tr class="text-center">
+        <th>{% translate "Vendor" %}</th>
+        <th>{% translate "Order Number" %}</th>
+        <th>{% translate "Invoice" %}</th>
+        <th>{% translate "Due Date" %}</th>
+        <th>{% translate "Subtotal" %}</th>
+        <th>{% translate "Shipping" %}</th>
+        <th>{% translate "Sales Tax" %}</th>
+        <th>{% translate "Grand Total" %}</th>
+        <th>{% translate "Calculated Total" %}</th>
+        <th>{% translate "Tracker" %}</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for o in object_list %}
+        <tr>
+          <td>{{ o.vendor|urlizeobject }}</td>
+          <td class="text-center">{{ o.name|urlizespecify:o.get_absolute_url }}</td>
+          <td>{{ o.invoice_number }}</td>
+          <td>{{ o.invoice_due_date|date:"SHORT_DATE_FORMAT" }}</td>
+          <td>{{ o.subtotal|usd_accounting }}</td>
+          <td>{{ o.shipping|usd_accounting }}</td>
+          <td>{{ o.sales_tax|usd_accounting }}</td>
+          <td {% if o.difference > 0 %} class="table-warning" {% elif o.difference < 0 %} class="table-danger" {% else %} class="table-success" {% endif %}>
+            {{ o.grand_total|usd_accounting }}
+          </td>
+          <td>{{ o.calculated_total|usd_accounting }}</td>
+          <td>{{ o.purchase_requests.last.tracker_set.last.status|camel_case_split }}</td>
+          <td>
+            <div class="btn-group">
+              <a class="btn-link"
+                 href="{% url "admin:purchases_vendororder_change" o.pk %}?next={{ request.get_full_path }}">
+                <i class="fa-solid fa-pencil px-1"></i>
+              </a>
+              <a class="btn-link"
+                 href="{% url "admin:purchases_vendororder_delete" o.pk %}">
+                <i class="fa-solid fa-trash-can px-1"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="100%" class="text-center">No matching orders.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
   </table>
 </div>

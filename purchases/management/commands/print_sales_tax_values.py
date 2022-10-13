@@ -1,8 +1,4 @@
-from decimal import Decimal
-from inspect import getattr_static
-
 from django.apps import apps
-from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from web_project.helpers import Percent
@@ -22,7 +18,8 @@ class Command(BaseCommand):
         for count, pr in enumerate(qs):
             field = PurchaseRequest._meta.get_field(_FIELD_NAME)
             print(
-                f"[{str(count).zfill(digits)}] {pr} (before): {field.value_from_object(pr)}"
+                f"[{str(count).zfill(digits)}] {pr} (before): \
+                    {field.value_from_object(pr)}"
             )
 
             if pr.subtotal.amount > 0:

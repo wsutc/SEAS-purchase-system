@@ -66,17 +66,14 @@ def update_pr_status(request: HttpRequest, slug: str, *args, **kwargs) -> HttpRe
         )
     else:
         logger.warning(
-            "Slug {} returned too many/too few results: {}; no records updated.".format(
-                slug,
-                count,
-            )
+            f"Slug {slug} returned too many/too few results: \
+                {count}; no records updated.",
         )
         messages.add_message(
             request,
             messages.ERROR,
-            message="Slug returned too many/too few results: {}; no records updated.".format(
-                count
-            ),
+            message=f"Slug returned too many/too few results: \
+                {count}; no records updated.",
         )
 
     return return_redirect
@@ -248,17 +245,6 @@ def generate_pr_pdf(request, slug):
     # Define purchase request information table
     info_column_widths = [0.9 * inch, 2.4 * inch, 0.9 * inch, 2.4 * inch]
 
-    # link = '<link href="' + purchase_request.vendor.website + '">' + purchase_request.vendor.website + '</link>'
-
-    # <td rowspan=2>{{ object.vendor.street1 }}<br>
-    #                             {% if object.vendor.street2 %}
-    #                                 {{ object.vendor.street2 }}<br>
-    #                             {% endif %}
-    #                             {% if object.vendor.city %}
-    #                                 {{ object.vendor.city }}, {{ object.vendor.state.abbreviation }} {{ object.vendor.zip }}
-    #                             {% else %}
-    #                             {% endif %}
-    #                         </td>
     vendor = purchase_request.vendor
     address_line = ""
     if hasattr(vendor.state, "abbreviation"):
@@ -461,9 +447,8 @@ def update_tracker(request, pk, *args, **kwargs):
         elif tracker_obj.status == "NotFound":
             messages.warning(
                 request,
-                "Tracker '{}' was not found, please check the tracking number and carrier ({}).".format(
-                    tracker_str, tracker_obj.carrier_name
-                ),
+                "Tracker '{tracker_str}' was not found, please check the tracking \
+                    number and carrier ({tracker_obj.carrier_name}).",
             )
         else:
             messages.info(request, f"Tracker '{tracker_str}' was already up to date.")
