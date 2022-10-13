@@ -12,6 +12,7 @@
               <th>{% translate "Shipping" %}</th>
               <th>{% translate "Sales Tax" %}</th>
               <th>{% translate "Grand Total" %}</th>
+              <th>{% translate "Calculated Total" %}</th>
               <th>{% translate "Tracker" %}</th>
               <th></th>
           </tr>
@@ -26,7 +27,14 @@
                 <td>{{ o.subtotal|usd_accounting }}</td>
                 <td>{{ o.shipping|usd_accounting }}</td>
                 <td>{{ o.sales_tax|usd_accounting }}</td>
-                <td>{{ o.grand_total|usd_accounting }}</td>
+                <td
+                  {% if o.difference > 0 %} class="table-warning"
+                  {% elif o.difference < 0 %} class="table-danger"
+                  {% else %} class="table-success"
+                  {% endif %}>
+                  {{ o.grand_total|usd_accounting }}
+                </td>
+                <td>{{ o.calculated_total|usd_accounting }}</td>
                 <td>{{ o.purchase_requests.last.tracker_set.last.status|camel_case_split }}</td>
                 <td>
                     <div class="btn-group">
