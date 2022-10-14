@@ -160,7 +160,7 @@ logging.debug(f"MEDIA_URL: {apps.app_configs.get('MEDIA_URL')}")
 # Database
 # ----------------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
-
+"""
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
@@ -175,7 +175,7 @@ DATABASES = {
         "TEST": {"CHARSET": "utf8mb4", "COLLATION": "utf8mb4_unicode_ci"},
     },
 }
-
+"""
 # AUTHENTICATION
 # --------------------------------------------------------------------------------
 AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.ModelBackend"]
