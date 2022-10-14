@@ -92,7 +92,6 @@ _THIRD_PARTY_APPS = [
     "bootstrap_datepicker_plus",
     "crispy_bootstrap5",
     "crispy_forms",
-    "debug_toolbar",
     "django_listview_filters",
     "phonenumber_field",
     "djmoney",
