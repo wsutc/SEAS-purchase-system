@@ -9,7 +9,6 @@ from django.urls import reverse
 from django.views.generic import ListView, View
 from django.views.generic.list import MultipleObjectMixin
 from django_listview_filters.mixins import FilterViewMixin
-from djmoney.money import Money
 from furl import furl
 
 
@@ -67,7 +66,8 @@ def paginate(view: ListView, **kwargs) -> tuple[bool, HTTPResponse]:
 
 
 def redirect_to_next(request: HttpRequest, default_redirect, **kwargs) -> HTTPResponse:
-    """Allows for intermediate pages to redirect to the page indicated by the 'next' parameter of the request.
+    """Allows for intermediate pages to redirect to the page indicated by the 'next'
+    parameter of the request.
 
     Especially useful for update and delete views.
 
@@ -93,7 +93,8 @@ def redirect_to_next(request: HttpRequest, default_redirect, **kwargs) -> HTTPRe
 def get_new_page_fragment(view: ListView, new_page: int) -> str:
     """A helper that replaces the 'page' parameter of a path with <new_path>.
 
-    Useful for defining context for pagination links when using other parameters in a list view.
+    Useful for defining context for pagination links when using other parameters in a
+    list view.
     """
     request_path = furl(view.request.get_full_path())
     new_path = request_path.copy()

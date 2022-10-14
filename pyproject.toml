@@ -1,10 +1,15 @@
 [tool.black]
-    extend-exclude = '(/migrations|apps.py| *sgi.py|__init__.py| *urls.py)'
+extend-exclude = '(/migrations|apps.py| *sgi.py|__init__.py| *urls.py)'
 
 [tool.isort]
 profile = "black"
 multi_line_output = 3
 line_length = 88
+skip_glob = ["migrations/"]
+# extend_skip_glob = ["migrations/"]
 default_section = "THIRDPARTY"
 known_first_party = ["api", "user"]
 known_third_party = ["furl", "benedict", "django_listview_filters"]
+
+[tool.djlint]
+profile = "django"

@@ -6,31 +6,26 @@
 {% block header %}Account{% endblock %}
 {% comment %} {% block previous %}{{ object.get_previous_by_sort_order.get_absolute_url }}{% endblock previous %}
 {% block next %}{{ object.get_next_by_tracking_number.get_absolute_url }}{% endblock next %} {% endcomment %}
-
 {% block navigation %}
 {% endblock navigation %}
-
 {% block page %}
-
-{% firstof object.program_workday object.grant object.gift 'none' as title_var %}
-
-<div class="container mt-4 mb-4">
-      <div class="card col">
-        <div class="card-header">
-          <h4 class="header-em">{{ title_var }}</h4>
-        </div>
-        <div class="card-body">
-          <table>
-            <tr>
-              <td class="pe-2 fw-bold">Title</td>
-              <td>{{ object.account_title }}</td>
-            </tr>
-          </table>
-        </div>
+  {% firstof object.program_workday object.grant object.gift 'none' as title_var %}
+  <div class="container mt-4 mb-4">
+    <div class="card col">
+      <div class="card-header">
+        <h4 class="header-em">{{ title_var }}</h4>
       </div>
+      <div class="card-body">
+        <table>
+          <tr>
+            <td class="pe-2 fw-bold">Title</td>
+            <td>{{ object.account_title }}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
   </div>
-
 {% endblock %}
-
 {% comment %} {% block related_pr_table %}{% endblock related_pr_table %} {% endcomment %}
-{% block related_simpleproduct_table %}{% endblock related_simpleproduct_table %}
+{% block related_simpleproduct_table %}
+{% endblock related_simpleproduct_table %}

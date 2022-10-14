@@ -25,7 +25,7 @@ env = environ.Env(DEBUG=(bool, False))
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-READ_DOT_ENV_FILE = True  # env.bool("DJANGO_READ_DOT_ENV_FILE", default=False)
+READ_DOT_ENV_FILE = env.bool("DJANGO_READ_DOT_ENV_FILE", default=False)
 if READ_DOT_ENV_FILE:
     env_file = Path(BASE_DIR / ".env")
     if env_file.is_file():
@@ -38,7 +38,10 @@ APPS_DIR = BASE_DIR / "web_project"
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env.str("DJANGO_SECRET_KEY", default="!!!SET DJANGO_SECRET_KEY!!!")
+SECRET_KEY = env.str(
+    "DJANGO_SECRET_KEY",
+    default="django-insecure-=575&#l3pkg&6i%bmymmf+o@7$)tj8oxd=tvsn(n^0!3d8n013",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DJANGO_DEBUG", False)
@@ -89,11 +92,9 @@ _THIRD_PARTY_APPS = [
     "bootstrap_datepicker_plus",
     "crispy_bootstrap5",
     "crispy_forms",
-    "debug_toolbar",
     "django_listview_filters",
     "phonenumber_field",
     "djmoney",
-    "django_mysql",
     "django_select2",
     "widget_tweaks",
 ]
@@ -164,17 +165,19 @@ logging.debug(f"MEDIA_URL: {apps.app_configs.get('MEDIA_URL')}")
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": env.str("DB_NAME"),
-        "USER": env.str("DB_USER"),
-        "PASSWORD": env.str("DB_PASSWORD"),
-        "HOST": env.str("DB_HOST"),
-        "PORT": env.str("DB_PORT"),
+        "NAME": env.str("DB_NAME", default="db_name"),
+        "USER": env.str("DB_USER", default="db_username"),
+        "PASSWORD": env.str("DB_PASSWORD", default="db_password"),
+        "HOST": env.str("DB_HOST", default="localhost"),
+        "PORT": env.str("DB_PORT", default=3306),
         "OPTIONS": {
             "charset": "utf8mb4",
         },
         "TEST": {"CHARSET": "utf8mb4", "COLLATION": "utf8mb4_unicode_ci"},
     },
 }
+
+print(f"databases.default: {DATABASES}")
 
 # AUTHENTICATION
 # --------------------------------------------------------------------------------
@@ -199,7 +202,7 @@ PASSWORD_HASHERS = [
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",  # noqa: 501
     },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
@@ -346,9 +349,6 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # CUSTOM
 # -------------------------------------------------------------------
-
-# DEFAULT_TAX_RATE = ".087"
-# DEFAULT_INSTRUCTIONS = "Because grand total amount does not include shipping/handling and tax costs, Dr. Mo approves if total costs exceeds grand total amount."
 
 _17TRACK_KEY = env.str("_17TRACK_KEY", default="!!!MISSING API KEY!!!")
 

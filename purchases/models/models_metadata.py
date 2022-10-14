@@ -2,7 +2,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from . import Accounts, PurchaseRequest, SpendCategory
+from . import PurchaseRequest
 
 # class ShipmentSimpleProduct(models.Model):
 #     shipment = models.ForeignKey(Shipment, on_delete=models.CASCADE)

@@ -114,8 +114,8 @@ class RankManager(models.Manager):
         with transaction.atomic():
             qs.filter(pk=obj.pk).update(rank=obj.get_next_rank())
 
-            # if current_rank == obj.rank:
-            #     raise ValueError("Unable to move to end; '{}' already lowest rank.".format(current_rank))
+            # if current_rank == obj.rank: raise ValueError("Unable to move to end; '{}'
+            #     already lowest rank.".format(current_rank))
 
             qs.filter(parent_model=obj.parent_model, rank__gt=current_rank,).order_by(
                 "rank"
@@ -233,7 +233,8 @@ def something(something: Status):
 
 class Vendor(BaseModel):
     wsu_discount = models.BooleanField("Does WSU get a discount?", default=False)
-    # discount_percentage = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    # discount_percentage = models.DecimalField(max_digits=15, decimal_places=2,
+    # default=0)
     discount_percentage = SimplePercentageField(
         decimal_places=2, max_digits=15, default=0
     )
@@ -320,7 +321,7 @@ class TrackingWebhookMessage(models.Model):
         indexes = [models.Index(fields=["received_at"])]
 
 
-# --------------------------------------- Imported Data -------------------------------------
+# --------------------------------------- Imported Data -------------------------------
 
 
 class Accounts(BaseModel):

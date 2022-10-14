@@ -19,8 +19,7 @@ from django.views.generic import (
     UpdateView,
 )
 from django.views.generic.detail import SingleObjectMixin
-from django_listview_filters.filters import (
-    AllValuesFieldListFilter,
+from django_listview_filters.filters import (  # AllValuesFieldListFilter,
     ChoicesFieldListViewFilter,
     RelatedFieldListViewFilter,
 )
@@ -51,11 +50,10 @@ from purchases.models import (  # Transaction,
     requisitioner_from_user,
 )
 from purchases.models.models_metadata import PurchaseRequestAccount
-from web_project.helpers import (
+from web_project.helpers import (  # truncate_string,
     PaginatedListMixin,
     max_decimal_places,
     redirect_to_next,
-    truncate_string,
 )
 
 # from typing import Any, Dict
@@ -170,7 +168,8 @@ class SimpleProductListView(PaginatedListMixin, ListView):
         # sort vendor as lower case (python sorts lower different than upper by default)
         filter_name = "purchase_request__vendor"
 
-        # django-listview-filters added `get_filter_by_name` in later versions (should be removed)
+        # django-listview-filters added `get_filter_by_name` in later versions
+        # (should be removed)
         try:
             filter = self.get_filter_by_name(filter_name)
         except Exception:
@@ -245,10 +244,6 @@ class PurchaseRequestListView(PurchaseRequestListViewBase):
 
 
 class RequisitionerPurchaseRequestListView(PurchaseRequestListViewBase):
-    # filters = [
-    #     ("status", {'field':'status', 'parent_model':PurchaseRequest}),
-    #     ("vendor", {'model':Vendor, 'parent_model':PurchaseRequest, 'field':'purchaserequest', 'order_by':'name'}),
-    # ]
     list_filter = [
         ("status", ChoicesFieldListViewFilter),
         ("vendor", RelatedFieldListViewFilter),

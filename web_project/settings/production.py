@@ -1,13 +1,13 @@
 try:
-    import sentry_sdk
-    from sentry_sdk.integrations.django import DjangoIntegration
-    from sentry_sdk.integrations.logging import LoggingIntegration
+    import sentry_sdk  # type: ignore
+    from sentry_sdk.integrations.django import DjangoIntegration  # type: ignore
+    from sentry_sdk.integrations.logging import LoggingIntegration  # type: ignore
 except ImportError:
     from .base import logging
 
     logging.warning("`sentry_sdk` not installed")
 
-from .base import *  # noqa
+from .base import *  # noqa: F40
 from .base import env
 
 # from sentry_sdk.integrations.redis import RedisIntegration
@@ -22,24 +22,39 @@ ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["justdrive.wooster.xyz
 
 # DATABASES
 # ------------------------------------------------------------------------------
-DATABASES["default"] = env.db("DATABASE_URL")  # noqa F405
+# DATABASES["default"] = env.db("DATABASE_URL")  # noqa F405
+
+DATABASES["default"] = {  # noqa: F405
+    "ENGINE": "django.db.backends.mysql",
+    "NAME": env.str("DB_NAME", default="db_name"),
+    "USER": env.str("DB_USER", default="db_username"),
+    "PASSWORD": env.str("DB_PASSWORD", default="db_password"),
+    "HOST": env.str("DB_HOST", default="localhost"),
+    "PORT": env.str("DB_PORT", default=3306),
+    "OPTIONS": {
+        "charset": "utf8mb4",
+    },
+}
+
+logging.info(f"web_project.settings.production DATABASES: {DATABASES}")  # noqa: F405
+
 DATABASES["default"]["ATOMIC_REQUESTS"] = True  # noqa F405
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)  # noqa F405
 
 # CACHES
 # ------------------------------------------------------------------------------
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": env("REDIS_URL"),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            # Mimicing memcache behavior.
-            # https://github.com/jazzband/django-redis#memcached-exceptions-behavior
-            "IGNORE_EXCEPTIONS": True,
-        },
-    }
-}
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": env("REDIS_URL"),
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+#             # Mimicing memcache behavior.
+#             # https://github.com/jazzband/django-redis#memcached-exceptions-behavior
+#             "IGNORE_EXCEPTIONS": True,
+#         },
+#     }
+# }
 
 # SECURITY
 # ------------------------------------------------------------------------------
@@ -115,7 +130,11 @@ EMAIL_SUBJECT_PREFIX = env(
 # ADMIN
 # ------------------------------------------------------------------------------
 # Django Admin URL regex.
-ADMIN_URL = env("DJANGO_ADMIN_URL")
+try:
+    ADMIN_URL = env.url("DJANGO_ADMIN_URL", default="admin/")
+except Exception:
+    logging.info("ADMIN_URL not parseable by `env.url`", exc_info=1)
+    ADMIN_URL = env.str("DJANGO_ADMIN_URL", defaults="admin/")
 
 # Anymail
 # ------------------------------------------------------------------------------
@@ -188,6 +207,7 @@ try:
         integrations=integrations,
         environment=env("SENTRY_ENVIRONMENT", default="production"),
         traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.0),
+        auto_session_tracking=env.bool("SENTRY_AUTO_SESSION_TRACKING", default=True),
     )
 except Exception:
     logging.warning("`sentry_sdk` not imported")
