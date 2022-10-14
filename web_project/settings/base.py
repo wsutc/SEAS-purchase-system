@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 import logging
-import os
 from pathlib import Path
 
 import environ
@@ -27,11 +26,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 READ_DOT_ENV_FILE = env.bool("DJANGO_READ_DOT_ENV_FILE", default=False)
 if READ_DOT_ENV_FILE:
-    env_file = Path(BASE_DIR / ".env")
+    env_file = Path(BASE_DIR, ".env")
     if env_file.is_file():
         env.read_env(env_file)
 
-APPS_DIR = BASE_DIR / "web_project"
+APPS_DIR = Path(BASE_DIR / "web_project")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
@@ -64,22 +63,19 @@ else:
     logging.basicConfig(level="WARNING")
     MESSAGE_LEVEL = message_constants.WARNING
 
-# logging.debug(f"last 4 of secret key: {SECRET_KEY[-4:]}")
-
 plog(logging, logging.DEBUG, logging.__name__, "last 4 of secret key", SECRET_KEY[-4:])
 
 
 DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
 
-ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["127.0.0.1"])
-
-logging.debug(f"ALLOWED_HOSTS: {ALLOWED_HOSTS}")
+# ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["127.0.0.1"])
 
 # Application definition
 
 # CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 
 _DJANGO_APPS = [
+    "whitenoise.runserver_nostatic",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -115,6 +111,7 @@ INSTALLED_APPS = _DJANGO_APPS + _THIRD_PARTY_APPS + _LOCAL_APPS
 MIDDLEWARE = [
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -131,7 +128,7 @@ ROOT_URLCONF = "web_project.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "templates")],
+        "DIRS": [Path(BASE_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -153,7 +150,7 @@ WSGI_APPLICATION = "web_project.wsgi.application"
 
 # MEDIA
 # ----------------------------------------------------------------------------------------
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_ROOT = Path(BASE_DIR, "media")
 MEDIA_URL = "/media/"
 
 logging.debug(f"MEDIA_URL: {apps.app_configs.get('MEDIA_URL')}")
@@ -234,10 +231,13 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
-
-STATIC_URL = "static/"
-STATIC_ROOT = str(BASE_DIR / "staticfiles")
-STATICFILES_DIRS = [str(APPS_DIR / "static")]
+STATIC_HOST = env.url("DJANGO_AWS_S3_CUSTOM_DOMAIN", default="")
+STATIC_HOST = f"https://{STATIC_HOST}" if STATIC_HOST else ""
+STATIC_URL = f"{STATIC_HOST}/static/"
+STATIC_ROOT = f"{BASE_DIR}/staticfiles"
+STATICFILES_DIRS = [
+    f"{APPS_DIR}/static",
+]
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",

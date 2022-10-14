@@ -58,3 +58,7 @@ input[name=message] {
 .header-em {
     color: darkblue
 }
+
+.h2 {
+    background-color: blueviolet;
+}

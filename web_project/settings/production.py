@@ -32,7 +32,7 @@ DATABASES["default"] = {  # noqa: F405
     "PASSWORD": env.str("DB_PASSWORD", default="db_password"),
     "HOST": env.str("DB_HOST", default="localhost"),
     "PORT": env.str("DB_PORT", default=3306),
-     "OPTIONS": {
+    "OPTIONS": {
         "charset": "utf8mb4",
         "ssl": {"ca": env.path("AWS_CERT_PATH", default=None)},
     },
@@ -40,7 +40,7 @@ DATABASES["default"] = {  # noqa: F405
 
 logging.info(f"web_project.settings.production DATABASES: {DATABASES}")  # noqa: F405
 
-# DATABASES["default"]["OPTIONS"]["ssl"]["ca"] = 
+# DATABASES["default"]["OPTIONS"]["ssl"]["ca"] =
 DATABASES["default"]["ATOMIC_REQUESTS"] = True  # noqa F405
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)  # noqa F405
 
@@ -105,11 +105,15 @@ AWS_S3_OBJECT_PARAMETERS = {
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
 AWS_S3_REGION_NAME = env("DJANGO_AWS_S3_REGION_NAME", default=None)
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#cloudfront
-AWS_S3_CUSTOM_DOMAIN = env("DJANGO_AWS_S3_CUSTOM_DOMAIN", default=None)
+AWS_S3_CUSTOM_DOMAIN = env.url("DJANGO_AWS_S3_CUSTOM_DOMAIN", default=None)
 aws_s3_domain = AWS_S3_CUSTOM_DOMAIN or f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
 # STATIC
 # ------------------------
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+STATIC_HOST = f"https://{aws_s3_domain}"
+STATIC_URL = STATIC_HOST + "/static/"
+
 # MEDIA
 # ------------------------------------------------------------------------------
 DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"

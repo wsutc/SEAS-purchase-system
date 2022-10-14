@@ -7,12 +7,11 @@ DEBUG = True
 
 SECRET_KEY = env.str(
     "DJANGO_SECRET_KEY",
-    default="!!!SET DJANGO_SECRET_KEY!!!",
+    default=SECRET_KEY,  # noqa: F405
 )
-# ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default="127.0.0.1")
+ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["127.0.0.1"])
 
 _LOCAL_APPS = [
-    "debug_toolbar",
     "django_mysql",
 ]
 
