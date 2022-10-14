@@ -115,7 +115,11 @@ EMAIL_SUBJECT_PREFIX = env(
 # ADMIN
 # ------------------------------------------------------------------------------
 # Django Admin URL regex.
-ADMIN_URL = env("DJANGO_ADMIN_URL")
+try:
+    ADMIN_URL = env.url("DJANGO_ADMIN_URL", default="admin/")
+except Exception:
+    logging.info("ADMIN_URL not parseable by `env.url`", exc_info=1)
+    ADMIN_URL = env.str("DJANGO_ADMIN_URL", defaults="admin/")
 
 # Anymail
 # ------------------------------------------------------------------------------
