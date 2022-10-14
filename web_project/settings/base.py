@@ -168,6 +168,7 @@ DATABASES = {
         "PORT": env.str("DB_PORT", default=3306),
         "OPTIONS": {
             "charset": "utf8mb4",
+            "ssl": {"ca": env.path("AWS_CERT_PATH", default=None)},
         },
         "TEST": {"CHARSET": "utf8mb4", "COLLATION": "utf8mb4_unicode_ci"},
     },
@@ -232,10 +233,10 @@ USE_TZ = True
 STATIC_HOST = env.url("DJANGO_AWS_S3_CUSTOM_DOMAIN", default="")
 STATIC_HOST = f"https://{STATIC_HOST}" if STATIC_HOST else ""
 STATIC_URL = f"{STATIC_HOST}/static/"
-STATIC_ROOT = f"{BASE_DIR}/staticfiles"
-STATICFILES_DIRS = [
-    f"{BASE_DIR}/static",
-]
+STATIC_ROOT = Path(BASE_DIR, "staticfiles")
+# STATICFILES_DIRS = [
+#     f"{BASE_DIR}/static",
+# ]
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
