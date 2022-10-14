@@ -22,7 +22,22 @@ ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["justdrive.wooster.xyz
 
 # DATABASES
 # ------------------------------------------------------------------------------
-DATABASES["default"] = env.db("DATABASE_URL")  # noqa F405
+# DATABASES["default"] = env.db("DATABASE_URL")  # noqa F405
+
+DATABASES["default"] = {  # noqa: F405
+    "ENGINE": "django.db.backends.mysql",
+    "NAME": env.str("DB_NAME", default="db_name"),
+    "USER": env.str("DB_USER", default="db_username"),
+    "PASSWORD": env.str("DB_PASSWORD", default="db_password"),
+    "HOST": env.str("DB_HOST", default="localhost"),
+    "PORT": env.str("DB_PORT", default=3306),
+    "OPTIONS": {
+        "charset": "utf8mb4",
+    },
+}
+
+logging.info(f"web_project.settings.production DATABASES: {DATABASES}")  # noqa: F405
+
 DATABASES["default"]["ATOMIC_REQUESTS"] = True  # noqa F405
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)  # noqa F405
 

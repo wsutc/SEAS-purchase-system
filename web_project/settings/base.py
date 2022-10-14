@@ -179,7 +179,7 @@ DATABASES = {
     },
 }
 
-print(f"databases.default: {DATABASES}"
+print(f"databases.default: {DATABASES}")
 
 # AUTHENTICATION
 # --------------------------------------------------------------------------------
