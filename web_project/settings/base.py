@@ -68,10 +68,6 @@ plog(logging, logging.DEBUG, logging.__name__, "last 4 of secret key", SECRET_KE
 
 DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
 
-print("hello from `base.py`")
-
-# ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["127.0.0.1"])
-
 # Application definition
 
 # CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
@@ -184,7 +180,7 @@ DATABASES = {
 AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.ModelBackend"]
 # AUTH_USER_MODEL = "users.User"
 LOGIN_REDIRECT_URL = "/"
-LOGIN_URL = "account_login"
+# LOGIN_URL = "account_login"
 
 # PASSWORDS
 # --------------------------------------------------------------------------------
