@@ -39,6 +39,7 @@ DATABASES["default"] = env("DATABASE_URL")  # noqa F405
 
 logging.info(f"web_project.settings.production DATABASES: {DATABASES}")  # noqa: F405
 
+DATABASES["default"]["OPTIONS"]["ssl"]["ca"] = env.path("AWS_CERT_PATH", default=None)
 DATABASES["default"]["ATOMIC_REQUESTS"] = True  # noqa F405
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)  # noqa F405
 
