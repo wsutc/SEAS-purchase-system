@@ -23,7 +23,7 @@ ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["justdrive.wooster.xyz
 # DATABASES
 # ------------------------------------------------------------------------------
 # can't use `env.db` because of sslca requirement
-DATABASES["default"] = env.str("DATABASE_URL")  # noqa F405
+DATABASES["default"] = env("DATABASE_URL")  # noqa F405
 
 # DATABASES["default"] = {  # noqa: F405
 #     "ENGINE": "django.db.backends.mysql",
