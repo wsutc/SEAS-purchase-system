@@ -6,11 +6,14 @@
 {% block number %}{{ object.number }}{% endblock %}
 {% block previous %}{{ object.get_previous_by_created_date.get_absolute_url }}{% endblock %}
 {% block next %}{{ object.get_next_by_created_date.get_absolute_url }}{% endblock %}
-{% block edit %}{% url 'update_pr' slug=object.slug %}{% endblock %}
-{% block delete %}{% url 'delete_pr' slug=object.slug %}{% endblock delete %}
+{% block edit %}
+  {% url 'update_pr' slug=object.slug %}
+{% endblock %}
+{% block delete %}
+  {% url 'delete_pr' slug=object.slug %}
+{% endblock delete %}
 {% block page %}
-
-<style>
+  <style>
     .status-button {
         --bs-btn-color: #fff;
         --bs-btn-bg: #6c757d;
@@ -31,233 +34,320 @@
       width: 10em;
       text-align: right;
     }
-</style>
-
-{% include "purchases/status_change_button.html" with purchase_request=object %}
-
-{% comment %} <a href="{% url 'generate_pdf' slug=object.slug %}">PDF</a> {% endcomment %}{% comment %}someday!!!{% endcomment %}
-
-<div>
-  Created {{ object.created_date|date:"DATE_FORMAT" }}
-  <table class="table">
-    <caption hidden>Form Information</caption>
-    <tbody>
-      <tr>
-        <td class="field-title">Needed By</td>
-        <td style="width: 30em">
-          {{ object.need_by_date|default_if_none:"" }}
-        <td class="field-title">Requestor</td>
-        <td>{{ object.requisitioner.user.get_full_name|urlizespecifyobject:object.requisitioner }}</td>
-      </tr>
-      <tr>
-          <td class="field-title">Vendor</td>
-          <td>{{ object.vendor|urlizeobject }}</td>
-          <td class="field-title">Email</td>
-          <td>{{ object.requisitioner.user.email|urlize }}</td>
-      </tr>
-      <tr>
-          <td class="field-title" rowspan=2>Address</td>
-          <td rowspan=2>{{ object.vendor.street1 }}<br>
+  </style>
+  {% if debug %}
+    <div class="row justify-content-end">
+      <a href="{% url 'update_pr_totals' slug=object.slug %}"
+         class="btn btn-info col-1">Update Totals</a>
+    </div>
+  {% endif %}
+  {% include "purchases/status_change_button.html" with purchase_request=object %}
+  {% comment %} <a href="{% url 'generate_pdf' slug=object.slug %}">PDF</a> {% endcomment %}{% comment %}someday!!!{% endcomment %}
+  <div>
+    Created {{ object.created_date|date:"DATE_FORMAT" }}
+    <table class="table">
+      <caption hidden>Form Information</caption>
+      <tbody>
+        <tr>
+          <td class="field-title">Needed By</td>
+          <td style="width: 30em">
+            {{ object.need_by_date|default_if_none:"" }}
+            <td class="field-title">Requestor</td>
+            <td>{{ object.requisitioner.user.get_full_name|urlizespecifyobject:object.requisitioner }}</td>
+          </tr>
+          <tr>
+            <td class="field-title">Vendor</td>
+            <td>{{ object.vendor|urlizeobject }}</td>
+            <td class="field-title">Email</td>
+            <td>{{ object.requisitioner.user.email|urlize }}</td>
+          </tr>
+          <tr>
+            <td class="field-title" rowspan=2>Address</td>
+            <td rowspan=2>
+              {{ object.vendor.street1 }}
+              <br>
               {% if object.vendor.street2 %}
-                  {{ object.vendor.street2 }}<br>
+                {{ object.vendor.street2 }}
+                <br>
               {% endif %}
               {% if object.vendor.city %}
-                  {{ object.vendor.city }}, {{ object.vendor.state.abbreviation }} {{ object.vendor.zip }}
+                {{ object.vendor.city }}, {{ object.vendor.state.abbreviation }} {{ object.vendor.zip }}
               {% else %}
               {% endif %}
-          </td>
-          <td class="field-title">Phone</td>
-          <td>{{ object.requisitioner.phone|default_if_none:"" }}</td>
-      </tr>
-      <tr>
-          <td class="field-title">Department</td>
-          <td>{{ object.requisitioner.department.code }}</td>
-      </tr>
-      <tr>
-          <td class="field-title">Phone</td>
-          <td>{{ object.vendor.phone }}</td>
-          {% if object.vendororder_set.count == 1 %}
-          <td class="field-title">Order</td>
-          <td>{{ object.vendororder_set.first|urlizeobject }}</td>
-          {% endif %}
-      </tr>
-      <tr>
-          <td class="field-title">Email</td>
-          <td>{{ object.vendor.email|default_if_none:""|urlize }}</td>
-      </tr>
-      <tr>
-          <td class="field-title">Website</td>
-          <td><a href="{{ object.vendor.website }}" target="_blank" rel="noopener noreferrer">{{ object.vendor.website }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a></td>
-      </tr>
-      <tr>
-        <td class="field-title">Shipping</td>
-        <td>
-          <table>
-            {% for tracker in object.tracker_set.all %}
-              <tr>
-                <td>
-                  <a href="{% url "tracker_detail" tracker.pk %}">{{ tracker }}</a>
-                </td>
-                <td class="text-capitalize">
-                  Status: {{ tracker.status|default:"(unknown)"|camel_case_split }}
-                </td>
-              </tr>
-            {% empty %}
-              <tr>
-                <td>
-                  <a class="btn btn-secondary" href="{% urlquery 'create_tracker' 'purchase-request' object.slug %}">
-                    Create Tracker
-                  </a>
-                </td>
-              </tr>
-            {% endfor %}
-            {% if object.tracker_set.count %}
-              <tr>
-                <td>
-                  <a class="btn btn-secondary" href="{% urlquery 'tracker_list' 'purchase_request__id__exact' object.id %}">
-                    Show Trackers
-                  </a>
-                </td>
-                <td>
-                <a class="btn btn-secondary" href="{% urlquery 'create_tracker' 'purchase-request' object.slug %}">
-                  Create Tracker
-                </a>
-                </td>
-              </tr>
+            </td>
+            <td class="field-title">Phone</td>
+            <td>{{ object.requisitioner.phone|default_if_none:"" }}</td>
+          </tr>
+          <tr>
+            <td class="field-title">Department</td>
+            <td>{{ object.requisitioner.department.code }}</td>
+          </tr>
+          <tr>
+            <td class="field-title">Phone</td>
+            <td>{{ object.vendor.phone }}</td>
+            {% if object.vendororder_set.count == 1 %}
+              <td class="field-title">Order</td>
+              <td>{{ object.vendororder_set.first|urlizeobject }}</td>
             {% endif %}
-          </table>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  {% if debug %}<span class="alert alert-debug">debug ->count:{{ object.purchaserequestaccounts_set.count }}</span>{% endif %}
-  <table class="table table-striped caption-top">
-    <caption class="h4">Budget</caption>
-    <thead>
-      <tr>
-        <th>Program</th>
-        <th>Gift</th>
-        <th>Grant</th>
-        <th>Spend Category</th>
-        <th>Dist (% or $)</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for budget in budgets %}
-        <tr>
-          {% for fund in budget.funds_list %}
+          </tr>
+          <tr>
+            <td class="field-title">Email</td>
+            <td>{{ object.vendor.email|default_if_none:""|urlize }}</td>
+          </tr>
+          <tr>
+            <td class="field-title">Website</td>
             <td>
-              {% if fund %}
-                <a href="{% url "account_detail" slug=fund.slug %}" data-bs-toggle="tooltip" title="{{ fund.name }}" data-bs-placement="bottom">
-                  {{ fund.fund }}
+              <a href="{{ object.vendor.website }}"
+                 target="_blank"
+                 rel="noopener noreferrer">{{ object.vendor.website }}<i class="fa-solid fa-up-right-from-square"
+   data-fa-transform="shrink-6 up-4"></i></a>
+            </td>
+          </tr>
+          <tr>
+            <td class="field-title">Shipping</td>
+            <td>
+              <table>
+                {% for tracker in object.tracker_set.all %}
+                  <tr>
+                    <td>
+                      <a href="{% url "tracker_detail" tracker.pk %}">{{ tracker }}</a>
+                    </td>
+                    <td class="text-capitalize">Status: {{ tracker.status|default:"(unknown)"|camel_case_split }}</td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td>
+                      <a class="btn btn-secondary"
+                         href="{% urlquery 'create_tracker' 'purchase-request' object.slug %}">Create Tracker</a>
+                    </td>
+                  </tr>
+                {% endfor %}
+                {% if object.tracker_set.count %}
+                  <tr>
+                    <td>
+                      <a class="btn btn-secondary"
+                         href="{% urlquery 'tracker_list' 'purchase_request__id__exact' object.id %}">
+                        Show Trackers
+                      </a>
+                    </td>
+                    <td>
+                      <a class="btn btn-secondary"
+                         href="{% urlquery 'create_tracker' 'purchase-request' object.slug %}">
+                        Create Tracker
+                      </a>
+                    </td>
+                  </tr>
+                {% endif %}
+              </table>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      {% if debug %}
+        <span class="alert alert-debug">debug ->count:{{ object.purchaserequestaccounts_set.count }}</span>
+      {% endif %}
+      <table class="table table-striped caption-top">
+        <caption class="h4">Budget</caption>
+        <thead>
+          <tr>
+            <th>
+              Program
+            </th>
+            <th>
+              Gift
+            </th>
+            <th>
+              Grant
+            </th>
+            <th>
+              Spend Category
+            </th>
+            <th>
+              Dist (% or $)
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for budget in budgets %}
+            <tr>
+              {% for fund in budget.funds_list %}
+                <td>
+                  {% if fund %}
+                    <a href="{% url "account_detail" slug=fund.slug %}"
+                       data-bs-toggle="tooltip"
+                       title="{{ fund.name }}"
+                       data-bs-placement="bottom">
+                      {{ fund.fund }}
+                    </a>
+                  {% endif %}
+                </td>
+              {% endfor %}
+              <td>
+                <a href="#"
+                   data-bs-toggle="tooltip"
+                   title="{{ budget.spend_category.description }}">
+                  {{ budget.spend_category.name }}
                 </a>
+              </td>
+              {% if budget.distribution_type == distribution_types.percent %}
+                <td>
+                  {{ budget.distribution|percent:2 }}
+                </td>
+              {% elif budget.distribution_type == distribution_types.amount %}
+                <td>
+                  {{ budget.distribution|currency }}
+                </td>
               {% endif %}
-            </td>
+            </tr>
           {% endfor %}
+        </tbody>
+      </table>
+      {% if debug %}<span class="alert alert-debug">debug ->count:{{ object.simpleproduct_set.count }}</span>{% endif %}
+      <table class="table table-striped caption-top">
+        <caption><a href="{% url 'pr_filtered_simpleproducts' object.slug %}" class="h4">Items</a></caption>
+        <thead>
+          <tr>
+            <th class="text-center" style="width: 40%;">
+              Description
+            </th>
+            <th class="text-center" style="width: 10%;">
+              Link
+            </th>
+            <th class="text-center" style="width: 15%;">
+              Identifier
+            </th>
+            <th class="text-center">
+              Manufacturer
+            </th>
+            <th class="text-center" style="width:  5%;">
+              QTY
+            </th>
+            <th class="text-center" style="width: 10%;">
+              Unit
+            </th>
+            <th class="text-center" style="width: 10%;">
+              Unit Price
+            </th>
+            <th class="text-center" style="width: 10%;">
+              Extended Price
+            </th>
+            <th>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in object.simpleproduct_set.all|dictsort:"rank" %}
+            <tr>
+              <td>
+                <span class="text-truncate copyText" id="{{ item.pk }}Description">{{ item.name }}</span>
+              </td>
+              {% if item.link %}
+                <td style="text-align: center;">
+                  <a href="{{ item.link }}" target="_blank" rel="noopener noreferrer">
+                    <i class="fa-solid fa-up-right-from-square"></i>
+                  </a>
+                </td>
+              {% else %}
+                <td>
+                </td>
+              {% endif %}
+              <td align="center">
+                {{ item.identifier|default_if_none:"" }}
+              </td>
+              <td>
+                {{ item.manufacturer|default_if_none:"" }}
+              </td>
+              <td align="center">
+                {{ item.quantity|floatformat }}
+              </td>
+              <td align="center">
+                {{ item.unit.unit }}
+              </td>
+              <td>
+                {{ item.unit_price|usd_accounting:simpleproducts_unitprice_maxdigits }}
+              </td>
+              <td>
+                {{ item.extended_price.amount|usd_accounting }}
+              </td>
+              <td>
+                {% if item.taxable %}<i class="fa-solid fa-asterisk" data-fa-transform="shrink-6"></i>{% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="100%" class="text-center">
+                Please edit Purchase Request to add items.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4">
+              &nbsp;
+            </td>
+            <td colspan="3" class="text-end">
+              Subtotal
+            </td>
             <td>
-              <a href="#" data-bs-toggle="tooltip" title="{{ budget.spend_category.description }}">
-                {{ budget.spend_category.name }}
-              </a>
+              {{ object.subtotal|usd_accounting }}
             </td>
-            {% if budget.distribution_type == distribution_types.percent %}
-                <td>{{ budget.distribution|percent:2 }}</td>
-            {% elif budget.distribution_type == distribution_types.amount %}
-                <td>{{ budget.distribution|currency }}</td>
-            {% endif %}
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-
-  {% if debug %}<span class="alert alert-debug">debug ->count:{{ object.simpleproduct_set.count }}</span>{% endif %}
-  <table class="table table-striped caption-top">
-    <caption><a href="{% url 'pr_filtered_simpleproducts' object.slug %}" class="h4">Items</a></caption>
-    <thead>
-      <tr>
-        <th class="text-center" style="width: 40%;">Description</th>
-        <th class="text-center" style="width: 10%;">Link</th>
-        <th class="text-center" style="width: 15%;">Identifier</th>
-        <th class="text-center">Manufacturer</th>
-        <th class="text-center" style="width:  5%;">QTY</th>
-        <th class="text-center" style="width: 10%;">Unit</th>
-        <th class="text-center" style="width: 10%;">Unit Price</th>
-        <th class="text-center" style="width: 10%;">Extended Price</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for item in object.simpleproduct_set.all|dictsort:"rank" %}
-        <tr>
-          <td>
-            <span class="text-truncate copyText" id="{{ item.pk }}Description">{{ item.name }}</span>
-          </td>
-          {% if item.link %}
-            <td style="text-align: center;">
-              <a href="{{ item.link }}" target="_blank" rel="noopener noreferrer">
-                <i class="fa-solid fa-up-right-from-square"></i>
-              </a>
+          </tr>
+          <tr>
+            <td colspan="4">
             </td>
-          {% else %}
-            <td></td>
-          {% endif %}
-          <td align="center">{{ item.identifier|default_if_none:"" }}</td>
-          <td>{{ item.manufacturer|default_if_none:"" }}</td>
-          <td align="center">{{ item.quantity|floatformat }}</td>
-          <td align="center">{{ item.unit.unit }}</td>
-          <td>{{ item.unit_price|usd_accounting:simpleproducts_unitprice_maxdigits }}</td>
-          <td>{{ item.extended_price.amount|usd_accounting }}</td>
-          <td>{% if item.taxable %}<i class="fa-solid fa-asterisk" data-fa-transform="shrink-6"></i>{% endif %}</td>
-        </tr>
-      {% empty %}
-        <tr><td colspan="100%" class="text-center">Please edit Purchase Request to add items.</td></tr>
-      {% endfor %}
-    </tbody>
-    <tfoot>
-      <tr>
-        <td colspan="4">&nbsp;</td>
-        <td colspan="3" class="text-end">Subtotal</td>
-        <td>{{ object.subtotal|usd_accounting }}</td>
-      </tr>
-      <tr>
-        <td colspan="4"></td>
-        <td colspan="3" class="text-end">Shipping</td>
-        <td>{{ object.shipping|usd_accounting }}</td>
-      </tr>
-      <tr>
-        <td colspan="4"></td>
-        <td colspan="3" class="text-end">Sales Tax ({{ object.sales_tax_rate|numeric2percent:2 }})</td>
-        <td>{{ object.sales_tax|usd_accounting }}</td>
-      </tr>
-      {% comment %} <tr>
+            <td colspan="3" class="text-end">
+              Shipping
+            </td>
+            <td>
+              {{ object.shipping|usd_accounting }}
+            </td>
+          </tr>
+          <tr>
+            <td colspan="4">
+            </td>
+            <td colspan="3" class="text-end">
+              Sales Tax ({{ object.sales_tax_rate|numeric2percent:2 }})
+            </td>
+            <td>
+              {{ object.sales_tax|usd_accounting }}
+            </td>
+          </tr>
+          {% comment %} <tr>
         <td colspan="4"></td>
         <td colspan="3" class="text-end">Sales Tax Perc ({{ object.sales_tax_perc }})</td>
         <td>{{ sales_tax_perc|usd_accounting }}</td>
-      </tr> {% endcomment %}
-      <tr>
-        <td colspan="4"></td>
-        <td colspan="3" class="text-end">Grand Total</td>
-        <td>{{ object.grand_total|usd_accounting }}</td>
-      </tr>
-    </tfoot>
-  </table>
-  <div class="border my-3">
-      Why:
-      {{ object.justification|linebreaks }}
-  </div>
-  <div class="border my-3">
-      Special Instructions:
-      {{ object.instruction|linebreaks }}
-  </div>
-</div>
-
-{% block related_pr_table %}{% endblock related_pr_table %}
-{% block related_simpleproduct_table %}{% endblock related_simpleproduct_table %}
-
-<div id="django-debug"><pre>{% debug %}</pre></div>
-
-<script>
+          </tr> {% endcomment %}
+          <tr>
+            <td colspan="4">
+            </td>
+            <td colspan="3" class="text-end">
+              Grand Total
+            </td>
+            <td>
+              {{ object.grand_total|usd_accounting }}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+      <div class="border my-3">
+        Why:
+        {{ object.justification|linebreaks }}
+      </div>
+      <div class="border my-3">
+        Special Instructions:
+        {{ object.instruction|linebreaks }}
+      </div>
+    </div>
+    {% block related_pr_table %}
+    {% endblock related_pr_table %}
+    {% block related_simpleproduct_table %}
+    {% endblock related_simpleproduct_table %}
+    <div id="django-debug">
+      <pre>{% debug %}</pre>
+    </div>
+    <script>
   const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
   const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl, { placement:"bottom" }))
-</script>
-
-{% endblock page %}
+    </script>
+  {% endblock page %}
