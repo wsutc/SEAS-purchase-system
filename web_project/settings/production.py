@@ -22,6 +22,8 @@ ALLOWED_HOSTS = env.list(
     "DJANGO_ALLOWED_HOSTS", default=["seas-purchase-system.herokuapp.com"]
 )
 
+print("hello from `production.py`")
+
 plog(  # noqa: F405
     logger=logging,
     level=logging.INFO,

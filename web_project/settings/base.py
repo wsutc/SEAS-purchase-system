@@ -68,6 +68,8 @@ plog(logging, logging.DEBUG, logging.__name__, "last 4 of secret key", SECRET_KE
 
 DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
 
+print("hello from `base.py`")
+
 # ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["127.0.0.1"])
 
 # Application definition
