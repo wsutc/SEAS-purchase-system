@@ -93,7 +93,10 @@ def tracking_webhook(request):
         secret = settings._17TRACK_KEY
         given_token = request.headers.get("sign", "")
 
-        if get_generated_signature(request.body, secret) != given_token:
+        if token := get_generated_signature(request.body, secret) != given_token:
+            logger.warning(
+                f"Invalid tracking webhook request received | token: {token}"
+            )
             return HttpResponseForbidden(
                 "Inconsistency in response signature.", content_type="text/plain"
             )

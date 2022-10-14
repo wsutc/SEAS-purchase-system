@@ -313,10 +313,10 @@ LOGGING = {
         },
     },
     "loggers": {
-        "purchases": {
-            "handlers": ["console"],
-            "level": "INFO",
-        },
+        # "purchases": {
+        #     "handlers": ["console"],
+        #     "level": "INFO",
+        # },
         "django": {
             "handlers": ["console", "mail_admins"],
             "level": "INFO",
@@ -332,7 +332,10 @@ LOGGING = {
             "level": "INFO",
         },
     },
-    "root": {"level": "INFO", "handlers": ["console"]},
+    "root": {
+        "level": "INFO",
+        "handlers": ["console"],
+    },
 }
 
 
