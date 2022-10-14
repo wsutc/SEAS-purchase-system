@@ -94,6 +94,7 @@ _THIRD_PARTY_APPS = [
     "crispy_forms",
     "django_listview_filters",
     "phonenumber_field",
+    "debug_toolbar",
     "djmoney",
     "django_select2",
     "widget_tweaks",
