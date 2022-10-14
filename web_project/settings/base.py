@@ -95,7 +95,6 @@ _THIRD_PARTY_APPS = [
     "django_listview_filters",
     "phonenumber_field",
     "djmoney",
-    "django_mysql",
     "django_select2",
     "widget_tweaks",
 ]
