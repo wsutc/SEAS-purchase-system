@@ -38,7 +38,10 @@ APPS_DIR = BASE_DIR / "web_project"
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env.str("DJANGO_SECRET_KEY", default="!!!SET DJANGO_SECRET_KEY!!!")
+SECRET_KEY = env.str(
+    "DJANGO_SECRET_KEY",
+    default="django-insecure-=575&#l3pkg&6i%bmymmf+o@7$)tj8oxd=tvsn(n^0!3d8n013",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DJANGO_DEBUG", False)
@@ -160,22 +163,22 @@ logging.debug(f"MEDIA_URL: {apps.app_configs.get('MEDIA_URL')}")
 # Database
 # ----------------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
-"""
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": env.str("DB_NAME"),
-        "USER": env.str("DB_USER"),
-        "PASSWORD": env.str("DB_PASSWORD"),
-        "HOST": env.str("DB_HOST"),
-        "PORT": env.str("DB_PORT"),
+        "NAME": env.str("DB_NAME", default="db_name"),
+        "USER": env.str("DB_USER", default="db_username"),
+        "PASSWORD": env.str("DB_PASSWORD", default="db_password"),
+        "HOST": env.str("DB_HOST", default="localhost"),
+        "PORT": env.str("DB_PORT", default=3306),
         "OPTIONS": {
             "charset": "utf8mb4",
         },
         "TEST": {"CHARSET": "utf8mb4", "COLLATION": "utf8mb4_unicode_ci"},
     },
 }
-"""
+
 # AUTHENTICATION
 # --------------------------------------------------------------------------------
 AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.ModelBackend"]
