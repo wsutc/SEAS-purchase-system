@@ -20,6 +20,14 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["justdrive.wooster.xyz"])
 
+plog(  # noqa: F405
+    logger=logging,
+    level=logging.INFO,
+    path="production",
+    text="ALLOWED_HOSTS",
+    value=ALLOWED_HOSTS,
+)
+
 # DATABASES
 # ------------------------------------------------------------------------------
 # can't use `env.db` because of sslca requirement
