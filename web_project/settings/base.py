@@ -175,7 +175,7 @@ DATABASES = {
     },
 }
 
-print(f"databases.default: {DATABASES}")
+# print(f"databases.default: {DATABASES}")
 
 # AUTHENTICATION
 # --------------------------------------------------------------------------------
@@ -236,7 +236,7 @@ STATIC_HOST = f"https://{STATIC_HOST}" if STATIC_HOST else ""
 STATIC_URL = f"{STATIC_HOST}/static/"
 STATIC_ROOT = f"{BASE_DIR}/staticfiles"
 STATICFILES_DIRS = [
-    f"{APPS_DIR}/static",
+    f"{BASE_DIR}/static",
 ]
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",

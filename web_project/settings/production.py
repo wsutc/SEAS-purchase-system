@@ -38,7 +38,7 @@ DATABASES["default"] = {  # noqa: F405
     },
 }
 
-logging.info(f"web_project.settings.production DATABASES: {DATABASES}")  # noqa: F405
+# logging.info(f"web_project.settings.production DATABASES: {DATABASES}")  # noqa: F405
 
 # DATABASES["default"]["OPTIONS"]["ssl"]["ca"] =
 DATABASES["default"]["ATOMIC_REQUESTS"] = True  # noqa F405
