@@ -208,7 +208,6 @@ try:
         environment=env("SENTRY_ENVIRONMENT", default="production"),
         traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.0),
         auto_session_tracking=env.bool("SENTRY_AUTO_SESSION_TRACKING", default=True),
-        environment=env.str("SENTRY_ENVIRONMENT", default="production"),
     )
 except Exception:
     logging.warning("`sentry_sdk` not imported")
