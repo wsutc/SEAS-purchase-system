@@ -1,11 +1,13 @@
 {% extends "purchases/layout.html" %}
 {% load static %}
-{% block title %}{% block title_prefix %}{% endblock title_prefix %} Purchase Request{% endblock %}
+{% block title %}
+  {% block title_prefix %}
+  {% endblock title_prefix %}
+  Purchase Request
+{% endblock %}
 {% block content %}
-
-{{ form.media.css }}
-
-<style>
+  {{ form.media.css }}
+  <style>
     .hidden {
         display: none
     }
@@ -33,116 +35,161 @@
     .select-standard {
         width: 15em;
     }
-</style>
-
-<div class="container mt-4">
+  </style>
+  <div class="container mt-4">
     <form method="post">
-        {% csrf_token %}
-        <div class="card col">
-            <div class="card-header">
-                <h4>{% block header %}{% endblock %} <span class="header-em">Purchase Request</span></h4>
-            </div>
-            <div class="card-body">
-                {{ form.non_form_errors }}
-                <table>
-                    {{ form.as_table }}
-                </table>
-                <p class="h1 text-info">Account(s)</p>
-                {{ purchase_request_accounts_formset.non_form_errors }}
-                {{ purchase_request_accounts_formset.management_form }}
-                <table id="account-table" class="table table-striped">
-                    <thead class="text-bg-secondary text-center">
-                        <td>{{ purchase_request_accounts_formset.form.account.label }}</td>
-                        <td>{{ purchase_request_accounts_formset.form.spend_category_ext.label }}</td>
-                        <td class="col-2">{{ purchase_request_accounts_formset.form.distribution_type.label }}</td>
-                        <td class="col-1">{{ purchase_request_accounts_formset.form.distribution_input.label }}</td>
-                        <td>{{ purchase_request_accounts_formset.form.DELETE.label }}</td>
-                    </thead>
-                    <tbody id="account-table-body" class="{{ purchase_request_accounts_formset.prefix }}">
-                        {% for account in purchase_request_accounts_formset %}
-                            {{ account.id }}
-                            <tr class="account-row">
-                                <td>{{ account.account }}</td>
-                                <td>{{ account.spend_category_ext }}</td>
-                                <td>{{ account.distribution_type }}</td>
-                                <td>{{ account.distribution_input }}</td>
-                                <td>{{ account.DELETE }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                <table class="hidden">
-                    <tr id="empty-account-row">
-                        {{ purchase_request_accounts_formset.empty_form.id }}
-                        <td>{{ purchase_request_accounts_formset.empty_form.accounts }}</td>
-                        <td>{{ purchase_request_accounts_formset.empty_form.spend_category }}</td>
-                        <td>{{ purchase_request_accounts_formset.empty_form.distribution_type }}</td>
-                        <td>{{ purchase_request_accounts_formset.empty_form.distribution_input }}</td>
-                        <td>{{ purchase_request_accounts_formset.empty_form.DELETE }}</td>
-                    </tr>
-                </table>
-                <button id="add-account" type="button" class="btn btn-secondary"><i class="fa-solid fa-plus"></i></button>
-
-                <p class="h1 text-info">Items</p>
-                {{ purchase_request_items_formset.non_form_errors }}
-                {{ purchase_request_items_formset.management_form }}
-                <table id="item-table" class="table table-striped">
-                    <thead class="text-bg-secondary">
-                        <td>{{ purchase_request_items_formset.form.name.label }}</td>
-                        <td class="col-1">{{ purchase_request_items_formset.form.identifier.label }}</td>
-                        <td class="col-2">{{ purchase_request_items_formset.form.link.label }}</td>
-                        <td class="col-2">{{ purchase_request_items_formset.form.manufacturer.label }}</td>
-                        <td class="col-1">{{ purchase_request_items_formset.form.unit_price.label }}</td>
-                        <td class="col-1">{{ purchase_request_items_formset.form.quantity.label }}</td>
-                        <td class="col-1">{{ purchase_request_items_formset.form.unit.label }}</td>
-                        <td class="text-center">{{ purchase_request_items_formset.form.taxable.label }}</td>
-                        <td class="text=center">Delete</td>
-                    </thead>
-                    <tbody id="item-table-body" class="{{ purchase_request_items_formset.prefix }}">
-                        {% for item in purchase_request_items_formset %}
-                            {{ item.non_field_errors }}
-                            {{ item.id }}
-                            <tr class="item-row">
-                                <td>{{ item.name.errors }}{{ item.name }}</td>
-                                <td>{{ item.identifier.errors }}{{ item.identifier }}</td>
-                                <td>{{ item.link.errors }}{{ item.link }}</td>
-                                <td>{{ item.manufacturer.errors }}{{ item.manufacturer }}</td>
-                                <td>{{ item.unit_price.errors }}{{ item.unit_price }}</td>
-                                <td>{{ item.quantity.errors }}{{ item.quantity }}</td>
-                                <td>{{ item.unit.errors }}{{ item.unit }}</td>
-                                <td class="text-center">{{ item.taxable.errors }}{{ item.taxable }}</td>
-                                <td class="text-center">{{ item.DELETE }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                <table class="hidden">
-                    <tr id="empty-row">
-                        {{ purchase_request_items_formset.empty_form.id }}
-                        <td>{{ purchase_request_items_formset.empty_form.name }}</td>
-                        <td>{{ purchase_request_items_formset.empty_form.identifier }}</td>
-                        <td>{{ purchase_request_items_formset.empty_form.link }}</td>
-                        <td>{{ purchase_request_items_formset.empty_form.manufacturer }}</td>
-                        <td>{{ purchase_request_items_formset.empty_form.unit_price }}</td>
-                        <td>{{ purchase_request_items_formset.empty_form.quantity }}</td>
-                        <td>{{ purchase_request_items_formset.empty_form.unit }}</td>
-                        <td class="text-center">{{ purchase_request_items_formset.empty_form.taxable }}</td>
-                        <td class="text-center">{{ purchase_request_items_formset.empty_form.DELETE }}</td>
-                    </tr>
-                </table>
-                <button id="add-item" type="button" class="btn btn-secondary"><i class="fa-solid fa-plus"></i></button>
-            </div>
+      {% csrf_token %}
+      <div class="card col">
+        <div class="card-header">
+          <h4>
+            {% block header %}{% endblock %}
+            <span class="header-em">Purchase Request</span>
+          </h4>
         </div>
-        <div class="mt-3 mb-5">
-            <button type="submit" class="save btn btn-primary">Save</button>
+        <div class="card-body">
+          {{ form.non_form_errors }}
+          <table>
+            {{ form.as_table }}
+          </table>
+          <p class="h1 text-info">
+            Account(s)
+          </p>
+          {{ purchase_request_accounts_formset.non_form_errors }}
+          {{ purchase_request_accounts_formset.management_form }}
+          <table id="account-table" class="table table-striped">
+            <thead class="text-bg-secondary text-center">
+              <td>{{ purchase_request_accounts_formset.form.account.label }}</td>
+              <td>{{ purchase_request_accounts_formset.form.spend_category_ext.label }}</td>
+              <td class="col-2">{{ purchase_request_accounts_formset.form.distribution_type.label }}</td>
+              <td class="col-1">{{ purchase_request_accounts_formset.form.distribution_input.label }}</td>
+              <td>{{ purchase_request_accounts_formset.form.DELETE.label }}</td>
+            </thead>
+            <tbody id="account-table-body"
+                   class="{{ purchase_request_accounts_formset.prefix }}">
+              {% for account in purchase_request_accounts_formset %}
+                {{ account.id }}
+                <tr class="account-row">
+                  <td>{{ account.account }}</td>
+                  <td>{{ account.spend_category_ext }}</td>
+                  <td>{{ account.distribution_type }}</td>
+                  <td>{{ account.distribution_input }}</td>
+                  <td>{{ account.DELETE }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <table class="hidden">
+            <tr id="empty-account-row">
+              {{ purchase_request_accounts_formset.empty_form.id }}
+              <td>{{ purchase_request_accounts_formset.empty_form.accounts }}</td>
+              <td>{{ purchase_request_accounts_formset.empty_form.spend_category }}</td>
+              <td>{{ purchase_request_accounts_formset.empty_form.distribution_type }}</td>
+              <td>{{ purchase_request_accounts_formset.empty_form.distribution_input }}</td>
+              <td>{{ purchase_request_accounts_formset.empty_form.DELETE }}</td>
+            </tr>
+          </table>
+          <button id="add-account" type="button" class="btn btn-secondary">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+          <p class="h1 text-info">
+            Items
+          </p>
+          {{ purchase_request_items_formset.non_form_errors }}
+          {{ purchase_request_items_formset.management_form }}
+          <table id="item-table" class="table table-striped">
+            <thead class="text-bg-secondary">
+              <td>{{ purchase_request_items_formset.form.name.label }}</td>
+              <td class="col-1">{{ purchase_request_items_formset.form.identifier.label }}</td>
+              <td class="col-2">{{ purchase_request_items_formset.form.link.label }}</td>
+              <td class="col-2">{{ purchase_request_items_formset.form.manufacturer.label }}</td>
+              <td class="col-1">{{ purchase_request_items_formset.form.unit_price.label }}</td>
+              <td class="col-1">{{ purchase_request_items_formset.form.quantity.label }}</td>
+              <td class="col-1">{{ purchase_request_items_formset.form.unit.label }}</td>
+              <td class="text-center">{{ purchase_request_items_formset.form.taxable.label }}</td>
+              <td class="text=center">Delete</td>
+            </thead>
+            <tbody id="item-table-body"
+                   class="{{ purchase_request_items_formset.prefix }}">
+              {% for item in purchase_request_items_formset %}
+                {{ item.non_field_errors }}
+                {{ item.id }}
+                <tr class="item-row">
+                  <td>{{ item.name.errors }}{{ item.name }}</td>
+                  <td>
+                    {{ item.identifier.errors }}{{ item.identifier }}
+                  </td>
+                  <td>
+                    {{ item.link.errors }}{{ item.link }}
+                  </td>
+                  <td>
+                    {{ item.manufacturer.errors }}{{ item.manufacturer }}
+                  </td>
+                  <td>
+                    {{ item.unit_price.errors }}{{ item.unit_price }}
+                  </td>
+                  <td>
+                    {{ item.quantity.errors }}{{ item.quantity }}
+                  </td>
+                  <td>
+                    {{ item.unit.errors }}{{ item.unit }}
+                  </td>
+                  <td class="text-center">
+                    {{ item.taxable.errors }}{{ item.taxable }}
+                  </td>
+                  <td class="text-center">
+                    {{ item.DELETE }}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <table class="hidden">
+            <tr id="empty-row">
+              {{ purchase_request_items_formset.empty_form.id }}
+              <td>
+                {{ purchase_request_items_formset.empty_form.name }}
+              </td>
+              <td>
+                {{ purchase_request_items_formset.empty_form.identifier }}
+              </td>
+              <td>
+                {{ purchase_request_items_formset.empty_form.link }}
+              </td>
+              <td>
+                {{ purchase_request_items_formset.empty_form.manufacturer }}
+              </td>
+              <td>
+                {{ purchase_request_items_formset.empty_form.unit_price }}
+              </td>
+              <td>
+                {{ purchase_request_items_formset.empty_form.quantity }}
+              </td>
+              <td>
+                {{ purchase_request_items_formset.empty_form.unit }}
+              </td>
+              <td class="text-center">
+                {{ purchase_request_items_formset.empty_form.taxable }}
+              </td>
+              <td class="text-center">
+                {{ purchase_request_items_formset.empty_form.DELETE }}
+              </td>
+            </tr>
+          </table>
+          <button id="add-item" type="button" class="btn btn-secondary">
+            <i class="fa-solid fa-plus"></i>
+          </button>
         </div>
+      </div>
+      <div class="mt-3 mb-5">
+        <button type="submit" class="save btn btn-primary">
+          Save
+        </button>
+      </div>
     </form>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-{{ form.media.js }}
-
-<script>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  {{ form.media.js }}
+  <script>
     const addRowBtn = document.getElementById('add-item')
     const totalNewForms = document.getElementById('id_items-TOTAL_FORMS')
 
@@ -193,8 +240,8 @@
         totalNewForms.setAttribute('value',currentItemCount)
         rowCopyTarget.append(copyEmptyRow)
     }
-</script>
-
-<div id="django-debug"><pre>{% debug %}</pre></div>
-
+  </script>
+  <div id="django-debug">
+    <pre>{% debug %}</pre>
+  </div>
 {% endblock %}

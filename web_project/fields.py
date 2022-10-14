@@ -20,11 +20,12 @@ else:
 
 
 class SimplePercentageField(models.DecimalField):
-    """Enter and display percentages out of 100 but store them out of 1 in db as decimals
+    """Enter and display percentages out of 100 but store them out of 1
+    in db as decimals
 
-    Because this is based on `models.DecimalField`, `decimal_places` applies to what is stored
-    in the db (/1), not what is shown or typed in (/100). With that said, add two (2) to whatever
-    is desired in the form for proper validation.
+    Because this is based on `models.DecimalField`, `decimal_places` applies to what is
+    stored in the db (/1), not what is shown or typed in (/100). With that said, add two
+    (2) to whatever is desired in the form for proper validation.
     """
 
     description = _(

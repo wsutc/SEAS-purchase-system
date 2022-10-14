@@ -19,5 +19,7 @@
     },
     "emmet.includeLanguages": {
         "django-html": "html",
-    }
+    },
+    "python.linting.flake8Enabled": true,
+    "python.linting.enabled": true
 }

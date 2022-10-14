@@ -1,13 +1,12 @@
 try:
-    import sentry_sdk
-    from sentry_sdk.integrations.django import DjangoIntegration
-    from sentry_sdk.integrations.logging import LoggingIntegration
+    import sentry_sdk  # type: ignore
+    from sentry_sdk.integrations.django import DjangoIntegration  # type: ignore
+    from sentry_sdk.integrations.logging import LoggingIntegration  # type: ignore
 except ImportError:
     from .base import logging
-
     logging.warning("`sentry_sdk` not installed")
 
-from .base import *  # noqa
+from .base import *  # noqa: F40
 from .base import env
 
 # from sentry_sdk.integrations.redis import RedisIntegration
