@@ -114,6 +114,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "web_project.helpers.LoginRequiredMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -353,7 +354,7 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 # CUSTOM
 # -------------------------------------------------------------------
 
-_17TRACK_KEY = env.str("_17TRACK_KEY", default="!!!MISSING API KEY!!!")
+PYTRACK_17TRACK_KEY = env.str("PYTRACK_17TRACK_KEY", default="!!!MISSING API KEY!!!")
 
 MESSAGE_TAGS = {
     message_constants.SUCCESS: "alert alert-success",
@@ -367,4 +368,10 @@ TRACKER_PARAMS = [
     "trackingnumber",
     "tracking_number",
     "strorigtracknum",
+]
+
+ALLOWED_ANONYMOUS_VIEWS = [
+    "LoginView",
+    "LogoutView",
+    "PasswordResetView",
 ]

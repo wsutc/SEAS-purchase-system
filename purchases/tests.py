@@ -1,3 +1,4 @@
+# flake8: noqa
 from http import HTTPStatus
 
 from django.contrib.auth.models import Permission, User
@@ -23,7 +24,7 @@ from purchases.views import tracking_webhook
 
 # from web_project.settings import AFTERSHIP_WEBHOOK_SECRET
 
-# from web_project.settings import _17TRACK_KEY
+# from web_project.settings import PYTRACK_17TRACK_KEY
 
 
 class PurchaseRequestTestModel(TestCase):
@@ -68,7 +69,7 @@ class PurchaseRequestTestModel(TestCase):
 #         response = self.client.get(reverse("new_pr"))
 #         self.assertEqual(response.status_code, 200)
 
-# @override_settings(_17TRACK_KEY="abc123")
+# @override_settings(PYTRACK_17TRACK_KEY="abc123")
 # class TrackingWebhookTests(TestCase):
 #     def setUp(self):
 #         self.client = Client(enforce_csrf_checks=True)

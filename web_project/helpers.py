@@ -1,8 +1,15 @@
 import logging
 from decimal import Decimal
 from http.client import HTTPResponse
+from inspect import getmembers
+from pprint import pprint
+from types import FunctionType
 
+from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+
+# from django.contrib.auth import views as auth_views
 from django.http import HttpRequest
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -10,6 +17,8 @@ from django.views.generic import ListView, View
 from django.views.generic.list import MultipleObjectMixin
 from django_listview_filters.mixins import FilterViewMixin
 from furl import furl
+
+# from web_project.settings.base import ALLOWED_ANONYMOUS_VIEWS
 
 
 def paginate(view: ListView, **kwargs) -> tuple[bool, HTTPResponse]:
@@ -274,8 +283,65 @@ def is_number(s):
         return False
 
 
+# -------------------------- Debug tools/helpers ----------------------------------
 def plog(
     logger: logging.Logger, level: int, path: str, text: str, value: (str | float)
 ):
     message = f"`{path}` {text}: {value}"
     logger.log(level, message)
+
+
+def attributes(obj):
+    disallowed_names = {
+        name for name, value in getmembers(type(obj)) if isinstance(value, FunctionType)
+    }
+    return {
+        name: getattr(obj, name)
+        for name in dir(obj)
+        if name[0] != "_" and name not in disallowed_names and hasattr(obj, name)
+    }
+
+
+def print_attributes(obj):
+    pprint(attributes(obj))
+
+
+def login_exempt(view):
+    view.login_exempt = True
+    return view
+
+
+# ------------------------------ Middlewares -----------------------------------
+
+
+class LoginRequiredMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        return self.get_response(request)
+
+    def process_view(self, request, view_func, view_args, view_kwargs):
+        import inspect
+
+        from django.contrib.auth import views as auth_views
+
+        if getattr(view_func, "login_exempt", False):
+            return
+
+        if request.user.is_authenticated:
+            return
+
+        ALLOWED_ANONYMOUS_VIEWS = settings.ALLOWED_ANONYMOUS_VIEWS
+        all_auth_views = inspect.getmembers(auth_views)
+        allowed_views = (
+            x[1] for x in all_auth_views if x[0] in ALLOWED_ANONYMOUS_VIEWS
+        )
+
+        if view_func.view_class in allowed_views:
+            """Allow views specified by ALLOWED_ANONYMOUS_VIEWS to be viewed even if not
+            authenticated.
+            """
+            return
+
+        return login_required(view_func)(request, *view_args, **view_kwargs)

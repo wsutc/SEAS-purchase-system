@@ -24,7 +24,8 @@ from reportlab.platypus import PageTemplate, SimpleDocTemplate, Table, TableStyl
 from reportlab.platypus.frames import Frame
 from reportlab.platypus.paragraph import Paragraph
 
-from web_project.helpers import redirect_to_next, truncate_string
+from purchases.exceptions import TrackerInvalidApiKey
+from web_project.helpers import login_exempt, redirect_to_next, truncate_string
 
 from ..models import (
     Balance,
@@ -79,6 +80,15 @@ def update_pr_status(request: HttpRequest, slug: str, *args, **kwargs) -> HttpRe
     return return_redirect
 
 
+def flush_old_webhooks(days_offset: int) -> int:
+    deleted, _ = TrackingWebhookMessage.objects.filter(
+        received_at__lte=timezone.now() - dt.timedelta(days=days_offset)
+    ).delete()
+
+    return deleted
+
+
+@login_exempt
 @csrf_exempt
 @require_POST
 @non_atomic_requests
@@ -90,39 +100,42 @@ def tracking_webhook(request):
         )
         return response
     else:
-        secret = settings._17TRACK_KEY
-        given_token = request.headers.get("sign", "")
-
-        if token := get_generated_signature(request.body, secret) != given_token:
-            logger.warning(
-                f"Invalid tracking webhook request received | token: {token}"
-            )
-            return HttpResponseForbidden(
-                "Inconsistency in response signature.", content_type="text/plain"
-            )
-
-        deleted, _ = TrackingWebhookMessage.objects.filter(
-            received_at__lte=timezone.now() - dt.timedelta(days=7)
-        ).delete()
-
-        if deleted > 0:
-            logger.info(f"Webhook Messages Deleted: {deleted}")
-        else:
-            logger.info("No Webhook Messages Deleted.")
-
-        payload = json.loads(request.body)
-        TrackingWebhookMessage.objects.create(
-            received_at=timezone.now(), payload=payload
-        )
-
         try:
-            success, message = process_webhook_payload(payload)
-            if success:
-                logger.info(message)
+            secret = settings.PYTRACK_17TRACK_KEY
+        except AttributeError:
+            logger.warning("Tracking API Key not set.", exc_info=1)
+        else:
+            given_token = request.headers.get("sign", "")
+
+            if token := get_generated_signature(request.body, secret) != given_token:
+                logger.warning(
+                    f"Invalid tracking webhook request received | token: {token}"
+                )
+                return HttpResponseForbidden(
+                    "Inconsistency in response signature.", content_type="text/plain"
+                )
+
+            payload = json.loads(request.body)
+            TrackingWebhookMessage.objects.create(
+                received_at=timezone.now(), payload=payload
+            )
+
+            try:
+                success, message = process_webhook_payload(payload)
+                if success:
+                    logger.info(message)
+                else:
+                    logger.warning(message)
+            except ObjectDoesNotExist:
+                logger.error("No object matching payload found", exc_info=1)
+
+        finally:
+            count = flush_old_webhooks(days_offset=7)
+
+            if count > 0:
+                logger.info(f"Webhook Messages Deleted: {count}")
             else:
-                logger.warning(message)
-        except ObjectDoesNotExist:
-            logger.error("No object matching payload found", exc_info=1)
+                logger.info("No Webhook Messages Deleted.")
 
         return HttpResponse("Message successfully received.", content_type="text/plain")
 
@@ -430,35 +443,42 @@ def update_tracker(request, pk, *args, **kwargs):
             response = update_tracking_details([(tracker.tracking_number, None)])
 
         data = next(iter(response or []), None)
-    except Exception as err:
-        messages.error(request, f"{err}")
+    except TrackerInvalidApiKey:
+        logger.warning("Tracking API Key not set or invalid.", exc_info=1)
+        messages.error(request, "API key not set, please contact site admin.")
+    except Exception:
+        messages.error(
+            request, "Unknown error updating tracker, please contact site admin."
+        )
+        logger.error("Unknown exception running `update_tracker`.", exc_info=1)
+    else:
 
-    if data.get("code") == 0:
-        tracker_obj = data.get("tracker")
+        if data.get("code") == 0:
+            tracker_obj = data.get("tracker")
 
-        if tracker_obj.events_hash != tracker.events_hash:
-            _, _ = tracker.create_events(tracker_obj.events)
+            if tracker_obj.events_hash != tracker.events_hash:
+                _, _ = tracker.create_events(tracker_obj.events)
 
-        tracker_str = tracker.tracking_number.upper()
+            tracker_str = tracker.tracking_number.upper()
 
-        count = tracker.update_tracker_fields(tracker_obj)
-        if count:
-            messages.success(
-                request,
-                f"Tracker '{tracker_str}' updated with new information.",
-            )
-        elif tracker_obj.status == "NotFound":
-            messages.warning(
-                request,
-                "Tracker '{tracker_str}' was not found, please check the tracking \
-                    number and carrier ({tracker_obj.carrier_name}).",
-            )
-        else:
-            messages.info(request, f"Tracker '{tracker_str}' was already up to date.")
-
-    url = tracker if "next" not in fragment.args else fragment.args.get("next")
-
-    # url = tracker if not fragment.args.has_key("next") else fragment.args.get("next")
+            count = tracker.update_tracker_fields(tracker_obj)
+            if count:
+                messages.success(
+                    request,
+                    f"Tracker '{tracker_str}' updated with new information.",
+                )
+            elif tracker_obj.status == "NotFound":
+                messages.warning(
+                    request,
+                    "Tracker '{tracker_str}' was not found, please check the tracking \
+                        number and carrier ({tracker_obj.carrier_name}).",
+                )
+            else:
+                messages.info(
+                    request, f"Tracker '{tracker_str}' was already up to date."
+                )
+    finally:
+        url = tracker if "next" not in fragment.args else fragment.args.get("next")
 
     return redirect(url)
 

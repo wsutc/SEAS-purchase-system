@@ -8,7 +8,7 @@ except ImportError:
     logging.warning("`sentry_sdk` not installed")
 
 from .base import *  # noqa: F40
-from .base import _17TRACK_KEY, env
+from .base import env
 
 # from sentry_sdk.integrations.redis import RedisIntegration
 
