@@ -5,7 +5,6 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from web_project import form_fields
-from web_project.helpers import plog
 
 logger = logging.getLogger(__name__)
 log_kwargs = {
@@ -62,7 +61,5 @@ class SimplePercentageField(models.DecimalField):
             decimal_places=self.decimal_places - 2,
         )
         defaults.update(kwargs)
-
-        plog(text="Decimal Places", value=kwargs["decimal_places"], **log_kwargs)
 
         return super().formfield(**defaults)

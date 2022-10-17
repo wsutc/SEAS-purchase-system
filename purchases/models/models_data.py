@@ -637,9 +637,6 @@ class Tracker(models.Model):
     def get_tracking_link(self):
         tracking_patterns = get_setting("TRACKER_PARAMS", ["trackingnumber"])
 
-        for pattern in tracking_patterns:
-            logger.info(f"{pattern}")
-
         try:
             path = furl(self.carrier.tracking_link)
 

@@ -1,14 +1,21 @@
 import hashlib
 import http.client
 import json
+import logging
 
 from benedict import benedict
 from django.conf import settings
 from django.http import JsonResponse
 
-from purchases.exceptions import TrackerPreviouslyRegistered, TrackerRejectedUnknownCode
+from purchases.exceptions import (
+    TrackerInvalidApiKey,
+    TrackerPreviouslyRegistered,
+    TrackerRejectedUnknownCode,
+)
 
 # from typing import TypeVar
+
+logger = logging.getLogger(__name__)
 
 
 def register_trackers(payload: list[tuple[str, str]]) -> dict[list[dict], list[dict]]:
@@ -88,7 +95,10 @@ def tracker_request(
     """
     conn = http.client.HTTPSConnection("api.17track.net")
 
-    headers = {"Content-Type": "application/json", "17token": settings._17TRACK_KEY}
+    headers = {
+        "Content-Type": "application/json",
+        "17token": settings.PYTRACK_17TRACK_KEY,
+    }
 
     payload_dict = []
     for t, c in payload:
@@ -147,10 +157,7 @@ def update_tracking_details(trackers: list[tuple[str, str]]) -> list[dict]:
     if len(trackers) == 0:
         return False
 
-    try:
-        data = tracker_request("GET", trackers)
-    except ValueError:
-        raise
+    data = tracker_request("GET", trackers)
 
     updated_trackers = []
     try:
@@ -163,10 +170,16 @@ def update_tracking_details(trackers: list[tuple[str, str]]) -> list[dict]:
                 tracking["message"] = "unknown"
                 tracking["code"] = -1000
             updated_trackers.append(tracking)
-    except Exception:
-        raise
-
-    return updated_trackers
+    except KeyError:
+        data_b = benedict(data)
+        if "errors" in data_b:
+            error_code = data_b["errors[0].code"]
+            error_message = data_b["errors[0].message"]
+            match str(error_code):
+                case "-18010002":
+                    raise TrackerInvalidApiKey(error_code, error_message)
+    else:
+        return updated_trackers
 
 
 def get_generated_signature(message: bytes, secret: str):
