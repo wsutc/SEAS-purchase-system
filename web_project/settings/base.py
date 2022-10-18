@@ -25,10 +25,10 @@ env = environ.Env(DEBUG=(bool, False))
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-DEV_MACHINES = ["tc-metech-5080", "wts-main-m01"]
+DEV_MACHINES = ["tc-metech-5080", "wtsmain-m01"]
 
 hostname = gethostname()
-if hostname in DEV_MACHINES:
+if hostname.lower() in DEV_MACHINES:
     READ_DOT_ENV_FILE = True
 else:
     READ_DOT_ENV_FILE = env.bool("DJANGO_READ_DOT_ENV_FILE", default=False)
@@ -55,6 +55,11 @@ TEMPLATE_DEBUG = env.bool("DJANGO_TEMPLATE_DEBUG", False)
 
 if DEBUG:
     logging.basicConfig(level="DEBUG")
+    log_kwargs = {
+        "logger": logging,
+        "path": "web_project.settings",
+        "level": logging.DEBUG,
+    }
     MESSAGE_LEVEL = message_constants.DEBUG
     import mimetypes
 
@@ -239,8 +244,8 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
-STATIC_HOST = env("DJANGO_AWS_S3_CUSTOM_DOMAIN", default="")
-STATIC_HOST = f"https://{STATIC_HOST}" if STATIC_HOST else ""
+STATIC_HOST = env.url("DJANGO_AWS_S3_CUSTOM_DOMAIN", default="")
+STATIC_HOST = f"https://{STATIC_HOST.path}" if STATIC_HOST else ""
 STATIC_URL = f"{STATIC_HOST}/static/"
 STATIC_ROOT = Path(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [
@@ -250,6 +255,8 @@ STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 ]
+
+plog(text="Static Host", value=STATIC_HOST, **log_kwargs)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
@@ -360,7 +367,7 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 GRAVATAR_DEFAULT_IMAGE = "retro"
-GRAVATAR_DEFAULT_RATING = "pg"
+GRAVATAR_DEFAULT_RATING = "g"
 
 # CUSTOM
 # -------------------------------------------------------------------
