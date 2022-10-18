@@ -66,7 +66,7 @@ def copy_account_to_accounts(apps, schema_editor):
         if created:
             created_count += 1
             print(
-                f"Account '{account_new.name}' created. Fund type: {account_new.fund_type}"
+                f"Account '{account_new.name}' created. Fund type: {account_new.fund_type}"  # noqa: E501
             )
         else:
             print(f"Account '{account_new.name}' already existed.")
@@ -78,7 +78,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("accounts", "0001_initial"),
-        ("purchases", "0088_remove_trackeritem_simple_product_and_more"),
+        # ("purchases", "0001_initial"),
     ]
 
     operations = [

@@ -10,8 +10,16 @@ import djmoney.models.fields
 import purchases.models.models_data
 import web_project.fields
 
-from zerozerozeroone_first_squash import (
+from .zerozerozeroone_first_squash import (
     CURRENCY_CHOICES,
+)
+
+from .migration_tools import (
+    create_account_slugs,
+    create_carrier_slugs,
+    create_manufacturer_slug,
+    change_account_foreign_relationship,
+    populate_spendcat_ext,
 )
 
 
@@ -106,11 +114,8 @@ class Migration(migrations.Migration):
     ]
 
     dependencies = [
-        ("accounts", "0003_alter_basetransaction_amount_and_more"),
-        (
-            "purchases",
-            "0049_vendor_created_date_alter_manufacturer_created_date_and_more",
-        ),
+        # ("accounts", "0003_alter_basetransaction_amount_and_more"),
+        ("purchases", "migration_tools"),
         ("accounts", "0004_spendcategory"),
     ]
 
@@ -121,7 +126,7 @@ class Migration(migrations.Migration):
             field=models.SlugField(),
         ),
         migrations.RunPython(
-            code=purchases.migrations.slug_helpers.create_account_slugs,
+            code=create_account_slugs,
         ),
         migrations.AlterField(
             model_name="accounts",
@@ -129,7 +134,7 @@ class Migration(migrations.Migration):
             field=models.SlugField(unique=True),
         ),
         migrations.RunPython(
-            code=purchases.migrations.slug_helpers_b.create_carrier_slugs,
+            code=create_carrier_slugs,
         ),
         migrations.AlterField(
             model_name="accounts",
@@ -615,7 +620,7 @@ class Migration(migrations.Migration):
             preserve_default=False,
         ),
         migrations.RunPython(
-            code=purchases.migrations.manufacturer_created_date_custom_and_more.create_manufacturer_slug,  # noqa: E501
+            code=create_manufacturer_slug,  # noqa: E501
         ),
         migrations.AlterField(
             model_name="manufacturer",
@@ -764,7 +769,7 @@ class Migration(migrations.Migration):
             field=models.DecimalField(decimal_places=5, max_digits=10),
         ),
         migrations.RunPython(
-            code=purchases.migrations.auto_20220926_1435.change_account_foreign_relationship,  # noqa: E501
+            code=change_account_foreign_relationship,  # noqa: E501
         ),
         migrations.AddField(
             model_name="purchaserequestaccount",
@@ -776,7 +781,7 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.RunPython(
-            code=purchases.migrations.auto_20220926_1651.populate_spendcat_ext,
+            code=populate_spendcat_ext,
         ),
         migrations.RemoveField(
             model_name="purchaserequest",
