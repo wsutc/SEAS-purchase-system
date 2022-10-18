@@ -73,6 +73,11 @@ if DEBUG:
     logging.debug(f"New js type: {new_js}")
 else:
     logging.basicConfig(level="WARNING")
+    log_kwargs = {
+        "logger": logging,
+        "path": "web_project.settings",
+        "level": logging.WARNING,
+    }
     MESSAGE_LEVEL = message_constants.WARNING
 
 plog(logging, logging.DEBUG, logging.__name__, "last 4 of secret key", SECRET_KEY[-4:])
