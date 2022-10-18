@@ -189,7 +189,7 @@ class Migration(migrations.Migration):
                 (
                     "specification",
                     models.TextField(
-                        verbose_name="Detailed Specifications (required if no specification sheet)"
+                        verbose_name="Detailed Specifications (required if no specification sheet)"  # noqa: E501
                     ),
                 ),
                 (
@@ -487,7 +487,7 @@ class Migration(migrations.Migration):
                             ("THB", "Thai Baht"),
                             (
                                 "XXX",
-                                "The codes assigned for transactions where no currency is involved",
+                                "The codes assigned for transactions where no currency is involved",  # noqa: E501
                             ),
                             ("TPE", "Timorese Escudo"),
                             ("TOP", "Tongan Paʻanga"),
@@ -858,7 +858,7 @@ class Migration(migrations.Migration):
                             ("THB", "Thai Baht"),
                             (
                                 "XXX",
-                                "The codes assigned for transactions where no currency is involved",
+                                "The codes assigned for transactions where no currency is involved",  # noqa: E501
                             ),
                             ("TPE", "Timorese Escudo"),
                             ("TOP", "Tongan Paʻanga"),
@@ -1258,7 +1258,7 @@ class Migration(migrations.Migration):
                             ("THB", "Thai Baht"),
                             (
                                 "XXX",
-                                "The codes assigned for transactions where no currency is involved",
+                                "The codes assigned for transactions where no currency is involved",  # noqa: E501
                             ),
                             ("TPE", "Timorese Escudo"),
                             ("TOP", "Tongan Paʻanga"),
@@ -1587,7 +1587,7 @@ class Migration(migrations.Migration):
                             ("THB", "Thai Baht"),
                             (
                                 "XXX",
-                                "The codes assigned for transactions where no currency is involved",
+                                "The codes assigned for transactions where no currency is involved",  # noqa: E501
                             ),
                             ("TPE", "Timorese Escudo"),
                             ("TOP", "Tongan Paʻanga"),
@@ -1916,7 +1916,7 @@ class Migration(migrations.Migration):
                             ("THB", "Thai Baht"),
                             (
                                 "XXX",
-                                "The codes assigned for transactions where no currency is involved",
+                                "The codes assigned for transactions where no currency is involved",  # noqa: E501
                             ),
                             ("TPE", "Timorese Escudo"),
                             ("TOP", "Tongan Paʻanga"),
@@ -2245,7 +2245,7 @@ class Migration(migrations.Migration):
                             ("THB", "Thai Baht"),
                             (
                                 "XXX",
-                                "The codes assigned for transactions where no currency is involved",
+                                "The codes assigned for transactions where no currency is involved",  # noqa: E501
                             ),
                             ("TPE", "Timorese Escudo"),
                             ("TOP", "Tongan Paʻanga"),
@@ -2311,7 +2311,7 @@ class Migration(migrations.Migration):
                 (
                     "instruction",
                     models.TextField(
-                        default="Because grand total amount does not include shipping/handling and tax costs, Dr. Mo approves if total costs exceeds grand total amount.",
+                        default="Because grand total amount does not include shipping/handling and tax costs, Dr. Mo approves if total costs exceeds grand total amount.",  # noqa: E501
                         verbose_name="Special Instructions",
                     ),
                 ),
@@ -2806,7 +2806,7 @@ class Migration(migrations.Migration):
                             ("THB", "Thai Baht"),
                             (
                                 "XXX",
-                                "The codes assigned for transactions where no currency is involved",
+                                "The codes assigned for transactions where no currency is involved",  # noqa: E501
                             ),
                             ("TPE", "Timorese Escudo"),
                             ("TOP", "Tongan Paʻanga"),
@@ -3135,7 +3135,7 @@ class Migration(migrations.Migration):
                             ("THB", "Thai Baht"),
                             (
                                 "XXX",
-                                "The codes assigned for transactions where no currency is involved",
+                                "The codes assigned for transactions where no currency is involved",  # noqa: E501
                             ),
                             ("TPE", "Timorese Escudo"),
                             ("TOP", "Tongan Paʻanga"),
@@ -3502,7 +3502,7 @@ class Migration(migrations.Migration):
                             ("THB", "Thai Baht"),
                             (
                                 "XXX",
-                                "The codes assigned for transactions where no currency is involved",
+                                "The codes assigned for transactions where no currency is involved",  # noqa: E501
                             ),
                             ("TPE", "Timorese Escudo"),
                             ("TOP", "Tongan Paʻanga"),
@@ -3912,7 +3912,7 @@ class Migration(migrations.Migration):
                             ("THB", "Thai Baht"),
                             (
                                 "XXX",
-                                "The codes assigned for transactions where no currency is involved",
+                                "The codes assigned for transactions where no currency is involved",  # noqa: E501
                             ),
                             ("TPE", "Timorese Escudo"),
                             ("TOP", "Tongan Paʻanga"),
@@ -4279,7 +4279,7 @@ class Migration(migrations.Migration):
                             ("THB", "Thai Baht"),
                             (
                                 "XXX",
-                                "The codes assigned for transactions where no currency is involved",
+                                "The codes assigned for transactions where no currency is involved",  # noqa: E501
                             ),
                             ("TPE", "Timorese Escudo"),
                             ("TOP", "Tongan Paʻanga"),

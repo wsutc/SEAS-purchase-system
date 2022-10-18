@@ -7,10 +7,10 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        (
-            "purchases",
-            "0025_rename_balances_balance_rename_ledgers_transaction_and_more",
-        ),
+        # (
+        #     "purchases",
+        #     "0025_rename_balances_balance_rename_ledgers_transaction_and_more",
+        # ),
         ("inventory", "0001_initial"),
     ]
 
