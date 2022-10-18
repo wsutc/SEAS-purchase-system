@@ -25,6 +25,11 @@ class Migration(migrations.Migration):
             model_name="accounts",
             name="slug",
         ),
+        migrations.AddField(
+            model_name="purchaserequest",
+            name="new_st",
+            field=models.DecimalField(max_digits=10, decimal_places=2),
+        ),
         migrations.RemoveField(
             model_name="purchaserequest",
             name="new_st",
