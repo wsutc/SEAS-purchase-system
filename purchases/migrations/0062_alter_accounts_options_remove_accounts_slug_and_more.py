@@ -89,7 +89,25 @@ DEV_MACHINES = ["tc-metech-5080"]
 
 current_machine = gethostname()
 
-if current_machine.lower() not in DEV_MACHINES:
+dev_machine = True if current_machine.lower() in DEV_MACHINES else False
+
+SCARY_FIELD_LIST = ["accounts.cost_center"]
+
+if not dev_machine:
+    for index, op in enumerate(OPERATIONS):
+        if isinstance(op, migrations.AddField):
+            model_name, name = op.model_name, op.name
+            if f"{model_name}.{name}" in SCARY_FIELD_LIST:
+                logging.info(
+                    f"Replacing AddField with RemoveField for '{model_name}.{name}"
+                )
+                print(f"Replacing AddField with RemoveField for '{model_name}.{name}")
+                OPERATIONS[index] = migrations.RemoveField(
+                    model_name=model_name,
+                    name=name,
+                )
+
+if dev_machine:
     for index, op in enumerate(OPERATIONS):
         if isinstance(op, migrations.AddField):
             model_name, name = op.model_name, op.name
@@ -97,12 +115,17 @@ if current_machine.lower() not in DEV_MACHINES:
                 logging.info(
                     f"Replacing AddField with AlterField for '{model_name}.{name}"
                 )
+                print(f"Replacing AddField with AlterField for '{model_name}.{name}")
                 OPERATIONS[index] = migrations.AlterField(
                     model_name=model_name,
                     name=name,
                     field=op.field,
                     preserve_default=op.preserve_default,
                 )
+
+for i, op in enumerate(OPERATIONS):
+    print(f"Operation[{i}]: {op}")
+
 
 # app = apps.get_app_config("purchases")
 
