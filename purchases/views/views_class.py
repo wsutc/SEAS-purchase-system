@@ -5,7 +5,8 @@ from decimal import Decimal
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.contrib.auth.models import User
+
+# from django.contrib.auth.models import User
 from django.db.models import ExpressionWrapper, F, OuterRef, Subquery, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -378,8 +379,8 @@ class RequisitionerDetailView(DetailView):
 
 class RequisitionerListView(PaginatedListMixin, ListView):
     context_object_name = "requisitioners"
-    admin_user = User.objects.filter(username="admin").first()
-    queryset = Requisitioner.objects.exclude(user=admin_user).order_by("user")
+    # admin_user = User.objects.filter(username="admin").first()
+    queryset = Requisitioner.objects.exclude(user__username="admin").order_by("user")
 
 
 class RequisitionerUpdateView(UpdateView):

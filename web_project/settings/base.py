@@ -179,19 +179,26 @@ logging.debug(f"MEDIA_URL: {apps.app_configs.get('MEDIA_URL')}")
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": env.str("DB_NAME", default="db_name"),
-        "USER": env.str("DB_USER", default="db_username"),
-        "PASSWORD": env.str("DB_PASSWORD", default="db_password"),
-        "HOST": env.str("DB_HOST", default="localhost"),
-        "PORT": env.str("DB_PORT", default=3306),
-        "OPTIONS": {
-            "charset": "utf8mb4",
-            "ssl": {"ca": env.path("AWS_CERT_PATH", default="")},
-        },
-        "TEST": {"CHARSET": "utf8mb4", "COLLATION": "utf8mb4_unicode_ci"},
-    },
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": Path(BASE_DIR, "db.sqlite3"),
+    }
 }
+
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.mysql",
+#         "NAME": env.str("DB_NAME", default="db_name"),
+#         "USER": env.str("DB_USER", default="db_username"),
+#         "PASSWORD": env.str("DB_PASSWORD", default="db_password"),
+#         "HOST": env.str("DB_HOST", default="localhost"),
+#         "PORT": env.str("DB_PORT", default=3306),
+#         "OPTIONS": {
+#             "charset": "utf8mb4",
+#             "ssl": {"ca": env.path("AWS_CERT_PATH", default="")},
+#         },
+#         "TEST": {"CHARSET": "utf8mb4", "COLLATION": "utf8mb4_unicode_ci"},
+#     },
+# }
 
 # print(f"databases.default: {DATABASES}")
 
