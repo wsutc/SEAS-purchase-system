@@ -239,7 +239,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
-STATIC_HOST = env.url("DJANGO_AWS_S3_CUSTOM_DOMAIN", default="")
+STATIC_HOST = env("DJANGO_AWS_S3_CUSTOM_DOMAIN", default="")
 STATIC_HOST = f"https://{STATIC_HOST}" if STATIC_HOST else ""
 STATIC_URL = f"{STATIC_HOST}/static/"
 STATIC_ROOT = Path(BASE_DIR, "staticfiles")
