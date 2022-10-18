@@ -66,7 +66,8 @@
             "request": "launch",
             "program": "${workspaceFolder}\\manage.py",
             "args": [
-                "print_sales_tax_values",
+                // "print_sales_tax_values",
+                "makemigrations",
             ],
             "django": true,
             "justMyCode": true

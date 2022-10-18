@@ -33,7 +33,6 @@ class SimplePercentageField(forms.DecimalField):
         **kwargs,
     ):
         log_kwargs["path"] = f"{logger.name}.SimplePercentageField"
-        plog(text="Decimal Places", value=decimal_places, **log_kwargs)
         if "widget" not in kwargs:
             step = 10 ** (-1 * decimal_places)
             kwargs["widget"] = forms.NumberInput(
@@ -72,13 +71,8 @@ class SimplePercentageField(forms.DecimalField):
 
     def prepare_value(self, value):
         log_kwargs["path"] = f"{logger.name}.prepare_value"
-        value_type = type(value) if settings.DEBUG else None
-        plog(text=f"incoming value [{value_type}]", value=value, **log_kwargs)
 
         val = super().prepare_value(value)
-        val_type = type(val) if settings.DEBUG else None
-
-        plog(text=f"after super() val [{val_type}]", value=val, **log_kwargs)
 
         if isinstance(val, Percent):
             return val.per_hundred

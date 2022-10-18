@@ -8,7 +8,7 @@ except ImportError:
     logging.warning("`sentry_sdk` not installed")
 
 from .base import *  # noqa: F40
-from .base import _17TRACK_KEY, env
+from .base import env
 
 # from sentry_sdk.integrations.redis import RedisIntegration
 
@@ -112,8 +112,8 @@ aws_s3_domain = AWS_S3_CUSTOM_DOMAIN or f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws
 # ------------------------
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-STATIC_HOST = f"https://{aws_s3_domain}"
-STATIC_URL = STATIC_HOST + "/static/"
+# STATIC_HOST = f"https://{aws_s3_domain}"
+# STATIC_URL = STATIC_HOST + "/static/"
 
 # MEDIA
 # ------------------------------------------------------------------------------
