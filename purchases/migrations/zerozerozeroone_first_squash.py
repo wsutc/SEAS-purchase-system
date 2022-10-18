@@ -921,7 +921,10 @@ class Migration(migrations.Migration):
         # ),
         # migrations.AlterModelOptions(
         #     name="accounts",
-        #     options={"ordering": ["account_title"], "verbose_name_plural": "Accounts"},
+        #     options={
+        #         "ordering": ["account_title"],
+        #         "verbose_name_plural": "Accounts",
+        #     },
         # ),
         migrations.AlterModelOptions(
             name="spendcategory",

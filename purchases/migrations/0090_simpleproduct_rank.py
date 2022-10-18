@@ -28,21 +28,25 @@ def set_product_rank(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('purchases', '0089_delete_transaction'),
+        ("purchases", "0088_remove_trackeritem_simple_product_and_more"),
     ]
 
     operations = [
-        migrations.RunSQL("ALTER TABLE `seas_purchasing`.`purchases_simpleproduct` DROP COLUMN `rank`;"),
+        # migrations.RunSQL( "ALTER TABLE `seas_purchasing`.`purchases_simpleproduct`
+        #     DROP COLUMN `rank`;" ),
         migrations.AddField(
-            model_name='simpleproduct',
-            name='rank',
-            field=models.SmallIntegerField(editable=False, null=True, verbose_name='in pr ordering'),
-        ),
-        migrations.RunPython(set_product_rank),
-        migrations.AlterField(
             model_name="simpleproduct",
             name="rank",
-            field=models.SmallIntegerField(editable=False, null=False, verbose_name='in pr ordering'),
-        )
-
+            field=models.SmallIntegerField(
+                editable=False, null=True, verbose_name="in pr ordering"
+            ),
+        ),
+        # migrations.RunPython(set_product_rank),
+        # migrations.AlterField(
+        #     model_name="simpleproduct",
+        #     name="rank",
+        #     field=models.SmallIntegerField(
+        #         editable=False, null=False, verbose_name="in pr ordering"
+        #     ),
+        # ),
     ]

@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
         #     model_name='setupsheet',
         #     name='part_number',
         # ),
-        migrations.RunSQL("DROP TABLE `seas_purchasing`.`setup_sheets_partrevision`;"),
+        # migrations.RunSQL("DROP TABLE `seas_purchasing`.`setup_sheets_partrevision`;"),
         migrations.CreateModel(
             name="PartRevision",
             fields=[

@@ -17,21 +17,16 @@ def populate_spendcat_ext(apps, schema_editor):
     )"""
 
     # real code
-    scsq = SpendCategory.objects.filter(id = OuterRef(OuterRef("spend_category_id")))
+    scsq = SpendCategory.objects.filter(id=OuterRef(OuterRef("spend_category_id")))
     escsq = ExternalSpendCategory.objects.filter(name__in=Subquery(scsq.values("code")))
 
-    qs.update(
-        spend_category_ext_id = Subquery(escsq.values("id")[:1])
-    )
-
-    new_name = PurchaseRequestAccount.objects.first().spend_category_ext.name
-    print(f"Name: {new_name}")
+    qs.update(spend_category_ext_id=Subquery(escsq.values("id")[:1]))
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('purchases', '0100_purchaserequestaccount_spend_category_ext'),
+        ("purchases", "0100_purchaserequestaccount_spend_category_ext"),
         # ('accounts', '0005_auto_20220926_1632'),
     ]
 

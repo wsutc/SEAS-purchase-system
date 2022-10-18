@@ -14,10 +14,9 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL(
-            "ALTER TABLE `seas_purchasing`.`purchases_manufacturer` DROP COLUMN `slugger`;"
-        ),
-        migrations.AddField(
+        # migrations.RunSQL( "ALTER TABLE `seas_purchasing`.`purchases_manufacturer`
+        #     DROP COLUMN `slugger`;" ),
+        migrations.AlterField(
             model_name="manufacturer",
             name="slug",
             field=models.SlugField(default=django.utils.timezone.now),

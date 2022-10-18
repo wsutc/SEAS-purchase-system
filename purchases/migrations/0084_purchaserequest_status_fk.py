@@ -39,30 +39,40 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # migrations.RunSQL("DROP INDEX `purchases_purchasere_status_fk_id_4916f867_fk_purchases` ON `seas_purchasing`.`purchases_purchaserequest`"),
-        # migrations.RunSQL("ALTER TABLE `seas_purchasing`.`purchases_purchaserequest` DROP INDEX `purchases_purchasere_status_fk_id_4916f867_fk_purchases`"),
-        # migrations.RunSQL("ALTER TABLE `seas_purchasing`.`purchases_purchaserequest` DROP FOREIGN KEY `purchases_purchasere_status_fk_id_4916f867_fk_purchases`;"),
-        migrations.RunSQL(
-            "ALTER TABLE `seas_purchasing`.`purchases_purchaserequest` DROP COLUMN `status_fk_id`;"
+        # migrations.RunSQL(
+        #     "DROP INDEX `purchases_purchasere_status_fk_id_4916f867_fk_purchases` ON `seas_purchasing`.`purchases_purchaserequest`"  # noqa: E501
+        # ),
+        # migrations.RunSQL(
+        #     "ALTER TABLE `seas_purchasing`.`purchases_purchaserequest` DROP INDEX `purchases_purchasere_status_fk_id_4916f867_fk_purchases`"  # noqa: E501
+        # ),
+        # migrations.RunSQL(
+        #     "ALTER TABLE `seas_purchasing`.`purchases_purchaserequest` DROP FOREIGN KEY `purchases_purchasere_status_fk_id_4916f867_fk_purchases`;"  # noqa: E501
+        # ),
+        # migrations.RunSQL(
+        #     "ALTER TABLE `seas_purchasing`.`purchases_purchaserequest` DROP COLUMN `status_fk_id`;"  # noqa: E501
+        # ),
+        migrations.RemoveField(
+            model_name="purchaserequest",
+            name="status",
         ),
         migrations.AddField(
             model_name="purchaserequest",
-            name="status_fk",
+            name="status",
             field=models.ForeignKey(
                 null=True,
                 on_delete=django.db.models.deletion.PROTECT,
                 to="purchases.status",
             ),
         ),
-        migrations.RunPython(fill_status_fk),
-        migrations.RenameField(
-            model_name="purchaserequest",
-            old_name="status",
-            new_name="status_choices",
-        ),
-        migrations.RenameField(
-            model_name="purchaserequest",
-            old_name="status_fk",
-            new_name="status",
-        ),
+        # migrations.RunPython(fill_status_fk),
+        # migrations.RenameField(
+        #     model_name="purchaserequest",
+        #     old_name="status",
+        #     new_name="status_choices",
+        # ),
+        # migrations.RenameField(
+        #     model_name="purchaserequest",
+        #     old_name="status_fk",
+        #     new_name="status",
+        # ),
     ]
