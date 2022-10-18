@@ -18,6 +18,9 @@ class Migration(migrations.Migration):
             name="accounts",
             options={"ordering": ["account_title"], "verbose_name_plural": "Accounts"},
         ),
+        migrations.AddField(
+            model_name="accounts", name="slug", field=models.SlugField()
+        ),
         migrations.RemoveField(
             model_name="accounts",
             name="slug",
