@@ -4,6 +4,7 @@ import string
 from django.db import migrations
 from django.db.models import OuterRef, Subquery
 from django.utils.text import slugify
+
 from web_project.helpers import first_true
 
 
