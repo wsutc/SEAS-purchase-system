@@ -108,3 +108,8 @@ input[name=message] {
 .gravatar {
     border-radius: 50% !important;
 }
+
+.field-title {
+    width: 10em;
+    text-align: right;
+}

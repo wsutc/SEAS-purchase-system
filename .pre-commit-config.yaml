@@ -23,6 +23,8 @@ repos:
           - id: check-merge-conflict
           - id: debug-statements
           - id: end-of-file-fixer
+            # files:
+            # exclude-types: [css]
           - id: name-tests-test
             args: ["--django"]
           - id: trailing-whitespace
