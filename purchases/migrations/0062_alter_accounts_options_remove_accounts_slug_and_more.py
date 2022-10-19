@@ -129,7 +129,8 @@ for index, op in enumerate(OPERATIONS):
                 #     field=op.field,
                 # )
                 OPERATIONS[index] = migrations.RunSQL(
-                    "WAITFOR DELAY '00:00:00'", state_operations=OPERATIONS[index]
+                    "ALTER TABLE accounts ALTER COLUMN cost_center varchar(15) NULL",
+                    state_operations=OPERATIONS[index],
                 )
                 print(f"Modified operation field: {OPERATIONS[index]}")
 
