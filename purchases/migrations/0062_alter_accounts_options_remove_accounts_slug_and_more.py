@@ -2,18 +2,17 @@
 
 import logging
 
+import django.utils.timezone
+from django.apps import apps
+
+# from django.conf import settings
+from django.core.exceptions import FieldDoesNotExist
+from django.db import migrations, models
+
 # from functools import partial
 # from socket import gethostname
 
 # from sqlite3 import OperationalError
-
-import django.utils.timezone
-
-# from django.apps import apps
-from django.conf import settings
-
-# from django.core.exceptions import FieldDoesNotExist
-from django.db import migrations, models
 
 logging.basicConfig(level="DEBUG")
 
@@ -105,15 +104,23 @@ OPERATIONS = [
 #                     name=name,
 #                 )
 
-read_migration_id = settings.MIGRATION_SWITCH_ID
+# read_migration_id = settings.MIGRATION_SWITCH_ID
 
-print(f"MIGRATION_SWITCH_ID: {read_migration_id}\nMIGRATE_ID: {MIGRATE_ID}")
+# print(f"MIGRATION_SWITCH_ID: {read_migration_id}\nMIGRATE_ID: {MIGRATE_ID}")
 
-if read_migration_id == MIGRATE_ID:
-    for index, op in enumerate(OPERATIONS):
-        if isinstance(op, migrations.AddField):
-            model_name, name = op.model_name, op.name
-            if f"{model_name}.{name}" in FIELD_LIST:
+# if read_migration_id == MIGRATE_ID:
+for index, op in enumerate(OPERATIONS):
+    if isinstance(op, migrations.AddField):
+        model_name, name = op.model_name, op.name
+        model_obj = apps.get_model("purchases", model_name)
+        if f"{model_name}.{name}" in FIELD_LIST:
+            try:
+                field = model_obj._meta.get_field(name)
+            except FieldDoesNotExist:
+                logging.info(f"Field '{model_name}.{name} does not exist", exc_info=1)
+                print(f"Field '{model_name}.{name} does not exist")
+                # leave alone
+            else:
                 logging.info(
                     f"Replacing AddField with AlterField for '{model_name}.{name}"
                 )
@@ -123,7 +130,7 @@ if read_migration_id == MIGRATE_ID:
                     name=name,
                     field=op.field,
                 )
-                print(f"Modified operation field: {OPERATIONS[index].field}")
+                print(f"Modified operation field: {OPERATIONS[index]}")
 
 for i, op in enumerate(OPERATIONS):
     print(f"Operation[{i}]: {op}")
