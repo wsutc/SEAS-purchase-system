@@ -122,8 +122,8 @@ if read_migration_id == MIGRATE_ID:
                     model_name=model_name,
                     name=name,
                     field=op.field,
-                    preserve_default=op.preserve_default,
                 )
+                print(f"Modified operation field: {OPERATIONS[index].field}")
 
 for i, op in enumerate(OPERATIONS):
     print(f"Operation[{i}]: {op}")
