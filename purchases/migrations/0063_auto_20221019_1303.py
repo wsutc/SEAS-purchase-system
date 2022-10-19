@@ -14,6 +14,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RemoveField(
+            model_name="accounts",
+            name="slug",
+        ),
         migrations.AddField(
             model_name="carrier",
             name="created_date",

@@ -14,10 +14,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RemoveField(
-            model_name="accounts",
-            name="slug",
-        ),
-        migrations.RemoveField(
             model_name="purchaserequest",
             name="new_st",
         ),
