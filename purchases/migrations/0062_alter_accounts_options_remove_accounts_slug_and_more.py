@@ -105,7 +105,11 @@ OPERATIONS = [
 #                     name=name,
 #                 )
 
-if settings.MIGRATION_SWITCH_ID == MIGRATE_ID:
+read_migration_id = settings.MIGRATION_SWITCH_ID
+
+print(f"MIGRATION_SWITCH_ID: {read_migration_id}\nMIGRATE_ID: {MIGRATE_ID}")
+
+if read_migration_id == MIGRATE_ID:
     for index, op in enumerate(OPERATIONS):
         if isinstance(op, migrations.AddField):
             model_name, name = op.model_name, op.name
