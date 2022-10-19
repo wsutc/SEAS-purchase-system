@@ -3,23 +3,27 @@
 import logging
 
 # from functools import partial
-from socket import gethostname
+# from socket import gethostname
 
 # from sqlite3 import OperationalError
 
 import django.utils.timezone
 
 # from django.apps import apps
+from django.conf import settings
+
 # from django.core.exceptions import FieldDoesNotExist
 from django.db import migrations, models
 
 logging.basicConfig(level="DEBUG")
 
+MIGRATE_ID = "deploy_init"
+
 FIELD_LIST = [
     "accounts.cost_center",
-    "carrier.created_date",
-    "spendcategory.created_date",
-    "spendcategory.slug",
+    # "carrier.created_date",
+    # "spendcategory.created_date",
+    # "spendcategory.slug",
 ]
 
 OPERATIONS = [
@@ -85,29 +89,23 @@ OPERATIONS = [
     ),
 ]
 
-DEV_MACHINES = ["tc-metech-5080"]
+# SCARY_FIELD_LIST = ["accounts.cost_center"]
 
-current_machine = gethostname()
+# if not dev_machine:
+#     for index, op in enumerate(OPERATIONS):
+#         if isinstance(op, migrations.AddField):
+#             model_name, name = op.model_name, op.name
+#             if f"{model_name}.{name}" in SCARY_FIELD_LIST:
+#                 logging.info(
+#                     f"Replacing AddField with RemoveField for '{model_name}.{name}"
+#                 )
+#                 print(f"Replacing AddField with RemoveField for '{model_name}.{name}")
+#                 OPERATIONS[index] = migrations.RemoveField(
+#                     model_name=model_name,
+#                     name=name,
+#                 )
 
-dev_machine = True if current_machine.lower() in DEV_MACHINES else False
-
-SCARY_FIELD_LIST = ["accounts.cost_center"]
-
-if not dev_machine:
-    for index, op in enumerate(OPERATIONS):
-        if isinstance(op, migrations.AddField):
-            model_name, name = op.model_name, op.name
-            if f"{model_name}.{name}" in SCARY_FIELD_LIST:
-                logging.info(
-                    f"Replacing AddField with RemoveField for '{model_name}.{name}"
-                )
-                print(f"Replacing AddField with RemoveField for '{model_name}.{name}")
-                OPERATIONS[index] = migrations.RemoveField(
-                    model_name=model_name,
-                    name=name,
-                )
-
-if dev_machine:
+if settings.MIGRATION_SWITCH_ID == MIGRATE_ID:
     for index, op in enumerate(OPERATIONS):
         if isinstance(op, migrations.AddField):
             model_name, name = op.model_name, op.name
@@ -161,7 +159,7 @@ for i, op in enumerate(OPERATIONS):
 #             field=field_dict["field"],
 #             preserve_default=field_dict["preserve_default"],
 #         )
-#         logging.info(f"Field altered: {field_dict['model_name']}.{field_dict['name']}")
+#         logging.info(f"Field altered: {field_dict['model_name']}.{field_dict['name']}")  # noqa: E501
 #         print(f"Field altered: {field_dict['model_name']}.{field_dict['name']}")
 
 #     try:

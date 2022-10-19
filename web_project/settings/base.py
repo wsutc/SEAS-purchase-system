@@ -37,6 +37,8 @@ if READ_DOT_ENV_FILE:
     if env_file.is_file():
         env.read_env(env_file)
 
+MIGRATION_SWITCH_ID = env.str("DJANGO_MIGRATION_SWITCH_ID", default="")
+
 APPS_DIR = Path(BASE_DIR / "web_project")
 
 # Quick-start development settings - unsuitable for production

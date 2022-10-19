@@ -1,12 +1,13 @@
 import csv
 import os
-from logging import exception
 
-import MySQLdb
+# import MySQLdb
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from purchases.models.models_metadata import Carrier
+
+# from logging import exception
 
 
 class Command(BaseCommand):
