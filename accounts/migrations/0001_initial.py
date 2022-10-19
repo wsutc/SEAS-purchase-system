@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
     dependencies = [
         (
             "purchases",
-            "0049_vendor_created_date_alter_manufacturer_created_date_and_more",  # noqa: E501
+            "migration_tools",  # noqa: E501
         ),
     ]
 

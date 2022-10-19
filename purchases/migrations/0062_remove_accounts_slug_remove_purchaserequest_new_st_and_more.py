@@ -7,44 +7,53 @@ import django.utils.timezone
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('purchases', '0061_auto_20220824_1450_squashed_0127_remove_purchaserequest_gravatar_email'),
+        (
+            "purchases",
+            "0061_auto_20220824_1450_squashed_0127_remove_purchaserequest_gravatar_email",  # noqa: E501
+        ),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='accounts',
-            name='slug',
+            model_name="accounts",
+            name="slug",
         ),
         migrations.RemoveField(
-            model_name='purchaserequest',
-            name='new_st',
+            model_name="purchaserequest",
+            name="new_st",
         ),
         migrations.AddField(
-            model_name='carrier',
-            name='created_date',
-            field=models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now),
+            model_name="carrier",
+            name="created_date",
+            field=models.DateTimeField(
+                auto_now_add=True, default=django.utils.timezone.now
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='spendcategory',
-            name='created_date',
-            field=models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now),
+            model_name="spendcategory",
+            name="created_date",
+            field=models.DateTimeField(
+                auto_now_add=True, default=django.utils.timezone.now
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='spendcategory',
-            name='slug',
-            field=models.SlugField(default='test', editable=False, unique=True),
+            model_name="spendcategory",
+            name="slug",
+            field=models.SlugField(default="test", editable=False, unique=True),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='carrier',
-            name='name',
+            model_name="carrier",
+            name="name",
             field=models.CharField(max_length=50),
         ),
         migrations.AlterField(
-            model_name='simpleproduct',
-            name='rank',
-            field=models.SmallIntegerField(editable=False, verbose_name='in pr ordering'),
+            model_name="simpleproduct",
+            name="rank",
+            field=models.SmallIntegerField(
+                editable=False, verbose_name="in pr ordering"
+            ),
         ),
     ]
