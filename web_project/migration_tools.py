@@ -1,11 +1,16 @@
 import random
 import string
 
+from django.apps import apps
+from django.core.exceptions import FieldDoesNotExist
 from django.db import migrations
+from django.db.migrations.operations.base import Operation
 from django.db.models import OuterRef, Subquery
 from django.utils.text import slugify
 
 from web_project.helpers import first_true
+
+# from typing import List
 
 
 def create_manufacturer_slug(apps, schema):
@@ -126,3 +131,36 @@ class Migration(migrations.Migration):
             "0049_vendor_created_date_alter_manufacturer_created_date_and_more",
         )
     ]
+
+
+def replace_migration_ops(operations: list[Operation], sql: str) -> list[Operation]:
+    """For cleaning up migrations on dbs that are working.
+    Used when migrations have been done in a mismatched way but db is working but
+    migrations won't run.
+
+    :param operations: List of operations extracted from `Migration` class
+    :type operations: List[Operation]
+    :param sql: sql to run in `RunSQL` command,
+            e.g., "ALTER TABLE accounts ALTER COLUMN cost_center varchar(15) NULL"
+    :type sql: str
+    :return: New list of operations to be used by `Migration` class
+    :rtype: List[Operation]
+    """
+    for index, op in enumerate(operations):
+        if isinstance(op, migrations.AddField):
+            model_name, name = op.model_name, op.name
+            model_obj = apps.get_model("purchases", model_name)
+            try:
+                _ = model_obj._meta.get_field(name)
+            except FieldDoesNotExist:
+                print(f"Field '{model_name}.{name}' does not exist")
+                # leave alone
+            else:
+                print(f"Replacing AddField with RunSQL for '{model_name}.{name}'")
+                operations[index] = migrations.RunSQL(
+                    sql,
+                    state_operations=operations[index],
+                )
+                # print(f"Modified operation field: {operations[index]}")
+
+    return operations

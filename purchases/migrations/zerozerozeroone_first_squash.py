@@ -914,18 +914,18 @@ class Migration(migrations.Migration):
             name="carrier_code",
             field=models.CharField(blank=True, max_length=30, null=True),
         ),
-        # migrations.AddField(
-        #     model_name="accounts",
-        #     name="cost_center",
-        #     field=models.CharField(max_length=15, null=True),
-        # ),
-        # migrations.AlterModelOptions(
-        #     name="accounts",
-        #     options={
-        #         "ordering": ["account_title"],
-        #         "verbose_name_plural": "Accounts",
-        #     },
-        # ),
+        migrations.AddField(
+            model_name="accounts",
+            name="cost_center",
+            field=models.CharField(max_length=15, null=True),
+        ),
+        migrations.AlterModelOptions(
+            name="accounts",
+            options={
+                "ordering": ["account_title"],
+                "verbose_name_plural": "Accounts",
+            },
+        ),
         migrations.AlterModelOptions(
             name="spendcategory",
             options={"ordering": ["code"], "verbose_name_plural": "Spend Categories"},

@@ -1,4 +1,10 @@
 from django.db.migrations.operations.base import Operation
+from django.db.migrations.operations import AddField
+
+
+class AddFieldResilient(AddField):
+    def database_forwards(self, app_label, schema_editor, from_state, to_state):
+        pass
 
 
 class RemoveColumn(Operation):
