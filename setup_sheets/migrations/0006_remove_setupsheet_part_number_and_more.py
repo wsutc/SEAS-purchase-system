@@ -7,14 +7,14 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("setup_sheets", "0005_manual_fixes 01"),
+        ("setup_sheets", "0004_alter_setupsheet_options_part_partrevision_part"),
     ]
 
     operations = [
         # migrations.RunSQL("ALTER TABLE `seas_purchasing`.`setup_sheets_setupsheet` ADD part_number CHAR;"),
-        migrations.RunSQL(
-            "ALTER TABLE `seas_purchasing`.`setup_sheets_setupsheet` ADD part_revision CHAR;"
-        ),
+        # migrations.RunSQL(
+        #     "ALTER TABLE `seas_purchasing`.`setup_sheets_setupsheet` ADD part_revision CHAR;"
+        # ),
         # migrations.RemoveField(
         #     model_name='setupsheet',
         #     name='part_number',

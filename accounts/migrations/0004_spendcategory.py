@@ -6,24 +6,37 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0003_alter_basetransaction_amount_and_more'),
+        ("accounts", "0003_alter_basetransaction_amount_and_more"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='SpendCategory',
+            name="SpendCategory",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('slug', models.SlugField(editable=False, unique=True)),
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('name', models.CharField(max_length=15, unique=True, verbose_name='workday ID')),
-                ('description', models.TextField(verbose_name='workday description')),
-                ('object', models.CharField(max_length=50)),
-                ('subobject', models.CharField(max_length=50)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("slug", models.SlugField(editable=False, unique=True)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                (
+                    "name",
+                    models.CharField(
+                        max_length=15, unique=True, verbose_name="workday ID"
+                    ),
+                ),
+                ("description", models.TextField(verbose_name="workday description")),
+                ("object", models.CharField(max_length=50)),
+                ("subobject", models.CharField(max_length=50)),
             ],
             options={
-                'verbose_name_plural': 'spend categories',
-                'ordering': ['name'],
+                "verbose_name_plural": "spend categories",
+                "ordering": ["name"],
             },
         ),
     ]

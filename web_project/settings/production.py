@@ -4,6 +4,7 @@ try:
     from sentry_sdk.integrations.logging import LoggingIntegration  # type: ignore
 except ImportError:
     from .base import logging
+
     logging.warning("`sentry_sdk` not installed")
 
 from .base import *  # noqa: F40
@@ -17,28 +18,46 @@ from .base import env
 # https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["justdrive.wooster.xyz"])
+ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["wsu.edu"])
 
 # DATABASES
 # ------------------------------------------------------------------------------
+# can't use `env.db` because of sslca requirement
 DATABASES["default"] = env.db("DATABASE_URL")  # noqa F405
+
+DATABASES["default"] = {  # noqa: F405
+    "ENGINE": "django.db.backends.mysql",
+    "NAME": env.str("DB_NAME", default="db_name"),
+    "USER": env.str("DB_USER", default="db_username"),
+    "PASSWORD": env.str("DB_PASSWORD", default="db_password"),
+    "HOST": env.str("DB_HOST", default="localhost"),
+    "PORT": env.str("DB_PORT", default=3306),
+    "OPTIONS": {
+        "charset": "utf8mb4",
+        "ssl": {"ca": env.path("AWS_CERT_PATH", default=None)},
+    },
+}
+
+# logging.info(f"web_project.settings.production DATABASES: {DATABASES}")  # noqa: F405
+
+# DATABASES["default"]["OPTIONS"]["ssl"]["ca"] =
 DATABASES["default"]["ATOMIC_REQUESTS"] = True  # noqa F405
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)  # noqa F405
 
 # CACHES
 # ------------------------------------------------------------------------------
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": env("REDIS_URL"),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            # Mimicing memcache behavior.
-            # https://github.com/jazzband/django-redis#memcached-exceptions-behavior
-            "IGNORE_EXCEPTIONS": True,
-        },
-    }
-}
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": env("REDIS_URL"),
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+#             # Mimicing memcache behavior.
+#             # https://github.com/jazzband/django-redis#memcached-exceptions-behavior
+#             "IGNORE_EXCEPTIONS": True,
+#         },
+#     }
+# }
 
 # SECURITY
 # ------------------------------------------------------------------------------
@@ -86,11 +105,19 @@ AWS_S3_OBJECT_PARAMETERS = {
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
 AWS_S3_REGION_NAME = env("DJANGO_AWS_S3_REGION_NAME", default=None)
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#cloudfront
-AWS_S3_CUSTOM_DOMAIN = env("DJANGO_AWS_S3_CUSTOM_DOMAIN", default=None)
-aws_s3_domain = AWS_S3_CUSTOM_DOMAIN or f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
+
+aws_s3_domain = (
+    AWS_S3_CUSTOM_DOMAIN or f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"  # noqa: F405
+)
+
 # STATIC
 # ------------------------
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+# STATIC_HOST = env.url("DJANGO_AWS_S3_CUSTOM_DOMAIN", default="")
+
+# STATIC_HOST = f"https://{AWS_S3_CUSTOM_DOMAIN.path}"
+# STATIC_URL = STATIC_HOST + "/static/"
+
 # MEDIA
 # ------------------------------------------------------------------------------
 DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
@@ -114,7 +141,11 @@ EMAIL_SUBJECT_PREFIX = env(
 # ADMIN
 # ------------------------------------------------------------------------------
 # Django Admin URL regex.
-ADMIN_URL = env("DJANGO_ADMIN_URL")
+try:
+    ADMIN_URL = env.url("DJANGO_ADMIN_URL", default="admin/")
+except Exception:
+    logging.warning("ADMIN_URL not parseable by `env.url`", exc_info=1)
+    ADMIN_URL = env.str("DJANGO_ADMIN_URL", defaults="admin/")
 
 # Anymail
 # ------------------------------------------------------------------------------
@@ -187,6 +218,7 @@ try:
         integrations=integrations,
         environment=env("SENTRY_ENVIRONMENT", default="production"),
         traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.0),
+        auto_session_tracking=env.bool("SENTRY_AUTO_SESSION_TRACKING", default=True),
     )
 except Exception:
     logging.warning("`sentry_sdk` not imported")

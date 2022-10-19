@@ -47,8 +47,8 @@ def copy_account_to_accounts(apps, schema_editor):
             raise KeyError("Error finding fund type or identity.")
 
         account_new, created = Account.objects.update_or_create(
-            fund = fund,
-            defaults = {
+            fund=fund,
+            defaults={
                 "name": account.account_title,
                 "cost_center": account.cost_center,
                 "fund_type": fund_type,
@@ -60,12 +60,14 @@ def copy_account_to_accounts(apps, schema_editor):
                 "changed_datetime": timezone.now(),
                 "in_use": True,
                 "slug": slug,
-            }
+            },
         )
 
         if created:
             created_count += 1
-            print(f"Account '{account_new.name}' created. Fund type: {account_new.fund_type}")
+            print(
+                f"Account '{account_new.name}' created. Fund type: {account_new.fund_type}"  # noqa: E501
+            )
         else:
             print(f"Account '{account_new.name}' already existed.")
 
@@ -75,15 +77,20 @@ def copy_account_to_accounts(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0001_initial'),
-        ('purchases', '0089_delete_transaction'),
+        ("accounts", "0001_initial"),
+        # ("purchases", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name = "account",
-            name = "account",
-            field = models.CharField(_("account"), help_text=_("in form XXXX-XXXX."), max_length=10, unique=False),
+            model_name="account",
+            name="account",
+            field=models.CharField(
+                _("account"),
+                help_text=_("in form XXXX-XXXX."),
+                max_length=10,
+                unique=False,
+            ),
         ),
         migrations.RunPython(copy_account_to_accounts),
     ]

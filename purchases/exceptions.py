@@ -62,6 +62,22 @@ class TrackerRejectedUnknownCode(Error):
         )
 
 
+class TrackerInvalidApiKey(Error):
+    """Exception raised when API request indicates missing or invalid API key."""
+
+    def __init__(
+        self,
+        code,
+        message="Tracking API returned an unrecognized error code.",
+    ):
+        self.error_code = code
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self) -> str:
+        return f"{self.message}: {self.error_code}"
+
+
 class StatusCodeNotFound(Error):
     """Exception raised when status two-character code not found"""
 

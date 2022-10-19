@@ -6,13 +6,13 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('setup_sheets', '0006_remove_setupsheet_part_number_and_more'),
+        ("setup_sheets", "0006_remove_setupsheet_part_number_and_more"),
     ]
 
     operations = [
-        migrations.RunSQL("ALTER TABLE `seas_purchasing`.`setup_sheets_setupsheet` ADD part_number CHAR;"),
+        # migrations.RunSQL("ALTER TABLE `seas_purchasing`.`setup_sheets_setupsheet` ADD part_number CHAR;"),
         migrations.RemoveField(
-            model_name='setupsheet',
-            name='part_number',
+            model_name="setupsheet",
+            name="part_number",
         ),
     ]

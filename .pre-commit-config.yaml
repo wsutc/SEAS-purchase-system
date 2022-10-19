@@ -23,21 +23,23 @@ repos:
           - id: check-merge-conflict
           - id: debug-statements
           - id: end-of-file-fixer
+            # files:
+            # exclude-types: [css]
           - id: name-tests-test
             args: ["--django"]
           - id: trailing-whitespace
           - id: detect-private-key
           # - id: requirements-txt-fixer
-    - repo: https://github.com/psf/black
-      rev: 22.8.0
-      hooks:
-          - id: black
-            exclude: (/migrations/|sgi.py$|apps.py$|urls.py$|/static/)
     - repo: https://github.com/pycqa/isort
       rev: 5.10.1
       hooks:
           - id: isort
             exclude: (/migrations/)
+    - repo: https://github.com/psf/black
+      rev: 22.8.0
+      hooks:
+          - id: black
+            exclude: (/migrations/|sgi.py$|apps.py$|urls.py$|/static/)
     - repo: https://gitlab.com/pycqa/flake8
       rev: 3.9.2
       hooks:

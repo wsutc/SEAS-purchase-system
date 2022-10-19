@@ -58,3 +58,58 @@ input[name=message] {
 .header-em {
     color: darkblue
 }
+
+/* .h2 {
+    background-color: blueviolet;
+} */
+
+.save {
+    padding-top: 18px;
+    padding-bottom: 18px;
+    padding-left: 48px;
+    padding-right: 48px;
+    background-color: #ca1237;
+    border-radius: 7px;
+    --bs-btn-border-color: #ca1237;
+    --bs-btn-hover-bg: #4d4d4d;
+    transition-property: all;
+    transition-duration: 0.333s;
+    transition-timing-function: cubic-bezier(0, 0, 0.03, 1);
+    transition-delay: 0s;
+    font-weight: 600;
+    display: inline;
+}
+
+.btn-simple {
+    background-color: #ca1237;
+    border-radius: 7px;
+    --bs-btn-border-color: #ca1237;
+    --bs-btn-hover-bg: #4d4d4d;
+    transition-property: all;
+    transition-duration: 0.333s;
+    transition-timing-function: cubic-bezier(0, 0, 0.03, 1);
+    transition-delay: 0s;
+    font-weight: 600;
+    display: inline;
+}
+
+.header-em {
+    color: #ca1237;
+}
+
+.nav-pills {
+    --bs-nav-pills-link-active-bg: #ca1237;
+}
+
+.percent::after {
+    content: '%';
+}
+
+.gravatar {
+    border-radius: 50% !important;
+}
+
+.field-title {
+    width: 10em;
+    text-align: right;
+}

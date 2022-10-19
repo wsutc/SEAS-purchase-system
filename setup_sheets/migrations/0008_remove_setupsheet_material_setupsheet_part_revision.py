@@ -11,16 +11,16 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL(
-            "ALTER TABLE `seas_purchasing`.`setup_sheets_setupsheet` ADD material_id CHAR;"
-        ),
+        # migrations.RunSQL(
+        #     "ALTER TABLE `seas_purchasing`.`setup_sheets_setupsheet` ADD material_id CHAR;"
+        # ),
         migrations.RemoveField(
             model_name="setupsheet",
             name="material",
         ),
-        migrations.RunSQL(
-            "ALTER TABLE `seas_purchasing`.`setup_sheets_setupsheet` DROP COLUMN part_revision_id;"
-        ),
+        # migrations.RunSQL(
+        #     "ALTER TABLE `seas_purchasing`.`setup_sheets_setupsheet` DROP COLUMN part_revision_id;"
+        # ),
         migrations.AddField(
             model_name="setupsheet",
             name="part_revision",

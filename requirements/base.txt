@@ -4,7 +4,10 @@ django[argon2]==4.0.3
 django-bootstrap-datepicker-plus==4.0.0
 # django-crispy-forms>=1.14.0
 # django-constance>=2.9.0
+django-debug-toolbar==3.7.0
 django-environ>=0.8.1
+# django-gravatar2==1.4.4
+django-gravatar2 @ git+https://github.com/wsutc/django-gravatar@master
 django-import-export>=2.8.0
 django-listview-filters==0.0.1b1.dev1
 django-money>=2.1.1
@@ -21,3 +24,4 @@ reportlab>=3.6.10
 # django-bootstrap-modal-forms>=2.2.0
 shortuuid==1.0.9
 # smartsheet-python-sdk>=2.105.1
+whitenoise==6.2.0

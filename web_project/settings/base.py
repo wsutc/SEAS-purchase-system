@@ -11,11 +11,10 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 import logging
-import os
 from pathlib import Path
+from socket import gethostname
 
 import environ
-from django.apps import apps
 from django.contrib.messages import constants as message_constants
 
 from web_project.helpers import plog
@@ -25,13 +24,19 @@ env = environ.Env(DEBUG=(bool, False))
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-READ_DOT_ENV_FILE = env.bool("DJANGO_READ_DOT_ENV_FILE", default=False)
+DEV_MACHINES = ["tc-metech-5080", "wtsmain-m01"]
+
+hostname = gethostname()
+if hostname.lower() in DEV_MACHINES:
+    READ_DOT_ENV_FILE = True
+else:
+    READ_DOT_ENV_FILE = env.bool("DJANGO_READ_DOT_ENV_FILE", default=False)
 if READ_DOT_ENV_FILE:
-    env_file = Path(BASE_DIR / ".env")
+    env_file = Path(BASE_DIR, ".env")
     if env_file.is_file():
         env.read_env(env_file)
 
-APPS_DIR = BASE_DIR / "web_project"
+APPS_DIR = Path(BASE_DIR / "web_project")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
@@ -47,8 +52,16 @@ SECRET_KEY = env.str(
 DEBUG = env.bool("DJANGO_DEBUG", False)
 TEMPLATE_DEBUG = env.bool("DJANGO_TEMPLATE_DEBUG", False)
 
+logger = logging.getLogger()
+
 if DEBUG:
-    logging.basicConfig(level="DEBUG")
+    logger.setLevel(logging.DEBUG)
+    # logging.basicConfig(level="DEBUG")
+    log_kwargs = {
+        "logger": logger,
+        "path": "web_project.settings",
+        "level": logging.DEBUG,
+    }
     MESSAGE_LEVEL = message_constants.DEBUG
     import mimetypes
 
@@ -61,25 +74,24 @@ if DEBUG:
     new_js = mimetypes.guess_type(js_path, True)
     logging.debug(f"New js type: {new_js}")
 else:
-    logging.basicConfig(level="WARNING")
+    log_kwargs = {
+        "logger": logger,
+        "path": "web_project.settings",
+        "level": logging.DEBUG,
+    }
     MESSAGE_LEVEL = message_constants.WARNING
 
-# logging.debug(f"last 4 of secret key: {SECRET_KEY[-4:]}")
-
-plog(logging, logging.DEBUG, logging.__name__, "last 4 of secret key", SECRET_KEY[-4:])
-
+plog(text="last 4 of secret key", value=SECRET_KEY[-4:], **log_kwargs)
+plog(text="Current hostname", value=hostname, **log_kwargs)
 
 DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
-
-ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["127.0.0.1"])
-
-logging.debug(f"ALLOWED_HOSTS: {ALLOWED_HOSTS}")
 
 # Application definition
 
 # CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 
 _DJANGO_APPS = [
+    "whitenoise.runserver_nostatic",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -92,11 +104,11 @@ _THIRD_PARTY_APPS = [
     "bootstrap_datepicker_plus",
     "crispy_bootstrap5",
     "crispy_forms",
-    "debug_toolbar",
+    "django_gravatar",
     "django_listview_filters",
     "phonenumber_field",
+    "debug_toolbar",
     "djmoney",
-    "django_mysql",
     "django_select2",
     "widget_tweaks",
 ]
@@ -116,10 +128,12 @@ INSTALLED_APPS = _DJANGO_APPS + _THIRD_PARTY_APPS + _LOCAL_APPS
 MIDDLEWARE = [
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "web_project.helpers.LoginRequiredMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -132,7 +146,7 @@ ROOT_URLCONF = "web_project.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "templates")],
+        "DIRS": [Path(BASE_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -154,10 +168,8 @@ WSGI_APPLICATION = "web_project.wsgi.application"
 
 # MEDIA
 # ----------------------------------------------------------------------------------------
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_ROOT = Path(BASE_DIR, "media")
 MEDIA_URL = "/media/"
-
-logging.debug(f"MEDIA_URL: {apps.app_configs.get('MEDIA_URL')}")
 
 
 # Database
@@ -166,25 +178,35 @@ logging.debug(f"MEDIA_URL: {apps.app_configs.get('MEDIA_URL')}")
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": env.str("DB_NAME", default="db_name"),
-        "USER": env.str("DB_USER", default="db_username"),
-        "PASSWORD": env.str("DB_PASSWORD", default="db_password"),
-        "HOST": env.str("DB_HOST", default="localhost"),
-        "PORT": env.str("DB_PORT", default=3306),
-        "OPTIONS": {
-            "charset": "utf8mb4",
-        },
-        "TEST": {"CHARSET": "utf8mb4", "COLLATION": "utf8mb4_unicode_ci"},
-    },
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": Path(BASE_DIR, "db.sqlite3"),
+    }
 }
+
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.mysql",
+#         "NAME": env.str("DB_NAME", default="db_name"),
+#         "USER": env.str("DB_USER", default="db_username"),
+#         "PASSWORD": env.str("DB_PASSWORD", default="db_password"),
+#         "HOST": env.str("DB_HOST", default="localhost"),
+#         "PORT": env.str("DB_PORT", default=3306),
+#         "OPTIONS": {
+#             "charset": "utf8mb4",
+#             "ssl": {"ca": env.path("AWS_CERT_PATH", default="")},
+#         },
+#         "TEST": {"CHARSET": "utf8mb4", "COLLATION": "utf8mb4_unicode_ci"},
+#     },
+# }
+
+# print(f"databases.default: {DATABASES}")
 
 # AUTHENTICATION
 # --------------------------------------------------------------------------------
 AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.ModelBackend"]
 # AUTH_USER_MODEL = "users.User"
 LOGIN_REDIRECT_URL = "/"
-LOGIN_URL = "account_login"
+# LOGIN_URL = "account_login"
 
 # PASSWORDS
 # --------------------------------------------------------------------------------
@@ -233,14 +255,28 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
+AWS_S3_CUSTOM_DOMAIN = env.url("DJANGO_AWS_S3_CUSTOM_DOMAIN", default=None)
 
-STATIC_URL = "static/"
-STATIC_ROOT = str(BASE_DIR / "staticfiles")
-STATICFILES_DIRS = [str(APPS_DIR / "static")]
+if AWS_S3_CUSTOM_DOMAIN:
+    AWS_S3_CUSTOM_DOMAIN = AWS_S3_CUSTOM_DOMAIN.path
+    STATIC_HOST = f"https://{AWS_S3_CUSTOM_DOMAIN}"
+else:
+    STATIC_HOST = ""
+
+
+# STATIC_HOST = env.url("DJANGO_AWS_S3_CUSTOM_DOMAIN", default="")
+# STATIC_HOST = f"https://{AWS_S3_CUSTOM_DOMAIN}" if AWS_S3_CUSTOM_DOMAIN else ""
+STATIC_URL = f"{STATIC_HOST}/static/"
+STATIC_ROOT = Path(BASE_DIR, "staticfiles")
+STATICFILES_DIRS = [
+    Path(BASE_DIR, "static/"),
+]
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 ]
+
+plog(text="Static Host", value=STATIC_HOST, **log_kwargs)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
@@ -313,10 +349,10 @@ LOGGING = {
         },
     },
     "loggers": {
-        "purchases": {
-            "handlers": ["console"],
-            "level": "INFO",
-        },
+        # "purchases": {
+        #     "handlers": ["console"],
+        #     "level": "INFO",
+        # },
         "django": {
             "handlers": ["console", "mail_admins"],
             "level": "INFO",
@@ -332,7 +368,10 @@ LOGGING = {
             "level": "INFO",
         },
     },
-    "root": {"level": "INFO", "handlers": ["console"]},
+    "root": {
+        "level": "INFO",
+        "handlers": ["console"],
+    },
 }
 
 
@@ -347,10 +386,13 @@ FILTERVIEW_SHOW_ALL = False
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
+GRAVATAR_DEFAULT_IMAGE = "retro"
+GRAVATAR_DEFAULT_RATING = "g"
+
 # CUSTOM
 # -------------------------------------------------------------------
 
-_17TRACK_KEY = env.str("_17TRACK_KEY", default="!!!MISSING API KEY!!!")
+PYTRACK_17TRACK_KEY = env.str("PYTRACK_17TRACK_KEY", default="!!!MISSING API KEY!!!")
 
 MESSAGE_TAGS = {
     message_constants.SUCCESS: "alert alert-success",
@@ -364,4 +406,10 @@ TRACKER_PARAMS = [
     "trackingnumber",
     "tracking_number",
     "strorigtracknum",
+]
+
+ALLOWED_ANONYMOUS_VIEWS = [
+    "LoginView",
+    "LogoutView",
+    "PasswordResetView",
 ]
