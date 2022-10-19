@@ -121,14 +121,15 @@ for index, op in enumerate(OPERATIONS):
                 print(f"Field '{model_name}.{name} does not exist")
                 # leave alone
             else:
-                logging.info(
-                    f"Replacing AddField with AlterField for '{model_name}.{name}"
-                )
-                print(f"Replacing AddField with AlterField for '{model_name}.{name}")
-                OPERATIONS[index] = migrations.AlterField(
-                    model_name=model_name,
-                    name=name,
-                    field=op.field,
+                logging.info(f"Replacing AddField with RunSQL for '{model_name}.{name}")
+                print(f"Replacing AddField with RunSQL for '{model_name}.{name}")
+                # OPERATIONS[index] = migrations.AlterField(
+                #     model_name=model_name,
+                #     name=name,
+                #     field=op.field,
+                # )
+                OPERATIONS[index] = migrations.RunSQL(
+                    "WAITFOR DELAY '00:00:00'", state_operations=OPERATIONS[index]
                 )
                 print(f"Modified operation field: {OPERATIONS[index]}")
 
