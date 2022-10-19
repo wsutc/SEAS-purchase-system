@@ -20,9 +20,9 @@ MIGRATE_ID = "deploy_init"
 
 FIELD_LIST = [
     "accounts.cost_center",
-    # "carrier.created_date",
-    # "spendcategory.created_date",
-    # "spendcategory.slug",
+    "carrier.created_date",
+    "spendcategory.created_date",
+    "spendcategory.slug",
 ]
 
 OPERATIONS = [
