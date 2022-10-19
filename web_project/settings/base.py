@@ -256,14 +256,16 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 AWS_S3_CUSTOM_DOMAIN = env.url("DJANGO_AWS_S3_CUSTOM_DOMAIN", default=None)
-AWS_S3_CUSTOM_DOMAIN = AWS_S3_CUSTOM_DOMAIN.path if AWS_S3_CUSTOM_DOMAIN else None
 
-CLOUDFRONT_CUSTOM_DOMAIN = env.url("DJANGO_CLOUDFRONT_CUSTOM_DOMAIN", default="")
+if AWS_S3_CUSTOM_DOMAIN:
+    AWS_S3_CUSTOM_DOMAIN = AWS_S3_CUSTOM_DOMAIN.path
+    STATIC_HOST = f"https://{AWS_S3_CUSTOM_DOMAIN}"
+else:
+    STATIC_HOST = ""
+
 
 # STATIC_HOST = env.url("DJANGO_AWS_S3_CUSTOM_DOMAIN", default="")
-STATIC_HOST = (
-    f"https://{CLOUDFRONT_CUSTOM_DOMAIN.path}" if CLOUDFRONT_CUSTOM_DOMAIN else ""
-)
+# STATIC_HOST = f"https://{AWS_S3_CUSTOM_DOMAIN}" if AWS_S3_CUSTOM_DOMAIN else ""
 STATIC_URL = f"{STATIC_HOST}/static/"
 STATIC_ROOT = Path(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [
