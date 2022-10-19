@@ -14,7 +14,7 @@ from .zerozerozeroone_first_squash import (
     CURRENCY_CHOICES,
 )
 
-from web_project.migration_tools import (
+from .migration_tools import (
     create_account_slugs,
     create_carrier_slugs,
     create_manufacturer_slug,
@@ -117,7 +117,7 @@ class Migration(migrations.Migration):
         # ("accounts", "0003_alter_basetransaction_amount_and_more"),
         (
             "purchases",
-            "0049_vendor_created_date_alter_manufacturer_created_date_and_more",
+            "migration_tools",
         ),
         ("accounts", "0004_spendcategory"),
     ]

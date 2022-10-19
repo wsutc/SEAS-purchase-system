@@ -123,14 +123,14 @@ def change_account_foreign_relationship(apps, schema_editor):
         )
 
 
-# class Migration(migrations.Migration):
+class Migration(migrations.Migration):
 
-#     dependencies = [
-#         (
-#             "purchases",
-#             "0049_vendor_created_date_alter_manufacturer_created_date_and_more",
-#         )
-#     ]
+    dependencies = [
+        (
+            "purchases",
+            "0049_vendor_created_date_alter_manufacturer_created_date_and_more",
+        )
+    ]
 
 
 def replace_migration_ops(operations: list[Operation], sql: str) -> list[Operation]:
