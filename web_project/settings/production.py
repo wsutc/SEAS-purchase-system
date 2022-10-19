@@ -105,16 +105,17 @@ AWS_S3_OBJECT_PARAMETERS = {
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
 AWS_S3_REGION_NAME = env("DJANGO_AWS_S3_REGION_NAME", default=None)
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#cloudfront
-AWS_S3_CUSTOM_DOMAIN = env.url("DJANGO_AWS_S3_CUSTOM_DOMAIN", default=None)
+
 aws_s3_domain = (
-    AWS_S3_CUSTOM_DOMAIN.path or f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
+    AWS_S3_CUSTOM_DOMAIN or f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"  # noqa: F405
 )
 
 # STATIC
 # ------------------------
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+# STATIC_HOST = env.url("DJANGO_AWS_S3_CUSTOM_DOMAIN", default="")
 
-# STATIC_HOST = f"https://{aws_s3_domain}"
+# STATIC_HOST = f"https://{AWS_S3_CUSTOM_DOMAIN.path}"
 # STATIC_URL = STATIC_HOST + "/static/"
 
 # MEDIA
