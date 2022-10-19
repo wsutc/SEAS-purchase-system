@@ -609,6 +609,7 @@ class Tracker(models.Model):
     # simple_product = models.ManyToManyField(
     #     SimpleProduct, verbose_name=_("items"), through="TrackerItem"
     # )
+    note = models.TextField(_("note"), help_text=_("which items, how many, etc."))
 
     @property
     def latest_event(self):
