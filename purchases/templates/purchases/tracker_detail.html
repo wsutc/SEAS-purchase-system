@@ -5,61 +5,73 @@
 {% block header %}Tracker{% endblock %}
 {% comment %} {% block previous %}{{ object.get_previous_by_sort_order.get_absolute_url }}{% endblock previous %}
 {% block next %}{{ object.get_next_by_tracking_number.get_absolute_url }}{% endblock next %} {% endcomment %}
-
 {% block navigation %}
-    {% comment %} <div class="row mb-3">
+  {% comment %} <div class="row mb-3">
       <div class="col"></div>
       <div class="btn-group col-2" role="group" aria-label="Navigation">
             <a href="{% url 'update_tracker' pk=object.id %}" class="btn btn-secondary">Update Tracker</a>
             <a href="{% url 'tracker_delete' pk=object.pk %}" class="btn btn-secondary">Delete</a>
       </div>
-    </div> {% endcomment %}
+  </div> {% endcomment %}
 {% endblock navigation %}
-
 {% block page %}
-
-<div class="container mt-4">
-      <div class="card col">
-        <h4 class="card-header d-flex justify-content-between align-items-center">
-          <span class="header-em">{{ object }}</span>
-          <div>
-            <a href="{% url 'update_tracker' object.pk %}"><i class="fa-solid fa-arrows-rotate fa-2xs"></i></a>
-            <a href="{% url 'admin:purchases_tracker_history' object.pk %}"><i class="fa-solid fa-clock-rotate-left fa-2xs"></i></a>
-            <a href="{% url 'admin:purchases_tracker_change' object.pk %}"><i class="fa-solid fa-pencil fa-2xs"></i></a>
-            <a href="{% url 'admin:purchases_tracker_delete' object.pk %}"><i class="fa-solid fa-trash-can fa-2xs"></i></a>
-          </div>
-        </h4>
-        <div class="card-body">
-          <table>
-            <tr>
-              <td class="pe-2 fw-bold">Status</td>
-              <td>{{ object.status|default_if_none:"(unknown)"|camel_case_split }}</td>
-            </tr>
-            <tr>
-                <td class="pe-2 fw-bold">Purchase Request</td>
-                <td><a href="{{ object.purchase_request.get_absolute_url }}">{{ object.purchase_request }}</a></td>
-            </tr>
-            <tr>
-              <td class="pe-2 fw-bold">Delivery Estimate</td>
-              <td>{{ object.delivery_estimate|date:"SHORT_DATE_FORMAT" }}</td>
-            </tr>
-            <tr>
-                <td class="pe-2 fw-bold">Carrier</td>
-                <td><a href="{{ object.carrier.website }}" target="_blank" rel="noopener noreferrer">{{ object.carrier }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></a></td>
-            </tr>
-            <tr>
-                <td class="pe-2 fw-bold">Tracking Number</td>
-                <td><a href="{{ object.get_tracking_link }}" target="_blank" rel="noopener noreferrer">{{ object.tracking_number }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></a></td>
-            </tr>
-            <tr>
-                <td class="pe-2 fw-bold">Latest Location</td>
-                <td>{{ object.latest_event.location }}</td>
-            </tr>
-          </table>
+  <div class="container mt-4">
+    <div class="card col">
+      <h4 class="card-header d-flex justify-content-between align-items-center">
+        <span class="header-em">{{ object }}</span>
+        <div>
+          <a href="{% url 'update_tracker' object.pk %}"><i class="fa-solid fa-arrows-rotate fa-2xs"></i></a>
+          <a href="{% url 'admin:purchases_tracker_history' object.pk %}"><i class="fa-solid fa-clock-rotate-left fa-2xs"></i></a>
+          <a href="{% url 'admin:purchases_tracker_change' object.pk %}"><i class="fa-solid fa-pencil fa-2xs"></i></a>
+          <a href="{% url 'admin:purchases_tracker_delete' object.pk %}"><i class="fa-solid fa-trash-can fa-2xs"></i></a>
         </div>
+      </h4>
+      <div class="card-body">
+        <table>
+          <tr>
+            <td class="pe-2 fw-bold">Status</td>
+            <td>{{ object.status|default_if_none:"(unknown)"|camel_case_split }}</td>
+          </tr>
+          <tr>
+            <td class="pe-2 fw-bold">Purchase Request</td>
+            <td>
+              <a href="{{ object.purchase_request.get_absolute_url }}">{{ object.purchase_request }}</a>
+            </td>
+          </tr>
+          <tr>
+            <td class="pe-2 fw-bold">Delivery Estimate</td>
+            <td>{{ object.delivery_estimate|date:"SHORT_DATE_FORMAT" }}</td>
+          </tr>
+          <tr>
+            <td class="pe-2 fw-bold">Carrier</td>
+            <td>
+              <a href="{{ object.carrier.website }}"
+                 target="_blank"
+                 rel="noopener noreferrer">{{ object.carrier }}<i class="fa-solid fa-up-right-from-square"
+   data-fa-transform="shrink-6 up-4"></i></a>
+            </td>
+          </tr>
+          <tr>
+            <td class="pe-2 fw-bold">Tracking Number</td>
+            <td>
+              <a href="{{ object.get_tracking_link }}"
+                 target="_blank"
+                 rel="noopener noreferrer">{{ object.tracking_number }}<i class="fa-solid fa-up-right-from-square"
+   data-fa-transform="shrink-6 up-4"></i></a>
+            </td>
+          </tr>
+          <tr>
+            <td class="pe-2 fw-bold">Latest Location</td>
+            <td>{{ object.latest_event.location }}</td>
+          </tr>
+          <tr>
+            <td class="pe-2 fw-bold">Note</td>
+            <td>{{ object.note }}</td>
+          </tr>
+        </table>
       </div>
+    </div>
   </div>
-
   {% comment %} {% with object.trackeritem_set.all as items %}
     {% if debug %}<div class="alert alert-debug">debug ->count:{{ items|length }}</div>{% endif %}
 
@@ -67,37 +79,37 @@
 
     {% include "purchases/trackeritem_list_table.html" with object_list=items %}
   {% endwith %} {% endcomment %}
-
   <div class="col-12">
     <div class="h2">Events</div>
-        <div class="bd-example-snippet bd-code-snippet">
-            <div class="bd-example">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Date/Time</th>
-                            <th>Description</th>
-                            <th>Location</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in object.trackingevent_set.all %}
-                          <tr>
-                            <td>{{ row.time_utc|date:"D d M Y" }} {{ row.time_utc|time:"H:i:s e" }}</td>
-                            <td>{{ row.description }}</td>
-                            <td>{{ row.location|default_if_none:"" }}</td>
-                            <td>{{ row.status }}</td>
-                          </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    <div class="bd-example-snippet bd-code-snippet">
+      <div class="bd-example">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Date/Time</th>
+              <th>Description</th>
+              <th>Location</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in object.trackingevent_set.all %}
+              <tr>
+                <td>{{ row.time_utc|date:"D d M Y" }} {{ row.time_utc|time:"H:i:s e" }}</td>
+                <td>{{ row.description }}</td>
+                <td>{{ row.location|default_if_none:"" }}</td>
+                <td>
+                  {{ row.status }}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
-
+  </div>
 {% endblock page %}
-
-{% block related_pr_table %}{% endblock related_pr_table %}
+{% block related_pr_table %}
+{% endblock related_pr_table %}
 {% block related_simpleproduct_table %}
 {% endblock related_simpleproduct_table %}
