@@ -84,6 +84,7 @@
         "migrate",
         "fix_orphan_columns",
         "csv_imports",
+        "create_user",
       ],
       "default": "makemigrations",
     },
@@ -100,6 +101,8 @@
       "options": [
         "makemigrations",
         "migrate",
+        "create_user",
+        "disconnect_signal",
       ],
       "default": "makemigrations",
     }

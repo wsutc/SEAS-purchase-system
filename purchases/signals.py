@@ -44,7 +44,9 @@ def validate_account_program(sender, instance, created, **kwargs):
 @receiver(post_save, sender=User)
 def create_requisitioner(sender, instance, created, **kwargs):
     if created:
-        department = Department.objects.get(code="SEAS")
+        department, _ = Department.objects.get_or_create(
+            code="SEAS", defaults={"name": "School of Engineering and Applied Sciences"}
+        )
         Requisitioner.objects.create(user=instance, department=department)
 
 

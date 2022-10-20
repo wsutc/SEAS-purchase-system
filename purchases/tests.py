@@ -1,101 +1,91 @@
-# flake8: noqa
 from http import HTTPStatus
 
 from django.contrib.auth.models import Permission, User
-from django.shortcuts import get_object_or_404
-
-# from multiprocessing.connection import Client
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
-
-# from .models.models_apis import Tracker, TrackingEvent, TrackingWebhookMessage
-# from .models.models_metadata import Carrier, Department, Urgency, Vendor
-# from .models.models_data import PurchaseRequest, Requisitioner
 from model_bakery import baker
 
-from purchases import urls
-
-# import datetime as dt
-# from django.utils import timezone
 from purchases.views import tracking_webhook
 
-# from django.conf import settings
+from .models import PurchaseRequest, Requisitioner, Tracker, Urgency
 
 
-# from web_project.settings import AFTERSHIP_WEBHOOK_SECRET
+def create_pr_deps():
+    user = baker.make(User)
+    rvalue = {
+        "default_sales_tax_rate": baker.make_recipe(
+            "purchases.sales_tax_rate_settings"
+        ),
+        "vendor": baker.make_recipe("purchases.vendor_tormach"),
+        "urgency": baker.make(Urgency, name="Standard"),
+        "user": user,
+        "requisitioner": Requisitioner.objects.get(user=user),
+    }
 
-# from web_project.settings import PYTRACK_17TRACK_KEY
+    return rvalue
 
 
 class PurchaseRequestTestModel(TestCase):
     def setUp(self):
-        print("hello")
+        deps = create_pr_deps()
         self.purchase_request = baker.make(
-            "purchases.models.models_data.PurchaseRequest"
+            PurchaseRequest,
+            requisitioner=deps["requisitioner"],
+            vendor=deps["vendor"],
+            sales_tax_rate=deps["default_sales_tax_rate"].value,
+            urgency=deps["urgency"],
         )
-
-        print(self.purchase_request.number)
-
-        # baker.make(Department, code='SEAS')
-        # self.user = baker.make(User)
-        # requisitioner = Requisitioner.objects.get(user=self.user)
-        # baker.make(Urgency, name='Standard')
-        # vendor = baker.make(Vendor, name='Tormach')
-        # self.purchase_request = baker.make(PurchaseRequest,vendor=vendor,requisitioner=requisitioner)
-        # self.purchase_request = PurchaseRequest.objects.get(pk=self.purchase_request.pk)
 
     def test_using_purchase_request(self):
-        self.assertIsInstance(
-            self.purchase_request, "purchases.models.models_data.PurchaseRequest"
-        )
+        self.assertIsInstance(self.purchase_request, PurchaseRequest)
         self.assertNotEqual(self.purchase_request.slug, "")
 
 
-# class TestCreatePRView(TestCase):
+class TestCreatePRView(TestCase):
+    def setUp(self):
+        deps = create_pr_deps()
+        self.user = deps["user"]
+        self.purchase_request = baker.make(
+            PurchaseRequest,
+            requisitioner=deps["requisitioner"],
+            vendor=deps["vendor"],
+            sales_tax_rate=deps["default_sales_tax_rate"].value,
+            urgency=deps["urgency"],
+        )
 
-#     def setUp(self):
-#         baker.make(Department, code='SEAS')
-#         self.user = baker.make(User)
+    def test_anonymous_cannot_see_page(self):
+        response = self.client.get(reverse("new_pr"))
+        self.assertRedirects(
+            response, "/accounts/login/?next=/purchases/purchase-request/new/"
+        )
 
-#     def test_anonymous_cannot_see_page(self):
-#         response = self.client.get(reverse("new_pr"))
-#         self.assertRedirects(response, "/accounts/login/?next=/new-purchase-request/")
+    def test_permissed_user_can_see_page(self):
+        self.user.user_permissions.add(
+            Permission.objects.get(codename="add_purchaserequest")
+        )
 
-#     def test_permissed_user_can_see_page(self):
-#         # user = baker.make(User)
-#         self.user.user_permissions.add(Permission.objects.get(codename='add_purchaserequest'))
+        self.client.force_login(user=self.user)
+        response = self.client.get(reverse("new_pr"))
+        self.assertEqual(response.status_code, 200)
 
-#         self.client.force_login(user=self.user)
-#         response = self.client.get(reverse("new_pr"))
-#         self.assertEqual(response.status_code, 200)
 
-# @override_settings(PYTRACK_17TRACK_KEY="abc123")
-# class TrackingWebhookTests(TestCase):
-#     def setUp(self):
-#         self.client = Client(enforce_csrf_checks=True)
-#         baker.make(Department, code='SEAS')
-#         self.user = baker.make(User)
-#         requisitioner = Requisitioner.objects.get(user=self.user)
-#         urgency = baker.make(Urgency, name='Standard')
-#         vendor = baker.make(Vendor, name='Tormach')
-#         self.purchase_request = baker.make(PurchaseRequest,vendor=vendor,requisitioner=requisitioner,urgency=urgency)
-#         self.purchase_request = PurchaseRequest.objects.get(pk=self.purchase_request.pk)
-#         # carrier = baker.make(Carrier)
-#         self.tracker = baker.make(Tracker, carrier=carrier)
+@override_settings(PYTRACK_17TRACK_KEY="abc123")
+class TrackingWebhookTests(TestCase):
+    def setUp(self):
+        self.client = Client(enforce_csrf_checks=True)
+        self.purchase_request = baker.prepare_recipe("purchases.default_pr")
+        self.tracker = baker.prepare(Tracker)
 
-#     def test_bad_method(self):
-#         url = reverse(tracking_webhook)
-#         response = self.client.get(url)
-#         # print(response.status_code)
-#         assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
+    def test_bad_method(self):
+        url = reverse(tracking_webhook)
+        response = self.client.get(url)
+        assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
 
-#     def test_missing_token(self):
-#         response = self.client.post(reverse(tracking_webhook))
+    def test_missing_token(self):
+        response = self.client.post(reverse(tracking_webhook))
 
-#         assert response.status_code == HTTPStatus.FORBIDDEN
-#         assert (
-#             response.content.decode() == "Incorrect token in Aftership-Hmac-Sha256 header."
-#         )
+        assert response.status_code == HTTPStatus.FORBIDDEN
+
 
 #     def test_bad_token(self):
 #         response = self.client.post(
@@ -105,7 +95,7 @@ class PurchaseRequestTestModel(TestCase):
 
 #         assert response.status_code == HTTPStatus.FORBIDDEN
 #         assert (
-#             response.content.decode() == "Incorrect token in Aftership-Hmac-Sha256 header."
+#             response.content.decode() == "Incorrect token in Aftership-Hmac-Sha256 header."  # noqa: E501
 #         )
 
 #     def test_success(self):
@@ -244,7 +234,7 @@ class PurchaseRequestTestModel(TestCase):
 #                             "state": "null",
 #                             "city": "FAYETTEVILLE NC DISTRIBUTION CENTER ANNEX",
 #                             "zip": "null",
-#                             "message": "Arrived at USPS Regional Destination Facility",
+#                             "message": "Arrived at USPS Regional Destination Facility",  # noqa: E501
 #                             "coordinates": [],
 #                             "tag": "InTransit",
 #                             "subtag": "InTransit_003",
@@ -300,9 +290,9 @@ class PurchaseRequestTestModel(TestCase):
 #                     "tracking_postal_code": "null",
 #                     "tracking_ship_date": "null",
 #                     "tracking_state": "null",
-#                     "courier_tracking_link": "https://tools.usps.com/go/TrackConfirmAction?tLabels=9405516902697649303570",
+#                     "courier_tracking_link": "https://tools.usps.com/go/TrackConfirmAction?tLabels=9405516902697649303570",  # noqa: E501
 #                     "first_attempted_at": "null",
-#                     "courier_redirect_link": "https://tools.usps.com/go/TrackConfirmAction?tRef=fullpage&tLc=2&text28777=&tLabels=9405516902697649303570%2C",
+#                     "courier_redirect_link": "https://tools.usps.com/go/TrackConfirmAction?tRef=fullpage&tLc=2&text28777=&tLabels=9405516902697649303570%2C",  # noqa: E501
 #                     "on_time_status": "trending-on-time",
 #                     "on_time_difference": 0,
 #                     "order_tags": [],
