@@ -1,7 +1,10 @@
+# flake8: noqa
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
 from django.views.generic import RedirectView
+
+from purchases.views.views_class import VendorOrderAddApprovedPR
 
 from .views import (  # LedgersListView,
     AccountDetailView,
@@ -56,6 +59,7 @@ urlpatterns = [
     path("vendor/orders/<int:pk>-<str:slug>/", VendorOrderDetailView.as_view(), name="vendororder_detail"),
     path("vendor/orders/", VendorOrderListView.as_view(), name="vendororder_list"),
     path("vendor/orders/current/", VendorOrderCurrentListView.as_view(), name="vendororder_current_list"),
+    path("vendor/orders/<int:pk>-<str:slug>/attach-purchase-request", VendorOrderAddApprovedPR.as_view(), name="vendororder_add_pr"),
     # path("vendor/modal-new/", VendorModalCreateView.as_view(), name="modal_create_vendor"),
     path("purchase-request/new/", PurchaseRequestCreateView.as_view(), name="new_pr"),
     path("purchase-request/new-custom/", CustomPurchaseRequestCreateView.as_view(), name="custom_new_pr"),

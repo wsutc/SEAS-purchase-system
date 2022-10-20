@@ -28,6 +28,7 @@ from djmoney.models.fields import MoneyField
 
 from globals.models import DefaultValue
 from purchases.forms import (
+    AddApprovedPRAttachmentForm,
     AddVendorForm,
     AddVendorOrderForm,
     CreateUserForm,
@@ -773,3 +774,9 @@ class TrackerDeleteView(DeleteView):
         redirect_url = redirect_to_next(self.request, "tracker_list")
 
         return redirect(redirect_url)
+
+
+class VendorOrderAddApprovedPR(UpdateView):
+    model = VendorOrder
+    form_class = AddApprovedPRAttachmentForm
+    template_name = "purchases/vendororder_attach_pr.html"
