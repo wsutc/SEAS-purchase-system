@@ -1,0 +1,52 @@
+{% extends "purchases/layout.html" %}
+{% block title %}{% block title_prefix %} Tracker{% endblock %}{% endblock %}
+
+{% block content %}
+
+{{ form.media.css }}
+
+<style>
+
+  .select-pr {
+      width: 15em
+  }
+
+  .select-carrier {
+    width: 15em
+  }
+</style>
+
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<div class="container mt-4">
+  <form method="post">
+    {% csrf_token %}
+    <div class="card col">
+      <div class="card-header">
+        <h4>{% block header %}{% endblock header %} <span class="header-em">Tracker</span></h4>
+      </div>
+      <div class="card-body">
+        {{ form.non_form_errors }}
+        <table>
+          {{ form.as_table }}
+        </table>
+      </div>
+    </div>
+    <div class="mt-3 mb-5">
+      <button type="submit" class="save btn btn-primary">Save</button>
+    </div>
+  </form>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+{{ form.media.js }}
+
+<div id="django-debug"><pre>{% debug %}</pre></div>
+
+{% endblock %}

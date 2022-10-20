@@ -5,100 +5,95 @@
 {% block header %}Order{% endblock %}
 {% comment %} {% block previous %}{{ object.get_previous_by_sort_order.get_absolute_url }}{% endblock previous %}
 {% block next %}{{ object.get_next_by_tracking_number.get_absolute_url }}{% endblock next %} {% endcomment %}
-
 {% block navigation %}
-    {% comment %} <div class="row mb-3">
+  {% comment %} <div class="row mb-3">
       <div class="col"></div>
       <div class="btn-group col-2" role="group" aria-label="Navigation">
             <a href="{% url 'update_tracker' pk=object.id %}" class="btn btn-secondary">Update Tracker</a>
             <a href="{% url 'tracker_delete' pk=object.pk %}" class="btn btn-secondary">Delete</a>
       </div>
-    </div> {% endcomment %}
+  </div> {% endcomment %}
 {% endblock navigation %}
-
 {% block page %}
-
-<div class="container mt-4">
-  <div class="card col">
-    <h4 class="card-header d-flex justify-content-between align-items-center">
-      <span class="header-em">{{ object }}</span>
-      <div class="btn-group" role="group" aria-label="Buttons">
-        {% comment %} <a href="{% url 'update_tracker' object.pk %}"><i class="fa-solid fa-arrows-rotate fa-2xs"></i></a> {% endcomment %}
-        {% if object.link %}
-          <a href="{{ object.link }}" target="_blank" rel="noopener noreferrer">
-            <i class="fa-solid fa-up-right-from-square fa-2xs px-1"></i>
+  <div class="container mt-4">
+    <div class="card col">
+      <h4 class="card-header d-flex justify-content-between align-items-center">
+        <span class="header-em">{{ object }}</span>
+        <div class="btn-group" role="group" aria-label="Buttons">
+          {% comment %} <a href="{% url 'update_tracker' object.pk %}"><i class="fa-solid fa-arrows-rotate fa-2xs"></i></a> {% endcomment %}
+          {% if object.approved_request %}
+            <a href="{{ object.approved_request.url }}"
+               target="_blank"
+               rel="noopener noreferrer">
+              <i class="fa-solid fa-clipboard-list fa-2xs px-1"></i>
+            </a>
+          {% endif %}
+          {% if object.link %}
+            <a href="{{ object.link }}" target="_blank" rel="noopener noreferrer">
+              <i class="fa-solid fa-up-right-from-square fa-2xs px-1"></i>
+            </a>
+          {% endif %}
+          <a href="{% url 'admin:purchases_vendororder_history' object.pk %}">
+            <i class="fa-solid fa-clock-rotate-left fa-2xs px-1"></i>
           </a>
-        {% endif %}
-        <a href="{% url 'admin:purchases_vendororder_history' object.pk %}">
-          <i class="fa-solid fa-clock-rotate-left fa-2xs px-1"></i>
-        </a>
-        <a href="{% url 'admin:purchases_vendororder_change' object.pk %}">
-          <i class="fa-solid fa-pencil fa-2xs px-1"></i>
-        </a>
-        <a href="{% url 'admin:purchases_vendororder_delete' object.pk %}">
-          <i class="fa-solid fa-trash-can fa-2xs px-1"></i>
-        </a>
+          <a href="{% url 'admin:purchases_vendororder_change' object.pk %}">
+            <i class="fa-solid fa-pencil fa-2xs px-1"></i>
+          </a>
+          <a href="{% url 'admin:purchases_vendororder_delete' object.pk %}">
+            <i class="fa-solid fa-trash-can fa-2xs px-1"></i>
+          </a>
+        </div>
+      </h4>
+      <div class="card-body">
+        <table>
+          <tr>
+            <td class="pe-2 fw-bold">{% translate "Order Placed" %}</td>
+            <td>{{ object.order_placed|date:"SHORT_DATE_FORMAT" }}</td>
+          </tr>
+          <tr>
+            <td class="pe-2 fw-bold">{% translate "Subtotal" %}</td>
+            <td>{{ object.subtotal|usd_accounting }}</td>
+          </tr>
+          <tr>
+            <td class="pe-2 fw-bold">{% translate "Shipping" %}</td>
+            <td>{{ object.shipping|usd_accounting }}</td>
+          </tr>
+          <tr>
+            <td class="pe-2 fw-bold">{% translate "Sales Tax" %}</td>
+            <td>{{ object.sales_tax|usd_accounting }}</td>
+          </tr>
+          <tr>
+            <td class="pe-2 fw-bold">{% translate "Grand Total" %}</td>
+            <td>{{ object.grand_total|usd_accounting }}</td>
+          </tr>
+          <tr>
+            <td class="pe-2 fw-bold">{% translate "Invoice Number" %}</td>
+            <td>{{ object.invoice_number }}</td>
+          </tr>
+          <tr>
+            <td class="pe-2 fw-bold">{% translate "Invoice Due Date" %}</td>
+            <td>{{ object.invoice_due_date|date:"SHORT_DATE_FORMAT" }}</td>
+          </tr>
+        </table>
       </div>
-    </h4>
-    <div class="card-body">
-      <table>
-        <tr>
-          <td class="pe-2 fw-bold">{% translate "Order Placed" %}</td>
-          <td>{{ object.order_placed|date:"SHORT_DATE_FORMAT" }}</td>
-        </tr>
-        <tr>
-          <td class="pe-2 fw-bold">{% translate "Subtotal" %}</td>
-          <td>{{ object.subtotal|usd_accounting }}</td>
-        </tr>
-        <tr>
-          <td class="pe-2 fw-bold">{% translate "Shipping" %}</td>
-          <td>{{ object.shipping|usd_accounting }}</td>
-        </tr>
-        <tr>
-          <td class="pe-2 fw-bold">{% translate "Sales Tax" %}</td>
-          <td>{{ object.sales_tax|usd_accounting }}</td>
-        </tr>
-        <tr>
-          <td class="pe-2 fw-bold">{% translate "Grand Total" %}</td>
-          <td>{{ object.grand_total|usd_accounting }}</td>
-        </tr>
-        <tr>
-          <td class="pe-2 fw-bold">{% translate "Invoice Number" %}</td>
-          <td>{{ object.invoice_number }}</td>
-        </tr>
-        <tr>
-          <td class="pe-2 fw-bold">{% translate "Invoice Due Date" %}</td>
-          <td>{{ object.invoice_due_date|date:"SHORT_DATE_FORMAT" }}</td>
-        </tr>
-      </table>
     </div>
   </div>
-</div>
-
 {% endblock %}
-
 {% block related_pr_table %}
   {% with object.purchase_requests.all as set %}
     {% if debug %}<div class="alert alert-debug">debug ->count:{{ set.count }}</div>{% endif %}
     <div class="h4">{% translate "Purchase Requests" %}</div>
-
     {% include "purchases/purchaserequest_list_table.html" with object_list=set.all %}
-
   {% endwith %}
-
 {% endblock related_pr_table %}
-
-{% block related_simpleproduct_table %}{% endblock related_simpleproduct_table %}
-
+{% block related_simpleproduct_table %}
+{% endblock related_simpleproduct_table %}
 {% block custom_tables %}
   {% with trackers as trackers %}
     {% if debug %}<div class="alert alert-debug">debug ->count:{{ trackers|length }}</div>{% endif %}
-
     <div class="h4">{% translate "Trackers" %}</div>
-
     {% include "purchases/tracker_list_table.html" with tracker_list=trackers %}
   {% endwith %}
-
   {% comment %} {% with object.items as items %}
   {% if debug %}<div class="alert alert-debug">debug ->count:{{ items|length }}</div>{% endif %}
 
@@ -106,5 +101,4 @@
 
   {% include "purchases/trackeritem_list_table.html" with object_list=items %}
   {% endwith %} {% endcomment %}
-
 {% endblock custom_tables %}

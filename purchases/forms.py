@@ -357,3 +357,9 @@ class TrackerForm(forms.ModelForm):
         self.tracking_number = response_dict["tracker"].tracking_number
 
         return super().clean()
+
+
+class AddApprovedPRAttachmentForm(forms.ModelForm):
+    class Meta:
+        model = VendorOrder
+        fields = ["approved_request"]
