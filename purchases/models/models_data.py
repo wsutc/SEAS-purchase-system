@@ -5,7 +5,8 @@ from pathlib import Path
 
 import shortuuid
 from django.conf import settings
-from django.contrib.auth.models import User
+
+# from django.contrib.auth.models import User
 from django.core.validators import FileExtensionValidator
 from django.db import models, transaction
 from django.db.models import Count, F, Max, Sum
@@ -47,7 +48,7 @@ if settings.DEBUG:
 
 
 class Requisitioner(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     wsu_id = models.CharField("WSU ID", max_length=50, blank=True, null=True)
     slug = models.SlugField(null=True)
     phone = PhoneNumberField("Phone Number", max_length=25, blank=True, null=True)
@@ -609,7 +610,9 @@ class Tracker(models.Model):
     # simple_product = models.ManyToManyField(
     #     SimpleProduct, verbose_name=_("items"), through="TrackerItem"
     # )
-    note = models.TextField(_("note"), help_text=_("which items, how many, etc."))
+    note = models.TextField(
+        _("note"), help_text=_("which items, how many, etc."), blank=True
+    )
 
     @property
     def latest_event(self):
