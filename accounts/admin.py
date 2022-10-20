@@ -7,6 +7,7 @@ from .models import (
     AccountGroup,
     BalanceAdjustment,
     BaseTransaction,
+    SpendCategory,
     Transaction,
 )
 
@@ -92,3 +93,8 @@ class BalanceAdjustmentAdmin(admin.ModelAdmin):
 class TransactionAdmin(admin.ModelAdmin):
     list_display = ["account", "amount", "date_time", "purchase_request"]
     list_filter = ["account"]
+
+
+@admin.register(SpendCategory)
+class SpendCategoryAdmin(admin.ModelAdmin):
+    list_display = ["name", "description"]
