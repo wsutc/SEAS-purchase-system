@@ -110,6 +110,7 @@ _THIRD_PARTY_APPS = [
     "debug_toolbar",
     "djmoney",
     "django_select2",
+    "modelclone",
     "widget_tweaks",
 ]
 

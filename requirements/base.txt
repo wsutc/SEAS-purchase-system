@@ -10,6 +10,7 @@ django-environ>=0.8.1
 django-gravatar2 @ git+https://github.com/wsutc/django-gravatar@master
 django-import-export>=2.8.0
 django-listview-filters==0.0.1b1.dev1
+django-modelclone @ git+https://github.com/xuhcc/django-modelclone.git@6234f3d03f7ec70f95ef99f2d6171fa1d045787a
 django-money>=2.1.1
 django-phonenumber-field>=6.1.0
 django-select2>=7.10.0
