@@ -20,4 +20,12 @@ class Migration(migrations.Migration):
                 blank=True, help_text="which items, how many, etc.", verbose_name="note"
             ),
         ),
+        migrations.AddField(
+            model_name="requisitioner",
+            name="gravatar_email",
+            field=models.EmailField(
+                "gravatar email", max_length=254, default="test@test.com"
+            ),
+            preserve_default=False,
+        ),
     ]
