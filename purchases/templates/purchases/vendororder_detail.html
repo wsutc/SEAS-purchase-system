@@ -22,11 +22,11 @@
         <div class="btn-group" role="group" aria-label="Buttons">
           {% comment %} <a href="{% url 'update_tracker' object.pk %}"><i class="fa-solid fa-arrows-rotate fa-2xs"></i></a> {% endcomment %}
           {% if object.approved_request %}
-            <a href="{{ object.approved_request.url }}"
+            <a class="btn-link"
+               href="{{ object.approved_request.url }}"
                target="_blank"
                rel="noopener noreferrer">
-              <i class="fa-solid fa-clipboard-list fa-2xs px-1"></i>
-            </a>
+              <i class="fa-solid fa-clipboard-list fa-2xs px-1"></i></a>
           {% endif %}
           {% if object.link %}
             <a href="{{ object.link }}" target="_blank" rel="noopener noreferrer">
