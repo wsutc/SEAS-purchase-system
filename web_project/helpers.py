@@ -159,7 +159,7 @@ class PaginatedListMixin(FilterViewMixin, MultipleObjectMixin, View):
 
         context["page_list"] = page_fragments
 
-        fragment = furl(self.request.get_full_path())
+        # fragment = furl(self.request.get_full_path())
 
         return context
 

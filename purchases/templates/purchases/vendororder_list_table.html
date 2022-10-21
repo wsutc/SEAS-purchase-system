@@ -34,6 +34,12 @@
           <td>{{ o.purchase_requests.last.tracker_set.last.status|camel_case_split }}</td>
           <td>
             <div class="btn-group">
+              {% if o.approved_request %}
+                <a class="btn-link"
+                   href="{{ o.approved_request.url }}"
+                   target="_blank"
+                   rel="noopener noreferrer"><i class="fa-solid fa-clipboard-list px-1"></i></a>
+              {% endif %}
               <a class="btn-link"
                  href="{% url "admin:purchases_vendororder_change" o.pk %}?next={{ request.get_full_path }}">
                 <i class="fa-solid fa-pencil px-1"></i>
