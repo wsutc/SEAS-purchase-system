@@ -1,4 +1,5 @@
 from django.contrib import admin
+from modelclone import ClonableModelAdmin
 
 from setup_sheets.models import (
     Fixture,
@@ -20,7 +21,7 @@ class SetupSheetToolInline(admin.TabularInline):
 
 
 @admin.register(SetupSheet)
-class SetupSheetAdmin(admin.ModelAdmin):
+class SetupSheetAdmin(ClonableModelAdmin):
     list_display = ["name", "part_number", "program_name", "user_full_name"]
     inlines = [SetupSheetToolInline]
     search_fields = [
