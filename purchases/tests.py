@@ -39,6 +39,7 @@ class PurchaseRequestTestModel(TestCase):
     def test_using_purchase_request(self):
         self.assertIsInstance(self.purchase_request, PurchaseRequest)
         self.assertNotEqual(self.purchase_request.slug, "")
+        self.assertNotEqual(self.purchase_request.requisitioner.slug, "")
 
 
 class TestCreatePRView(TestCase):
