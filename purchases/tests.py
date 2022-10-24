@@ -4,6 +4,7 @@ from django.contrib.auth.models import Permission, User
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from model_bakery import baker
+from model_bakery.recipe import seq
 
 from purchases.views import tracking_webhook
 
@@ -11,7 +12,15 @@ from .models import PurchaseRequest, Requisitioner, Tracker, Urgency
 
 
 def create_pr_deps():
-    user = baker.make(User)
+    user = baker.make(User, first_name=seq("Test"), last_name=seq("User"))
+    # from purchases.signals import create_requisitioner
+    requisitioner = Requisitioner.objects.get(user=user)
+    # requisitioner.save()
+    # requisitioner = baker.make(Requisitioner)
+    # user = requisitioner.user
+    print(f"Requisitioner First Name: {requisitioner.user.first_name}")
+    print(f"Requisitioner Last Name: {requisitioner.user.last_name}")
+    # create_requisitioner(sender=User, instance=user, created=True)
     rvalue = {
         "default_sales_tax_rate": baker.make_recipe(
             "purchases.sales_tax_rate_settings"
