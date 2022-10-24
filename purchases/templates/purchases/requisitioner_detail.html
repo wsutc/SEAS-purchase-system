@@ -10,7 +10,7 @@
         <span class="header-em">{{ object.user.get_full_name }}</span>
         <div>
           <a href="{% url 'admin:purchases_requisitioner_change' object.pk %}"><i class="fa-solid fa-pencil fa-2xs"></i></a>
-          <a href="{% url 'admin:purchases_requisitioner_delete' object.pk %}"><i class="fa-solid fa-trash-can fa-2xs"></i></a>
+          <a href="{% url 'admin:purchases_requisitioner_delete' object.pk %}?next={% url 'all_requisitioners' %}"><i class="fa-solid fa-trash-can fa-2xs"></i></a>
         </div>
       </h4>
       <div class="card-body">
