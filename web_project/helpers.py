@@ -6,10 +6,8 @@ from pprint import pprint
 from types import FunctionType
 
 from django.conf import settings
-from django.contrib import messages
+from django.contrib import admin, messages
 from django.contrib.auth.decorators import login_required
-
-# from django.contrib.auth import views as auth_views
 from django.http import HttpRequest
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -17,8 +15,6 @@ from django.views.generic import ListView, View
 from django.views.generic.list import MultipleObjectMixin
 from django_listview_filters.mixins import FilterViewMixin
 from furl import furl
-
-# from web_project.settings.base import ALLOWED_ANONYMOUS_VIEWS
 
 
 def paginate(view: ListView, **kwargs) -> tuple[bool, HTTPResponse]:
@@ -345,3 +341,36 @@ class LoginRequiredMiddleware:
             return
 
         return login_required(view_func)(request, *view_args, **view_kwargs)
+
+
+def redirect_object_or_next(object, request, next_param="next"):
+    """Redirect to specified 'next' page or object's detail page.
+
+    :param object: Object/model to be redirected to if no 'next' page specified
+    :type object: Django models.Model object
+    :param request: The request as specified by the server
+    :type request: HTTPRequest
+    :param next_param: Paramater used in URL to specify 'next' page
+    :type next_param: str, optional
+    """
+    next = request.GET.get(next_param, None)
+    if next:
+        url = next
+    else:
+        url = object
+
+    return redirect(url)
+
+
+class AdminResponseMixin(admin.ModelAdmin):
+    """A mixin for `admin.ModelAdmin` classes that automatically redirects back to
+    object on site as well as back to list if deleted.
+    """
+
+    def response_change(self, request, obj, post_url_continue=...):
+
+        return redirect_object_or_next(obj, request)
+
+    def response_delete(self, request, obj, post_url_continue=...):
+
+        return redirect_object_or_next(obj, request)
