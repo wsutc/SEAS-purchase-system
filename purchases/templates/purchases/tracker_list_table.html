@@ -2,54 +2,68 @@
 {% load i18n %}
 <div class="col">
   <table class="table table-striped">
-      <thead>
-          <tr>
-              <th scope="col">{% translate "Carrier" %}</th>
-              <th>Tracking Number</th>
-              <th>Track</th>
-              <th>Status</th>
-              <th>Delivery Estimate</th>
-              <th>Purchase Request</th>
-              <th>Vendor</th>
-              <th></th>
-          </tr>
-      </thead>
-      <tbody>
-          {% for o in tracker_list %}
-              <tr>
-                  <td><a href="{{ o.carrier.website }}">{{ o.carrier }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a></td>
-                  <td class="text-truncate"><a href="{{ o.get_absolute_url }}">{{ o.tracking_number }}</a></td>
-                  <td>
-                      {% if o.get_tracking_link %}
-                          <a href="{{ o.get_tracking_link }}" target="_blank" rel="noopener noreferrer">
-                              <i class="fa-solid fa-up-right-from-square"></i>
-                          </a>
-                      {% endif %}
-                  </td>
-                  <td class="text-truncate">
-                    {% if o.status %}
-                      {{ o.status|camel_case_split }}{% if not o.status == 'Delivered' %} | {{ o.latest_event.location }}{% endif %}
-                    {% endif %}
-                  </td>
-                  <td>{{ o.delivery_estimate|date:"SHORT_DATETIME_FORMAT" }}</td>
-                  {% comment %} <td>{{ o.earliest_event_time }}</td> {% endcomment %}
-                  <td><a href="{{ o.purchase_request.get_absolute_url }}">{{ o.purchase_request|default_if_none:"" }}</a></td>
-                  <td>
-                    {% if o.purchase_request %}
-                      {{ o.purchase_request.vendor.name|urlizespecify:o.purchase_request.vendor.get_absolute_url }}
-                    {% endif %}
-                  </td>
-                  <td>
-                      <a href="{% url 'update_tracker' o.pk %}?next={{ request.get_full_path }}"><i class="fa-solid fa-arrows-rotate px-1"></i></a>
-                      <a href="{% url 'admin:purchases_tracker_change' o.pk %}"><i class="fa-solid fa-pencil px-1"></i></a>
-                      <a href="{% url 'tracker_delete' pk=o.pk %}?next={{ request.get_full_path }}">
-                          <i class="fa-solid fa-trash-can px-1"></i>
-                      </a>
-                  </td>
-              </tr>
-          {% empty %}
-              <tr><td colspan="8" class="text-center">No matching trackers.</td></tr>
-          {% endfor %}
-      </tbody>
+    <thead>
+      <tr>
+        <th scope="col">{% translate "Carrier" %}</th>
+        <th>Tracking Number</th>
+        <th>Track</th>
+        <th>Status</th>
+        <th>Delivery Estimate</th>
+        <th>Purchase Request</th>
+        <th>Vendor</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for o in tracker_list %}
+        <tr>
+          <td>
+            <a href="{{ o.carrier.website }}">{{ o.carrier }}<i class="fa-solid fa-up-right-from-square"
+   data-fa-transform="shrink-6 up-4"></i></a>
+          </td>
+          <td class="text-truncate">
+            <a href="{{ o.get_absolute_url }}">{{ o.tracking_number }}</a>
+          </td>
+          <td>
+            {% if o.get_tracking_link %}
+              <a href="{{ o.get_tracking_link }}"
+                 target="_blank"
+                 rel="noopener noreferrer">
+                <i class="fa-solid fa-up-right-from-square"></i>
+              </a>
+            {% endif %}
+          </td>
+          <td class="text-truncate">
+            {% if o.status %}
+              {{ o.status|camel_case_split }}
+              {% if not o.status == 'Delivered' %}| {{ o.latest_event.location }}{% endif %}
+            {% endif %}
+          </td>
+          <td>{{ o.delivery_estimate|date:"SHORT_DATETIME_FORMAT" }}</td>
+          {% comment %} <td>{{ o.earliest_event_time }}</td> {% endcomment %}
+          <td>
+            <a href="{{ o.purchase_request.get_absolute_url }}">{{ o.purchase_request|default_if_none:"" }}</a>
+          </td>
+          <td>
+            {% if o.purchase_request %}
+              {{ o.purchase_request.vendor.name|urlizespecify:o.purchase_request.vendor.get_absolute_url }}
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <div class="btn-group">
+              <a href="{% url 'update_tracker' o.pk %}?next={{ request.get_full_path }}"><i class="fa-solid fa-arrows-rotate px-1"></i></a>
+              <a href="{% url 'admin:purchases_tracker_change' o.pk %}"><i class="fa-solid fa-pencil px-1"></i></a>
+              <a href="{% url 'tracker_delete' pk=o.pk %}?next={{ request.get_full_path }}">
+                <i class="fa-solid fa-trash-can px-1"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="8" class="text-center">No matching trackers.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
   </table>
 </div>

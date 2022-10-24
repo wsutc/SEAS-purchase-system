@@ -32,7 +32,7 @@
           </td>
           <td>{{ o.calculated_total|usd_accounting }}</td>
           <td>{{ o.purchase_requests.last.tracker_set.last.status|camel_case_split }}</td>
-          <td>
+          <td class="text-end">
             <div class="btn-group">
               {% if o.approved_request %}
                 <a class="btn-link"
