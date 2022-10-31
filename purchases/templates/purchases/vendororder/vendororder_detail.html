@@ -1,10 +1,24 @@
 {% extends 'purchases/detail_page.html' %}
 {% load purchases_extras %}
+{% comment %} {% load breadcrumbs %} {% endcomment %}
 {% load i18n %}
 {% block title %}{{ object.vendor.name }} Order{% endblock %}
 {% block header %}Order{% endblock %}
 {% comment %} {% block previous %}{{ object.get_previous_by_sort_order.get_absolute_url }}{% endblock previous %}
 {% block next %}{{ object.get_next_by_tracking_number.get_absolute_url }}{% endblock next %} {% endcomment %}
+{% block breadcrumbs %}
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="{% url "home" %}">Home</a>
+      </li>
+      <li class="breadcrumb-item">
+        <a href="{% url "vendororder_list" %}">Orders</a>
+      </li>
+      <li class="breadcrumb-item active">{{ object }}</li>
+    </ol>
+  </nav>
+{% endblock breadcrumbs %}
 {% block navigation %}
   {% comment %} <div class="row mb-3">
       <div class="col"></div>

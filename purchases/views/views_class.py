@@ -81,7 +81,7 @@ class SimpleView(SingleObjectMixin):
 
 class VendorOrderCreateView(CreateView):
     form_class = AddVendorOrderForm
-    template_name = "purchases/vendororder_create.html"
+    template_name = "purchases/vendororder/vendororder_create.html"
 
     def form_valid(self, form):
         if hasattr(form, "message"):
@@ -91,6 +91,7 @@ class VendorOrderCreateView(CreateView):
 
 
 class VendorOrderDetailView(SimpleView, DetailView):
+    template_name = "purchases/vendororder/vendororder_detail.html"
     model = VendorOrder
     query_pk_and_slug = True
 
@@ -112,6 +113,7 @@ class VendorOrderDetailView(SimpleView, DetailView):
 
 
 class VendorOrderListView(PaginatedListMixin, ListView):
+    template_name = "purchases/vendororder/vendororder_list.html"
     context_object_name = "vendororder"
     queryset = VendorOrder.objects.all()
     list_filter = [
@@ -147,7 +149,7 @@ class VendorOrderListView(PaginatedListMixin, ListView):
 
 
 class VendorOrderCurrentListView(VendorOrderListView):
-    template_name = "purchases/vendororder_current_list.html"
+    template_name = "purchases/vendororder/vendororder_current_list.html"
     queryset = VendorOrder.objects.filter(purchase_requests__status__open=True)
 
 
@@ -227,9 +229,11 @@ class PurchaseRequestListViewBase(PaginatedListMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         context["purchase_request_statuses"] = Status.objects.filter(
             parent_model="PR"
         ).order_by("rank")
+
         return context
 
     class Meta:
@@ -239,6 +243,11 @@ class PurchaseRequestListViewBase(PaginatedListMixin, ListView):
 class PurchaseRequestListView(PurchaseRequestListViewBase):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # ------- sort statuses by 'rank' ---------------
+        # context["purchase_request_statuses"] = Status.objects.filter(
+        #     parent_model="PR"
+        # ).order_by("rank")
 
         context["show_link"] = (_("show open"), "open_pr")
 
@@ -253,6 +262,11 @@ class RequisitionerPurchaseRequestListView(PurchaseRequestListViewBase):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # ------- sort statuses by 'rank' ---------------
+        context["purchase_request_statuses"] = Status.objects.filter(
+            parent_model="PR"
+        ).order_by("rank")
 
         context["show_link"] = (_("show open"), "open_pr")
 
@@ -284,6 +298,11 @@ class OpenPurchaseRequestListView(PurchaseRequestListViewBase):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # ------- sort statuses by 'rank' ---------------
+        context["purchase_request_statuses"] = Status.objects.filter(
+            parent_model="PR"
+        ).order_by("rank")
 
         context["show_link"] = (_("show all"), "home")
 
@@ -727,6 +746,7 @@ class BalancesDetailView(DetailView):
 
 
 class TrackerListView(PaginatedListMixin, ListView):
+    template_name = "purchases/tracker/tracker_list.html"
     context_object_name = "tracker"
     queryset = Tracker.objects.all()
     list_filter = [
@@ -739,7 +759,7 @@ class TrackerListView(PaginatedListMixin, ListView):
 
 class TrackerCreateView(CreateView):
     form_class = TrackerForm
-    template_name = "purchases/tracker_create.html"
+    template_name = "purchases/tracker/tracker_create.html"
 
     def get_initial(self):
         purchase_request_param = self.request.GET.get("purchase-request", None)
@@ -759,7 +779,7 @@ class TrackerCreateView(CreateView):
 
 class TrackerDetailView(DetailView):
     model = Tracker
-    template_name = "purchases/tracker_detail.html"
+    template_name = "purchases/tracker/tracker_detail.html"
     query_pk_and_slug = True
 
 

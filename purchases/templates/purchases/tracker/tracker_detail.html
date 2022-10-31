@@ -5,6 +5,19 @@
 {% block header %}Tracker{% endblock %}
 {% comment %} {% block previous %}{{ object.get_previous_by_sort_order.get_absolute_url }}{% endblock previous %}
 {% block next %}{{ object.get_next_by_tracking_number.get_absolute_url }}{% endblock next %} {% endcomment %}
+{% block breadcrumbs %}
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="{% url 'home' %}">Home</a>
+      </li>
+      <li class="breadcrumb-item">
+        <a href="{% url 'tracker_list' %}">Trackers</a>
+      </li>
+      <li class="breadcrumb-item active">{{ object }}</li>
+    </ol>
+  </nav>
+{% endblock breadcrumbs %}
 {% block navigation %}
   {% comment %} <div class="row mb-3">
       <div class="col"></div>
@@ -95,9 +108,15 @@
           <tbody>
             {% for row in object.trackingevent_set.all %}
               <tr>
-                <td>{{ row.time_utc|date:"D d M Y" }} {{ row.time_utc|time:"H:i:s e" }}</td>
-                <td>{{ row.description }}</td>
-                <td>{{ row.location|default_if_none:"" }}</td>
+                <td>
+                  {{ row.time_utc|date:"D d M Y" }} {{ row.time_utc|time:"H:i:s e" }}
+                </td>
+                <td>
+                  {{ row.description }}
+                </td>
+                <td>
+                  {{ row.location|default_if_none:"" }}
+                </td>
                 <td>
                   {{ row.status }}
                 </td>

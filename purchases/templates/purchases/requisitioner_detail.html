@@ -1,6 +1,19 @@
 {% extends 'purchases/detail_page.html' %}
 {% block title %}{{ object.user.get_full_name }}{% endblock %}
 {% block header %}Requisitioner{% endblock %}
+{% block breadcrumbs %}
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="{% url 'home' %}">Home</a>
+      </li>
+      <li class="breadcrumb-item">
+        <a href="{% url 'all_requisitioners' %}">Requisitioners</a>
+      </li>
+      <li class="breadcrumb-item active">{{ object }}</li>
+    </ol>
+  </nav>
+{% endblock breadcrumbs %}
 {% block navigation %}
 {% endblock navigation %}
 {% block page %}
