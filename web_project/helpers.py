@@ -374,3 +374,25 @@ class AdminResponseMixin(admin.ModelAdmin):
     def response_delete(self, request, obj, post_url_continue=...):
 
         return redirect_object_or_next(obj, request)
+
+
+# def sort_list_by_lower():
+#     # TODO: make this more elegant
+#     # sort vendor as lower case (python sorts lower different than upper by default)
+#     filter_name = "purchase_request__vendor"
+
+#     # django-listview-filters added `get_filter_by_name` in later versions
+#     # (should be removed)
+#     try:
+#         filter = self.get_filter_by_name(filter_name)
+#     except Exception:
+#         if len(self.filter_specs) > 0:
+#             for filter_spec in self.filter_specs:
+#                filter = filter_spec if filter_spec.field_path == filter_name else None
+#         else:
+#             filter = None
+
+#     if filter:
+#         filter.lookup_choices = sorted(
+#             filter.lookup_choices, key=lambda x: x[1].lower()
+#         )
