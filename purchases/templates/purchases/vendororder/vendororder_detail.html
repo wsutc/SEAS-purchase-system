@@ -106,7 +106,7 @@
   {% with trackers as trackers %}
     {% if debug %}<div class="alert alert-debug">debug ->count:{{ trackers|length }}</div>{% endif %}
     <div class="h4">{% translate "Trackers" %}</div>
-    {% include "purchases/tracker_list_table.html" with tracker_list=trackers %}
+    {% include "purchases/tracker/tracker_list_table.html" with tracker_list=trackers %}
   {% endwith %}
   {% comment %} {% with object.items as items %}
   {% if debug %}<div class="alert alert-debug">debug ->count:{{ items|length }}</div>{% endif %}
