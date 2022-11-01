@@ -1,51 +1,52 @@
 {% extends 'purchases/layout.html' %}
 {% block title %}List{% endblock %}
 {% block content %}
-
-{% if messages %}
-  {% for message in messages %}
-  <p{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</p>
-  {% comment %} <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-    <div class="toast-header">
-      <img src="..." class="rounded mr-2" alt="...">
-      <strong class="mr-auto">{{ message.level }}</strong>
-      {% comment %} <small class="text-muted">just now</small>
-      <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-      </button>
+  {% if messages %}
+    <ul class="messages">
+      {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+  {% block breadcrumbs %}
+    <nav>
+      <ol class="breadcrumb">
+        {% for bc_text, bc_url in breadcrumbs %}
+          <li class="breadcrumb-item">
+            {% if bc_url %}<a href="{{ bc_url }}">{% endif %}
+            {{ bc_text }}
+            {% if bc_url %}</a>{% endif %}
+          </li>
+        {% endfor %}
+      </ol>
+    {% endblock breadcrumbs %}
+    {% block listheader %}
+      <div class="row mb-3">
+        <h1 class="wsu-c-heading col-sm">
+          All <span class="header-em">
+          {% block header %}{% endblock %}
+        </span>
+      </h1>
+      <a href="{% block new_url %}{% endblock %}"
+         class="save btn btn-primary col-2">New</a>
     </div>
-    <div class="toast-body{% if message.tags %} {{ message.tags }}{% endif %}">
-      {{ message }}
+  {% endblock listheader %}
+  {% if show_link %}
+    <div>
+      <a href="{% url show_link.1 %}">{{ show_link.0|title }}</a>
     </div>
-  </div> {% endcomment %}
-  {% endfor %}
-{% endif %}
-
-{% block listheader %}
-<div class="row mb-3">
-    <h1 class="wsu-c-heading col-sm">All <span class="header-em">{% block header %}{% endblock %}</span></h1>
-    <a href="{% block new_url %}{% endblock %}" class="save btn btn-primary col-2">New</a>
-</div>
-{% endblock listheader %}
-
-{% if show_link %}<div><a href="{% url show_link.1 %}">{{ show_link.0|title }}</a></div>{% endif %}
-
-{% include "purchases/page_buttons.html" %}
-
-<main class="d-flex flex-nowrap">
-
-{% block page %}{% endblock %}
-
-{% block filter_sidebar %}
-  {% include "purchases/filter_sidebar.html" %}
-{% endblock filter_sidebar %}
-
-</main>
-
-{% block pagination %}
+  {% endif %}
   {% include "purchases/page_buttons.html" %}
-{% endblock pagination %}
-
-<div id="django-debug"><pre>{% debug %}</pre></div>
-
+  <main class="d-flex flex-nowrap">
+    {% block page %}{% endblock %}
+    {% block filter_sidebar %}
+      {% include "purchases/filter_sidebar.html" %}
+    {% endblock filter_sidebar %}
+  </main>
+  {% block pagination %}
+    {% include "purchases/page_buttons.html" %}
+  {% endblock pagination %}
+  <div id="django-debug">
+    <pre>{% debug %}</pre>
+  </div>
 {% endblock content %}
