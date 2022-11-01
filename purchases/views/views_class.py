@@ -52,7 +52,7 @@ from purchases.models import (  # Transaction,
     requisitioner_from_user,
 )
 from purchases.models.models_metadata import PurchaseRequestAccount
-from web_project.helpers import (  # truncate_string,
+from web_project.helpers import (  # truncate_string,; print_attributes,
     PaginatedListMixin,
     max_decimal_places,
     redirect_to_next,
@@ -201,6 +201,14 @@ class SimpleProductListView(PaginatedListMixin, ListView):
 
         context["unitprice_maxdigits"] = max_decimal_places(unitprice_values)
 
+        # build breadcrumbs as list of tuples (text, url)
+        breadcrumbs = [
+            (_("Home"), reverse_lazy("home")),
+            (_("Simple Products"), None),
+        ]
+
+        context["breadcrumbs"] = breadcrumbs
+
         return context
 
 
@@ -210,12 +218,30 @@ class SimpleProductPRListView(SimpleProductListView):
     def get_queryset(self):
         qs = super().get_queryset()
         slug = self.kwargs["purchaserequest"]
-        purchase_request = PurchaseRequest.objects.filter(slug=slug)
-        qs = qs.filter(purchase_request__in=purchase_request)
+        self.model = get_object_or_404(PurchaseRequest, slug=slug)
+        qs = qs.filter(purchase_request=self.model)
 
-        logger.info(f"Purchase Request: {purchase_request.first()}")
+        logger.info(f"Purchase Request: {self.model}")
 
         return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        breadcrumbs = context["breadcrumbs"]
+
+        insert_index = len(breadcrumbs) - 1
+
+        new_breadcrumb = (
+            f"{self.model}",
+            reverse_lazy("purchaserequest_detail", kwargs={"slug": self.model.slug}),
+        )
+
+        breadcrumbs.insert(insert_index, new_breadcrumb)
+
+        context["breadcrumbs"] = breadcrumbs
+
+        return context
 
 
 class PurchaseRequestListViewBase(PaginatedListMixin, ListView):
