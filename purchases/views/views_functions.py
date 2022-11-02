@@ -108,7 +108,7 @@ def tracking_webhook(request):
         else:
             given_token = request.headers.get("sign", "")
 
-            if token := get_generated_signature(request.body, secret) != given_token:
+            if (token := get_generated_signature(request.body, secret)) != given_token:
                 logger.warning(
                     f"Invalid tracking webhook request received | token: {token}"
                 )

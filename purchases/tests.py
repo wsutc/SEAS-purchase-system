@@ -1,11 +1,17 @@
+import json
+from datetime import datetime, timedelta
 from http import HTTPStatus
+from json import JSONDecodeError
 
+import pytz
 from django.contrib.auth.models import Permission, User
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from model_bakery import baker
 from model_bakery.recipe import seq
 
+from purchases.models.models_base import TrackingWebhookMessage
+from purchases.tracking import get_generated_signature
 from purchases.views import tracking_webhook
 
 from .models import PurchaseRequest, Requisitioner, Tracker, Urgency
@@ -85,6 +91,10 @@ class TrackingWebhookTests(TestCase):
         self.client = Client(enforce_csrf_checks=True)
         self.purchase_request = baker.prepare_recipe("purchases.default_pr")
         self.tracker = baker.prepare(Tracker)
+        # TODO - find a way to get the message instead of hard coding it
+        self.valid_signature = get_generated_signature(
+            b"--BoUnDaRyStRiNg--\r\n", "abc123"
+        )
 
     def test_bad_method(self):
         url = reverse(tracking_webhook)
@@ -97,233 +107,247 @@ class TrackingWebhookTests(TestCase):
 
         assert response.status_code == HTTPStatus.FORBIDDEN
 
+    def test_bad_token(self):
+        response = self.client.post(reverse(tracking_webhook), HTTP_SIGN="def456")
 
-#     def test_bad_token(self):
-#         response = self.client.post(
-#             reverse(tracking_webhook),
-#             HTTP_AFTERSHIP_WEBHOOK_SECRET = "def456"
-#         )
+        assert response.status_code == HTTPStatus.FORBIDDEN
+        assert response.content.decode() == "Inconsistency in response signature."
 
-#         assert response.status_code == HTTPStatus.FORBIDDEN
-#         assert (
-#             response.content.decode() == "Incorrect token in Aftership-Hmac-Sha256 header."  # noqa: E501
-#         )
+    def test_valid_token(self):
+        # since there is no body, post will fail, but with known exception
+        self.assertRaises(
+            JSONDecodeError,
+            self.client.post,
+            path=reverse(tracking_webhook),
+            HTTP_SIGN=self.valid_signature,
+        )
 
-#     def test_success(self):
+    def test_success(self):
+        start = datetime.today()
+        start_aware = pytz.utc.localize(start)
+        received = start - timedelta(days=2)
+        old_message = TrackingWebhookMessage.objects.create(
+            received_at=pytz.utc.localize(received)
+        )
 
-#         start = timezone.now()
-#         old_message = TrackingWebhookMessage.objects.create(
-#             received_at = start - dt.timedelta(days=100)
-#         )
+        message = json.dumps(WEBHOOK_DATA).encode("utf-8")
+        sign = get_generated_signature(message, "abc123")
 
-#         response = self.client.post(
-#             reverse(tracking_webhook),
-#             HTTP_AFTERSHIP_HMAC_SHA256="abc123",
-#             content_type="application/json",
-#             data={
-#                 "event_id": "bca2a741-8613-4694-bfb4-2ceb0016ee4f",
-#                 "event": "tracking_update",
-#                 "is_tracking_first_tag": "true",
-#                 "msg": {
-#                     "id": "n33xyn2b61cm3kosdtnvu00e",
-#                     "tracking_number": "9405516902697649303570",
-#                     "title": "9405516902697649303570",
-#                     "note": "null",
-#                     "origin_country_iso3": "USA",
-#                     "destination_country_iso3": "USA",
-#                     "courier_destination_country_iso3": "USA",
-#                     "shipment_package_count": "null",
-#                     "active": "true",
-#                     "order_id": "null",
-#                     "order_id_path": "null",
-#                     "order_date": "null",
-#                     "customer_name": "null",
-#                     "source": "web",
-#                     "emails": [
-#                         "hx.zuo@aftership.com"
-#                     ],
-#                     "smses": [],
-#                     "subscribed_smses": [],
-#                     "subscribed_emails": [],
-#                     "android": [],
-#                     "ios": [],
-#                     "return_to_sender": "false",
-#                     "custom_fields": {},
-#                     "tag": "InTransit",
-#                     "subtag": "InTransit_003",
-#                     "subtag_message": "Arrival scan",
-#                     "tracked_count": 1,
-#                     "expected_delivery": "2021-05-17",
-#                     "signed_by": "null",
-#                     "shipment_type": "Priority Mail",
-#                     "created_at": "2021-05-17T09:05:29+00:00",
-#                     "updated_at": "2021-05-17T09:05:31+00:00",
-#                     "slug": "usps",
-#                     "unique_token": "deprecated",
-#                     "path": "deprecated",
-#                     "shipment_weight": "null",
-#                     "shipment_weight_unit": "null",
-#                     "delivery_time": 5,
-#                     "last_mile_tracking_supported": "true",
-#                     "language": "null",
-#                     "shipment_pickup_date": "2021-05-13T18:10:00",
-#                     "shipment_delivery_date": "null",
-#                     "last_updated_at": "2021-05-17T09:05:31+00:00",
-#                     "checkpoints": [
-#                         {
-#                             "location": "BOCA RATON, FL, 33487, USA, United States",
-#                             "country_name": "United States",
-#                             "country_iso3": "USA",
-#                             "state": "FL",
-#                             "city": "BOCA RATON",
-#                             "zip": "33487",
-#                             "message": "Shipping Label Created, USPS Awaiting Item",
-#                             "coordinates": [],
-#                             "tag": "InfoReceived",
-#                             "subtag": "InfoReceived_001",
-#                             "subtag_message": "Info Received",
-#                             "created_at": "2021-05-17T09:05:31+00:00",
-#                             "checkpoint_time": "2021-05-13T13:04:00",
-#                             "slug": "usps",
-#                             "raw_tag": "GX"
-#                         },
-#                         {
-#                             "location": "BOCA RATON, FL, 33487, USA, United States",
-#                             "country_name": "United States",
-#                             "country_iso3": "USA",
-#                             "state": "FL",
-#                             "city": "BOCA RATON",
-#                             "zip": "33487",
-#                             "message": "Accepted at USPS Origin Facility",
-#                             "coordinates": [],
-#                             "tag": "InTransit",
-#                             "subtag": "InTransit_002",
-#                             "subtag_message": "Acceptance scan",
-#                             "created_at": "2021-05-17T09:05:31+00:00",
-#                             "checkpoint_time": "2021-05-13T18:10:00",
-#                             "slug": "usps",
-#                             "raw_tag": "OA"
-#                         },
-#                         {
-#                             "location": "WEST PALM BEACH FL DISTRIBUTION CENTER",
-#                             "country_name": "United States",
-#                             "country_iso3": "USA",
-#                             "state": "null",
-#                             "city": "WEST PALM BEACH FL DISTRIBUTION CENTER",
-#                             "zip": "null",
-#                             "message": "Arrived at USPS Regional Origin Facility",
-#                             "coordinates": [],
-#                             "tag": "InTransit",
-#                             "subtag": "InTransit_003",
-#                             "subtag_message": "Arrival scan",
-#                             "created_at": "2021-05-17T09:05:31+00:00",
-#                             "checkpoint_time": "2021-05-13T19:25:00",
-#                             "slug": "usps",
-#                             "raw_tag": "10"
-#                         },
-#                         {
-#                             "location": "WEST PALM BEACH FL DISTRIBUTION CENTER",
-#                             "country_name": "United States",
-#                             "country_iso3": "USA",
-#                             "state": "null",
-#                             "city": "WEST PALM BEACH FL DISTRIBUTION CENTER",
-#                             "zip": "null",
-#                             "message": "Departed USPS Regional Origin Facility",
-#                             "coordinates": [],
-#                             "tag": "InTransit",
-#                             "subtag": "InTransit_007",
-#                             "subtag_message": "Departure Scan",
-#                             "created_at": "2021-05-17T09:05:31+00:00",
-#                             "checkpoint_time": "2021-05-14T00:25:00",
-#                             "slug": "usps",
-#                             "raw_tag": "10"
-#                         },
-#                         {
-#                             "location": "FAYETTEVILLE NC DISTRIBUTION CENTER ANNEX",
-#                             "country_name": "United States",
-#                             "country_iso3": "USA",
-#                             "state": "null",
-#                             "city": "FAYETTEVILLE NC DISTRIBUTION CENTER ANNEX",
-#                             "zip": "null",
-#                             "message": "Arrived at USPS Regional Destination Facility",  # noqa: E501
-#                             "coordinates": [],
-#                             "tag": "InTransit",
-#                             "subtag": "InTransit_003",
-#                             "subtag_message": "Arrival scan",
-#                             "created_at": "2021-05-17T09:05:31+00:00",
-#                             "checkpoint_time": "2021-05-15T13:06:00",
-#                             "slug": "usps",
-#                             "raw_tag": "10"
-#                         },
-#                         {
-#                             "location": "FAYETTEVILLE NC DISTRIBUTION CENTER ANNEX",
-#                             "country_name": "United States",
-#                             "country_iso3": "USA",
-#                             "state": "null",
-#                             "city": "FAYETTEVILLE NC DISTRIBUTION CENTER ANNEX",
-#                             "zip": "null",
-#                             "message": "Departed USPS Regional Facility",
-#                             "coordinates": [],
-#                             "tag": "InTransit",
-#                             "subtag": "InTransit_007",
-#                             "subtag_message": "Departure Scan",
-#                             "created_at": "2021-05-17T09:05:31+00:00",
-#                             "checkpoint_time": "2021-05-16T05:52:00",
-#                             "slug": "usps",
-#                             "raw_tag": "T1"
-#                         },
-#                         {
-#                             "location": "HOLLY RIDGE, NC, 28445, USA, United States",
-#                             "country_name": "United States",
-#                             "country_iso3": "USA",
-#                             "state": "NC",
-#                             "city": "HOLLY RIDGE",
-#                             "zip": "28445",
-#                             "message": "Arrived at Post Office",
-#                             "coordinates": [],
-#                             "tag": "InTransit",
-#                             "subtag": "InTransit_003",
-#                             "subtag_message": "Arrival scan",
-#                             "created_at": "2021-05-17T09:05:31+00:00",
-#                             "checkpoint_time": "2021-05-17T03:45:00",
-#                             "slug": "usps",
-#                             "raw_tag": "07"
-#                         }
-#                     ],
-#                     "order_promised_delivery_date": "null",
-#                     "delivery_type": "null",
-#                     "pickup_location": "null",
-#                     "pickup_note": "null",
-#                     "tracking_account_number": "null",
-#                     "tracking_origin_country": "null",
-#                     "tracking_destination_country": "null",
-#                     "tracking_key": "null",
-#                     "tracking_postal_code": "null",
-#                     "tracking_ship_date": "null",
-#                     "tracking_state": "null",
-#                     "courier_tracking_link": "https://tools.usps.com/go/TrackConfirmAction?tLabels=9405516902697649303570",  # noqa: E501
-#                     "first_attempted_at": "null",
-#                     "courier_redirect_link": "https://tools.usps.com/go/TrackConfirmAction?tRef=fullpage&tLc=2&text28777=&tLabels=9405516902697649303570%2C",  # noqa: E501
-#                     "on_time_status": "trending-on-time",
-#                     "on_time_difference": 0,
-#                     "order_tags": [],
-#                     "aftership_estimated_delivery_date": {
-#                                 "estimated_delivery_date": "2022-01-03",
-#                                 "confidence_score": "null",
-#                                 "estimated_delivery_date_min": "2022-01-01",
-#                                 "estimated_delivery_date_max": "2022-01-06"
-#                     }
-#                     },
-#                     "ts": 1621242332
-#                     }
-#                 )
+        response = self.client.post(
+            reverse(tracking_webhook),
+            HTTP_SIGN=sign,
+            content_type="application/json",
+            data=WEBHOOK_DATA,
+        )
 
-#         assert response.status_code == HTTPStatus.OK
-#         assert response.content.decode() == "Message successfully received."
-#         assert not TrackingWebhookMessage.objects.filter(id=old_message.id).exists()
-#         awm = TrackingWebhookMessage.objects.get()
-#         assert awm.received_at >= start
-#         # assert awm.payload == {"this": "is a message"}
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.content.decode(), "Message successfully received.")
+
+        # assert response.status_code == HTTPStatus.OK
+        # assert response.content.decode() == "Message successfully received."
+        self.assertFalse(
+            TrackingWebhookMessage.objects.filter(id=old_message.id).exists()
+        )
+
+        awm = TrackingWebhookMessage.objects.get()
+
+        self.assertGreaterEqual(awm.received_at, start_aware)
+        # self.assertDictEqual(awm.payload, {"this": "is a message"})
+        # assert awm.received_at >= start
+        # assert awm.payload == {"this": "is a message"}
+
 
 #     def test_tracker_update(self):
 #         pass
+
+null = "null"
+
+
+WEBHOOK_DATA = {
+    "event": "TRACKING_UPDATED",
+    "data": {
+        "number": "1Z2617V10397725789",
+        "carrier": 3011,
+        "param": null,
+        "tag": null,
+        "track_info": {
+            "shipping_info": {
+                "shipper_address": {
+                    "country": "US",
+                    "state": "CA",
+                    "city": "CITY OF INDUSTRY",
+                    "street": null,
+                    "postal_code": null,
+                    "coordinates": {"longitude": null, "latitude": null},
+                }
+            },
+            "recipient_address": {
+                "country": "US",
+                "state": "CA",
+                "city": "GASQUET",
+                "street": null,
+                "postal_code": null,
+                "coordinates": {"longitude": null, "latitude": null},
+            },
+        },
+        "latest_status": {
+            "status": "Delivered",
+            "sub_status": "Delivered_Other",
+            "sub_status_descr": null,
+        },
+        "latest_event": {
+            "time_iso": "2022-04-04T16:35:22-07:00",
+            "time_utc": "2022-04-04T23:35:22Z",
+            "description": "DELIVERED",
+            "location": "GASQUET, CA, US",
+            "stage": null,
+            "address": {
+                "country": "US",
+                "state": "CA",
+                "city": "GASQUET",
+                "street": null,
+                "postal_code": null,
+                "coordinates": {"longitude": null, "latitude": null},
+            },
+        },
+        "time_metrics": {
+            "days_after_order": 7,
+            "days_of_transit": 4,
+            "days_of_transit_done": 4,
+            "days_after_last_update": 0,
+            "estimated_delivery_date": {"source": null, "from": null, "to": null},
+        },
+        "milestone": [
+            {
+                "key_stage": "InfoReceived",
+                "time_iso": "2022-03-28T22:43:08-07:00",
+                "time_utc": "2022-03-29T05:43:08Z",
+            },
+            {"key_stage": "PickedUp", "time_iso": null, "time_utc": null},
+            {"key_stage": "Departure", "time_iso": null, "time_utc": null},
+            {"key_stage": "Arrival", "time_iso": null, "time_utc": null},
+            {"key_stage": "AvailableForPickup", "time_iso": null, "time_utc": null},
+            {
+                "key_stage": "OutForDelivery",
+                "time_iso": "2022-04-04T08:46:06-07:00",
+                "time_utc": "2022-04-04T15:46:06Z",
+            },
+            {
+                "key_stage": "Delivered",
+                "time_iso": "2022-04-04T16:35:22-07:00",
+                "time_utc": "2022-04-04T23:35:22Z",
+            },
+            {"key_stage": "Returning", "time_iso": null, "time_utc": null},
+            {"key_stage": "Returned", "time_iso": null, "time_utc": null},
+        ],
+        "misc_info": {
+            "risk_factor": 0,
+            "service_type": "UPS Ground",
+            "weight_raw": "49.20LBS",
+            "weight_kg": "22.32",
+            "pieces": null,
+            "dimensions": null,
+            "customer_number": "2617V1",
+            "reference_number": null,
+            "local_number": "",
+            "local_provider": "",
+            "local_key": 0,
+        },
+        "tracking": {
+            "providers_hash": -595601716,
+            "providers": [
+                {
+                    "provider": {
+                        "key": 100002,
+                        "name": "UPS",
+                        "alias": "UPS",
+                        "tel": null,
+                        "homepage": "http://www.ups.com/",
+                        "country": "",
+                    },
+                    "service_type": "UPS Ground",
+                    "latest_sync_status": "Success",
+                    "latest_sync_time": "2022-04-29T08:06:06Z",
+                    "events_hash": -925320483,
+                    "events": [
+                        {
+                            "time_iso": "2022-04-04T16:35:22-07:00",
+                            "time_utc": "2022-04-04T23:35:22Z",
+                            "description": "DELIVERED",
+                            "location": "GASQUET, CA, US",
+                            "stage": "Delivered",
+                            "address": {
+                                "country": "US",
+                                "state": "CA",
+                                "city": "GASQUET",
+                                "street": null,
+                                "postal_code": null,
+                                "coordinates": {"longitude": null, "latitude": null},
+                            },
+                        },
+                        {
+                            "time_iso": "2022-04-04T08:46:06-07:00",
+                            "time_utc": "2022-04-04T15:46:06Z",
+                            "description": "Out For Delivery Today",
+                            "location": "Crescent City, CA, US",
+                            "stage": "OutForDelivery",
+                            "address": {
+                                "country": "US",
+                                "state": "CA",
+                                "city": "Crescent City",
+                                "street": null,
+                                "postal_code": null,
+                                "coordinates": {"longitude": null, "latitude": null},
+                            },
+                        },
+                        {
+                            "time_iso": "2022-04-02T02:15:00-07:00",
+                            "time_utc": "2022-04-02T09:15:00Z",
+                            "description": "Arrived at Facility",
+                            "location": "Anderson, CA, US",
+                            "stage": null,
+                            "address": {
+                                "country": "US",
+                                "state": "CA",
+                                "city": "Anderson",
+                                "street": null,
+                                "postal_code": null,
+                                "coordinates": {"longitude": null, "latitude": null},
+                            },
+                        },
+                        {
+                            "time_iso": "2022-03-31T16:36:47-07:00",
+                            "time_utc": "2022-03-31T23:36:47Z",
+                            "description": "Origin Scan",
+                            "location": "Ontario, CA, US",
+                            "stage": null,
+                            "address": {
+                                "country": "US",
+                                "state": "CA",
+                                "city": "Ontario",
+                                "street": null,
+                                "postal_code": null,
+                                "coordinates": {"longitude": null, "latitude": null},
+                            },
+                        },
+                        {
+                            "time_iso": "2022-03-28T22:43:08-07:00",
+                            "time_utc": "2022-03-29T05:43:08Z",
+                            "description": "Shipper created a label, UPS has not received the package yet.",  # noqa: E501
+                            "location": "US",
+                            "stage": "InfoReceived",
+                            "address": {
+                                "country": "US",
+                                "state": null,
+                                "city": null,
+                                "street": null,
+                                "postal_code": null,
+                                "coordinates": {"longitude": null, "latitude": null},
+                            },
+                        },
+                    ],
+                }
+            ],
+        },
+    },
+}
