@@ -125,7 +125,7 @@ class TrackingWebhookTests(TestCase):
     def test_success(self):
         start = datetime.today()
         start_aware = pytz.utc.localize(start)
-        received = start - timedelta(days=2)
+        received = start - timedelta(days=100)
         old_message = TrackingWebhookMessage.objects.create(
             received_at=pytz.utc.localize(received)
         )
