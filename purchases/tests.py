@@ -88,6 +88,7 @@ class TrackingWebhookTests(TestCase):
 
     def test_bad_method(self):
         url = reverse(tracking_webhook)
+        print(f"Webhook URL: {url}")
         response = self.client.get(url)
         assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
 

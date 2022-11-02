@@ -414,3 +414,5 @@ ALLOWED_ANONYMOUS_VIEWS = [
     "LogoutView",
     "PasswordResetView",
 ]
+
+TRACKER_WEBHOOK_URL = env.str("DJANGO_TRACKER_WEBHOOK_URL", default="")
