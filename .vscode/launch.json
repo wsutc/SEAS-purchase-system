@@ -103,6 +103,7 @@
         "migrate",
         "create_user",
         "disconnect_signal",
+        "test",
       ],
       "default": "makemigrations",
     }

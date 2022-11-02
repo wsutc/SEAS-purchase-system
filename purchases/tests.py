@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from json import JSONDecodeError
 
 from django.contrib.auth.models import Permission, User
 from django.test import Client, TestCase, override_settings
@@ -6,6 +7,7 @@ from django.urls import reverse
 from model_bakery import baker
 from model_bakery.recipe import seq
 
+from purchases.tracking import get_generated_signature
 from purchases.views import tracking_webhook
 
 from .models import PurchaseRequest, Requisitioner, Tracker, Urgency
@@ -97,17 +99,24 @@ class TrackingWebhookTests(TestCase):
 
         assert response.status_code == HTTPStatus.FORBIDDEN
 
+    def test_bad_token(self):
+        response = self.client.post(reverse(tracking_webhook), HTTP_SIGN="def456")
 
-#     def test_bad_token(self):
-#         response = self.client.post(
-#             reverse(tracking_webhook),
-#             HTTP_AFTERSHIP_WEBHOOK_SECRET = "def456"
-#         )
+        assert response.status_code == HTTPStatus.FORBIDDEN
+        assert response.content.decode() == "Inconsistency in response signature."
 
-#         assert response.status_code == HTTPStatus.FORBIDDEN
-#         assert (
-#             response.content.decode() == "Incorrect token in Aftership-Hmac-Sha256 header."  # noqa: E501
-#         )
+    def test_valid_token(self):
+        # TODO - find a way to get the message instead of hard coding it
+        sign = get_generated_signature(b"--BoUnDaRyStRiNg--\r\n", "abc123")
+
+        # since there is no body, post will fail, but with known exception
+        self.assertRaises(
+            JSONDecodeError,
+            self.client.post,
+            path=reverse(tracking_webhook),
+            HTTP_SIGN=sign,
+        )
+
 
 #     def test_success(self):
 
