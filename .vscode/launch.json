@@ -85,6 +85,7 @@
         "fix_orphan_columns",
         "csv_imports",
         "create_user",
+        "test",
       ],
       "default": "makemigrations",
     },
