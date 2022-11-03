@@ -29,7 +29,7 @@ class Part(BaseModel):
         if self._state.adding:
             doc_number, _ = DocumentNumber.objects.get_or_create(
                 document="PartNumber",
-                defaults={"prefix": "115", "padding_digits": "4"},
+                defaults={"prefix": "115", "padding_digits": 4},
             )
             self.number = doc_number.get_next_number()
         if not self.slug:

@@ -1,0 +1,12 @@
+{% extends "purchases/list_page.html" %}
+{% load purchases_extras %}
+{% block title %}Parts{% endblock %}
+{% block header %}
+  Parts
+{% endblock header %}
+{% block new_url %}
+  {% url 'create_tracker' %}
+{% endblock new_url %}
+{% block page %}
+  {% include "partnumbers/part_list_table.html" with list=object_list %}
+{% endblock %}

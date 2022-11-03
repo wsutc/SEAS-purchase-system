@@ -22,7 +22,7 @@ urlpatterns = [
     path("", RedirectView.as_view(url="purchases/")),
     path("budget-accounts/", include("accounts.urls")),
     path("inventory/", include("inventory.urls")),
-    # path("parts/", include("parts.urls")), # uses admin exclusively
+    path("parts/", include("partnumbers.urls")),
     path("purchases/", include("purchases.urls")),
     path("setup-sheets/", include("setup_sheets.urls")),
     path("tools/", include("tool_compatibility.urls")),
