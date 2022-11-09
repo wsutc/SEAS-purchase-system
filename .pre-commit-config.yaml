@@ -1,3 +1,6 @@
+exclude: "/migrations/"
+default_stages: [commit]
+
 default_language_version:
     python: python3.10
 repos:
@@ -34,17 +37,16 @@ repos:
       rev: 5.10.1
       hooks:
           - id: isort
-            exclude: (/migrations/)
     - repo: https://github.com/psf/black
-      rev: 22.8.0
+      rev: 22.10.0
       hooks:
           - id: black
-            exclude: (/migrations/|sgi.py$|apps.py$|urls.py$|/static/)
+            exclude: (sgi.py$|apps.py$|urls.py$|/static/)
     - repo: https://gitlab.com/pycqa/flake8
       rev: 3.9.2
       hooks:
           - id: flake8
-            exclude: (/migrations/|sgi.py$|apps.py$|/static/|urls.py$)
+            exclude: (sgi.py$|apps.py$|/static/|urls.py$)
             additional_dependencies:
                 [
                     "flake8-bugbear",
@@ -53,3 +55,8 @@ repos:
                     "flake8-print",
                     "flake8-simplify",
                 ]
+
+ci:
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false
