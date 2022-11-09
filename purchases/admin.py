@@ -3,11 +3,11 @@
 from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.db.models import Q
-from django.shortcuts import redirect
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
 from purchases.tracking import update_tracking_details
+from web_project.helpers import AdminResponseMixin
 
 from .models import (  # Transaction,
     AccountGroup,
@@ -157,7 +157,7 @@ class PurchaseRequestAdmin(admin.ModelAdmin):
 
 
 @admin.register(VendorOrder)
-class VendorOrderAdmin(admin.ModelAdmin):
+class VendorOrderAdmin(AdminResponseMixin, admin.ModelAdmin):
     list_display = ["name", "grand_total", "link"]
     list_filter = [
         ("purchase_requests", admin.RelatedOnlyFieldListFilter),
@@ -167,41 +167,15 @@ class VendorOrderAdmin(admin.ModelAdmin):
     ]
     search_fields = ["purchase_requests", "vendor"]
 
-    def response_change(self, request, obj, post_url_continue=...):
 
-        return redirect_object_or_next(obj, request)
-
-    def response_delete(self, request, obj, post_url_continue=...):
-
-        return redirect_object_or_next(obj, request)
-
-
-def redirect_object_or_next(object, request, next_param="next"):
-    """Redirect to specified 'next' page or object's detail page.
-
-    :param object: Object/model to be redirected to if no 'next' page specified
-    :type object: Django models.Model object
-    :param request: The request as specified by the server
-    :type request: HTTPRequest
-    :param next_param: Paramater used in URL to specify 'next' page
-    :type next_param: str, optional
-    """
-    next = request.GET.get(next_param, None)
-    if next:
-        url = next
-    else:
-        url = object
-
-    return redirect(url)
+class RequisitionerInline(admin.StackedInline):
+    model = Requisitioner
 
 
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
     list_display = ["name"]
-
-
-class RequisitionerInline(admin.StackedInline):
-    model = Requisitioner
+    inlines = [RequisitionerInline]
 
 
 class UserAdmin(BaseUserAdmin):
@@ -215,7 +189,7 @@ def save_requisitioners(modeladmin, request, queryset):
 
 
 @admin.register(Requisitioner)
-class RequisitionerAdmin(admin.ModelAdmin):
+class RequisitionerAdmin(AdminResponseMixin, admin.ModelAdmin):
     list_display = ["user_full_name", "user_email", "department"]
     actions = [save_requisitioners]
     inlines = [PurchaseRequestInline]
@@ -564,24 +538,12 @@ def add_first_event_time(modeladmin, request, queryset):
 
 
 @admin.register(Tracker)
-class TrackerAdmin(admin.ModelAdmin):
+class TrackerAdmin(AdminResponseMixin, admin.ModelAdmin):
     list_display = ["id", "status", "sub_status", "carrier", "earliest_event_time"]
     inlines = [TrackingEventInline]
     actions = [update_selected_trackers, add_first_event_time]
     list_filter = [TrackerCarrierListFilter, "status"]
     search_fields = ["id", "sub_status"]
-
-    def response_change(self, request, obj, post_url_continue=...):
-        url = redirect(obj)
-
-        # url = super().response_change(request, obj)
-
-        return url
-
-    def response_delete(self, request, obj, post_url_continue=...):
-        url = redirect("tracker_list")
-
-        return url
 
 
 @admin.register(TrackingEvent)

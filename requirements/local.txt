@@ -12,4 +12,4 @@ pre-commit>=2.20.0
 # ------------------------------------------------------------
 django-mysql==4.7.0
 model-bakery>=1.5.0
-mysqlclient==2.1.0
+mysqlclient==2.1.1

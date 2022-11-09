@@ -1,8 +1,8 @@
 -r base.txt
 
 gunicorn==20.1.0  # https://github.com/benoitc/gunicorn
-mysqlclient==2.1.0 # https://github.com/PyMySQL/mysqlclient
-sentry-sdk==1.9.9  # https://github.com/getsentry/sentry-python
+mysqlclient==2.1.1 # https://github.com/PyMySQL/mysqlclient
+sentry-sdk==1.10.1  # https://github.com/getsentry/sentry-python
 # hiredis==2.0.0  # https://github.com/redis/hiredis-py
 
 # Django
