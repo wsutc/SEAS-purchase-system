@@ -629,7 +629,7 @@ class CustomPurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
         )
 
 
-class PurchaseRequestUpdateView(UpdateView):
+class PurchaseRequestUpdateView(PermissionRequiredMixin, UpdateView):
     permission_required = "purchases.change_purchaserequest"
     model = PurchaseRequest
     form_class = NewPRForm
