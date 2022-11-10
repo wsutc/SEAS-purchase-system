@@ -466,6 +466,8 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
     template_name = "purchases/new_pr.html"
 
     def get_initial(self):
+        initial = super().get_initial().copy()
+
         req_obj = requisitioner_from_user(self.request.user)
         sales_tax_rate = DefaultValue.objects.get_value("salestaxrate")
         instruction = DefaultValue.objects.get_value("purchaserequestinstructions")
@@ -473,7 +475,7 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
         date_today = datetime.datetime.today()
         day_delta = datetime.timedelta(days=int(day_offset))
         need_by_date = date_today + day_delta
-        self.initial.update(
+        initial.update(
             {
                 "requisitioner": req_obj,
                 "sales_tax_rate": Decimal(sales_tax_rate),
@@ -481,9 +483,7 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
                 "need_by_date": need_by_date,
             }
         )
-
-        initial_values = super().get_initial()
-        return initial_values
+        return initial
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -558,9 +558,10 @@ class CustomPurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
     template_name = "purchases/new_pr.html"
 
     def get_initial(self):
+        initial = super().get_initial().copy()
         req_obj = requisitioner_from_user(self.request.user)
-        self.initial.update({"requisitioner": req_obj})
-        return super().get_initial()
+        initial.update({"requisitioner": req_obj})
+        return initial
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
