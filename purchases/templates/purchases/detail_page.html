@@ -7,6 +7,13 @@
       --bs-btn-padding-y: 0rem
   }
   </style>
+  {% block breadcrumbs %}
+    <nav>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item active">Home</li>
+      </ol>
+    </nav>
+  {% endblock breadcrumbs %}
   {% block navigation %}
     <div class="row mb-3">
       <h1 class="wsu-c-heading col-sm">

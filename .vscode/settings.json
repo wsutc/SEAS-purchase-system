@@ -21,5 +21,8 @@
         "django-html": "html",
     },
     "python.linting.flake8Enabled": true,
-    "python.linting.enabled": true
+    "python.linting.enabled": true,
+    "python.analysis.extraPaths": [
+        "./django-listview-filters/src"
+    ]
 }

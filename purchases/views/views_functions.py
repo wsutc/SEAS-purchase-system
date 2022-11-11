@@ -7,6 +7,7 @@ from functools import partial
 from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail import mail_admins
 from django.db.transaction import atomic, non_atomic_requests
 from django.http import FileResponse, HttpRequest, HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect
@@ -107,9 +108,13 @@ def tracking_webhook(request):
         else:
             given_token = request.headers.get("sign", "")
 
-            if token := get_generated_signature(request.body, secret) != given_token:
+            if (token := get_generated_signature(request.body, secret)) != given_token:
                 logger.warning(
                     f"Invalid tracking webhook request received | token: {token}"
+                )
+                mail_admins(
+                    subject="SEAS-Purchase-System: Invalid Tracking Webhook",
+                    message=f"Token does not match signature: {given_token}",
                 )
                 return HttpResponseForbidden(
                     "Inconsistency in response signature.", content_type="text/plain"
@@ -128,6 +133,10 @@ def tracking_webhook(request):
                     logger.warning(message)
             except ObjectDoesNotExist:
                 logger.error("No object matching payload found", exc_info=1)
+                mail_admins(
+                    subject="Unrecognized Webhook Payload",
+                    message=payload,
+                )
 
         finally:
             count = flush_old_webhooks(days_offset=7)

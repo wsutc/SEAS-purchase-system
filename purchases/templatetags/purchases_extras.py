@@ -1,9 +1,11 @@
 import re
 
 from django import template
-from django.apps import AppConfig
+
+# from django.apps import AppConfig
 from django.contrib.humanize.templatetags.humanize import intcomma
-from django.shortcuts import redirect
+
+# from django.shortcuts import redirect
 from django.template.defaultfilters import stringfilter
 from django.urls import reverse
 from django.utils.html import conditional_escape, mark_safe
@@ -25,7 +27,7 @@ def currency(value: float, currency: str = "USD"):
             )
 
             return return_value
-        case other:
+        case _:
             return value
 
 
@@ -33,7 +35,7 @@ def currency(value: float, currency: str = "USD"):
 def usd_accounting(value: float, decimals: int = 2, autoescape=True):
     """Format number as accounting.
 
-    For USD; adds whitespace between $ and numbers to right align digits and left align $.
+    For USD adds whitespace between $ and numbers to right align digits and left align $
     """
     if value is None:
         return value
@@ -165,7 +167,9 @@ def urlizespecifyblank(value: str, href: str, autoescape=True) -> str:
     if autoescape:
         value = conditional_escape(value)
 
-    tag = '<a href="{href}" target="_blank" rel="noopener noreferrer">{text}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a>'.format(
+    tag = '<a href="{href}" target="_blank" rel="noopener noreferrer">{text}\
+        <i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4">\
+            </i></a>'.format(
         text=value, href=href
     )
 
@@ -178,7 +182,8 @@ def urlizeobject(object, autoescape=True):
 
     :param object: The object/model to create a link for
     :type object: models.Model
-    :return: If <object> has a `get_absolute_url` method, return a link tag in the form '<a href="{{ object.get_absolute_url }}">{{ object }}</a>';
+    :return: If <object> has a `get_absolute_url` method, return a link tag in the form
+        '<a href="{{ object.get_absolute_url }}">{{ object }}</a>';
         if no method exists, return {{ object }}.
     :rtype: str, marked safe
     """
@@ -199,7 +204,8 @@ def urlizespecifyobject(value: str, object, autoescape=True):
 
     :param object: The object/model to create a link for
     :type object: models.Model
-    :return: If <object> has a `get_absolute_url` method, return a link tag in the form '<a href="{{ object.get_absolute_url }}">{{ value }}</a>';
+    :return: If <object> has a `get_absolute_url` method, return a link tag in the form
+        '<a href="{{ object.get_absolute_url }}">{{ value }}</a>';
         if no method exists, return {{ object }}.
     :rtype: str, marked safe
     """

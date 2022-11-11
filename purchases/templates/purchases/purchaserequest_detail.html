@@ -3,6 +3,16 @@
 {% load purchases_extras %}
 {% block title %}Purchase Request {{ object.number }}{% endblock %}
 {% block header %}Purchase Request{% endblock %}
+{% block breadcrumbs %}
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="{% url 'home' %}">Home</a>
+      </li>
+      <li class="breadcrumb-item active">{{ object }}</li>
+    </ol>
+  </nav>
+{% endblock breadcrumbs %}
 {% block number %}{{ object.number }}{% endblock %}
 {% block previous %}{{ object.get_previous_by_created_date.get_absolute_url }}{% endblock %}
 {% block next %}{{ object.get_next_by_created_date.get_absolute_url }}{% endblock %}
