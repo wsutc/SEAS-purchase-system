@@ -22,7 +22,7 @@ from djmoney.money import Money
 from furl import furl
 from phonenumber_field.modelfields import PhoneNumberField
 
-from globals.validators import PDF_EXTS
+from globals.validators import DOC_EXTS, PDF_EXTS
 from purchases.exceptions import StatusCodeNotFound
 from purchases.tracking import TrackerObject
 from web_project.fields import SimplePercentageField
@@ -282,6 +282,32 @@ class PurchaseRequest(models.Model):
         return self.number
 
 
+def attachment_path(instance, filename):
+    file_extension = Path(filename).suffix
+    file_name = Path(filename).stem
+    unique_uuid = shortuuid.uuid()
+
+    today = date.today()
+    year = today.strftime("/%Y")
+    month = today.strftime("/%m")
+
+    rpath = f"uploads/{year}/{month}/{file_name}.{unique_uuid}.{file_extension}"
+
+    return rpath
+
+
+class RelevantAttachment(models.Model):
+    purchase_request = models.ForeignKey(
+        PurchaseRequest, verbose_name=_("purchase request"), on_delete=models.CASCADE
+    )
+    file = models.FileField(
+        _("relevant attachment"),
+        upload_to=attachment_path,
+        validators=[FileExtensionValidator(DOC_EXTS)],
+        blank=True,
+    )
+
+
 def vendor_order_attachments_path(instance, filename):
     file_extension = Path(filename).suffix
 
@@ -302,7 +328,7 @@ class VendorOrder(BaseModel):
     approved_request = models.FileField(
         _("approved purchase request"),
         help_text=_("pdf"),
-        upload_to=vendor_order_attachments_path,
+        upload_to=attachment_path,
         validators=[FileExtensionValidator(PDF_EXTS)],
         blank=True,
     )
