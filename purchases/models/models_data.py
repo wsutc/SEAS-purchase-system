@@ -630,7 +630,7 @@ class Tracker(models.Model):
         ordering = ["-earliest_event_time"]
 
     def get_absolute_url(self):
-        kwargs = {"pk": slugify(self.id, allow_unicode=True)}
+        kwargs = {"pk": slugify(self.id, allow_unicode=True).upper()}
         return reverse("tracker_detail", kwargs=kwargs)
 
     def save(self, *args, **kwargs):

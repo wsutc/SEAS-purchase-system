@@ -4,6 +4,7 @@ import json
 import logging
 from functools import partial
 
+from benedict import benedict
 from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
@@ -25,7 +26,7 @@ from reportlab.platypus import PageTemplate, SimpleDocTemplate, Table, TableStyl
 from reportlab.platypus.frames import Frame
 from reportlab.platypus.paragraph import Paragraph
 
-from purchases.exceptions import TrackerInvalidApiKey
+from purchases.exceptions import TrackerInvalidApiKey, TrackerNotRegistered
 from web_project.helpers import login_exempt, redirect_to_next, truncate_string
 
 from ..models import (
@@ -455,15 +456,22 @@ def update_tracker(request, pk, *args, **kwargs):
     except TrackerInvalidApiKey:
         logger.warning("Tracking API Key not set or invalid.", exc_info=1)
         messages.error(request, "API key not set, please contact site admin.")
+    except TrackerNotRegistered:
+        logger.info(f"Tracker '{tracker.tracking_number}' expected to be registered.")
+        messages.warning(
+            request,
+            f"Tracker for '{tracker.tracking_number}' not registered, please register.",
+        )
     except Exception:
         messages.error(
             request, "Unknown error updating tracker, please contact site admin."
         )
         logger.error("Unknown exception running `update_tracker`.", exc_info=1)
     else:
+        data_b = benedict(data)
 
-        if data.get("code") == 0:
-            tracker_obj = data.get("tracker")
+        if data_b.get("code") == 0:
+            tracker_obj = data_b.get("tracker")
 
             if tracker_obj.events_hash != tracker.events_hash:
                 _, _ = tracker.create_events(tracker_obj.events)
@@ -476,16 +484,22 @@ def update_tracker(request, pk, *args, **kwargs):
                     request,
                     f"Tracker '{tracker_str}' updated with new information.",
                 )
-            elif tracker_obj.status == "NotFound":
-                messages.warning(
-                    request,
-                    "Tracker '{tracker_str}' was not found, please check the tracking \
-                        number and carrier ({tracker_obj.carrier_name}).",
-                )
+            # elif tracker_obj.status == "NotFound":
+            #     messages.warning(
+            #         request,
+            #         "Tracker '{tracker_str}' was not found, please check the tracking\
+            #             number and carrier ({tracker_obj.carrier_name}).",
+            #     )
             else:
                 messages.info(
                     request, f"Tracker '{tracker_str}' was already up to date."
                 )
+        elif data_b.get("code") == -1000:
+            messages.warning(
+                request,
+                f"Tracker '{tracker.tracking_number}' was not found, please check the \
+                    tracking number and carrier ({tracker.carrier.name}).",
+            )
     finally:
         url = tracker if "next" not in fragment.args else fragment.args.get("next")
 

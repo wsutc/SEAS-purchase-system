@@ -795,7 +795,9 @@ class TrackerCreateView(CreateView):
                 PurchaseRequest, slug=purchase_request_param
             )
 
-        return {"purchase_request": purchase_request}
+            return {"purchase_request": purchase_request}
+        else:
+            return
 
     def form_valid(self, form):
         if hasattr(form, "message"):
