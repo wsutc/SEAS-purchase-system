@@ -812,6 +812,7 @@ class TrackerDetailView(DetailView):
 
 class TrackerDeleteView(DeleteView):
     model = Tracker
+    template_name = "purchases/tracker/tracker_confirm_delete.html"
     success_url = reverse_lazy("tracker_list")
 
     def form_valid(self, *args, **kwargs):
