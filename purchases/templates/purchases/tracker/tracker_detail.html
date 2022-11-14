@@ -36,7 +36,7 @@
           <a href="{% url 'update_tracker' object.pk %}"><i class="fa-solid fa-arrows-rotate fa-2xs"></i></a>
           <a href="{% url 'admin:purchases_tracker_history' object.pk %}"><i class="fa-solid fa-clock-rotate-left fa-2xs"></i></a>
           <a href="{% url 'admin:purchases_tracker_change' object.pk %}"><i class="fa-solid fa-pencil fa-2xs"></i></a>
-          <a href="{% url 'admin:purchases_tracker_delete' object.pk %}"><i class="fa-solid fa-trash-can fa-2xs"></i></a>
+          <a href="{% url 'tracker_delete' object.pk %}"><i class="fa-solid fa-trash-can fa-2xs"></i></a>
         </div>
       </h4>
       <div class="card-body">
