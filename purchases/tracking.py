@@ -9,6 +9,7 @@ from django.http import JsonResponse
 
 from purchases.exceptions import (
     TrackerInvalidApiKey,
+    TrackerNotRegistered,
     TrackerPreviouslyRegistered,
     TrackerRejectedUnknownCode,
 )
@@ -170,6 +171,13 @@ def update_tracking_details(trackers: list[tuple[str, str]]) -> list[dict]:
                 tracking["message"] = "unknown"
                 tracking["code"] = -1000
             updated_trackers.append(tracking)
+        for row in data["rejected"]:
+            row_b = benedict(row)
+            match str(row_b["error.code"]):
+                case "-18019902":
+                    raise TrackerNotRegistered(
+                        tracking_number=row_b["number"], message=row_b["error.message"]
+                    )
     except KeyError:
         data_b = benedict(data)
         if "errors" in data_b:

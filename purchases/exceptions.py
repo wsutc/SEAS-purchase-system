@@ -22,6 +22,25 @@ class TrackerPreviouslyRegistered(Error):
         return f"{self.tracking_number} -> {self.message}"
 
 
+class TrackerNotRegistered(Error):
+    """Exception raised when API request returns that number was expected to be
+    registered but is not.
+    """
+
+    def __init___(
+        self,
+        tracking_number,
+        message="Tracking API returned that tracking number is not registered, \
+            please register.",
+    ):
+        self.tracking_number = tracking_number
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self) -> str:
+        return f"{self.tracking_number} -> {self.message}"
+
+
 class TrackerReturnedMultipleCarriers(Error):
     """Exception raised with tracker returns more than one carrier."""
 
