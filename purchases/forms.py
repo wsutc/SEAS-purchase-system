@@ -73,6 +73,10 @@ class AddVendorOrderForm(forms.ModelForm):
     class Meta:
         model = VendorOrder
         fields = "__all__"
+        widgets = {
+            "order_placed": DatePickerInput(),
+            "invoice_due_date": DatePickerInput(),
+        }
 
 
 # class AddRequisitionerForm(forms.ModelForm):
