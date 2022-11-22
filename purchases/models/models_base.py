@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
 
 from web_project.fields import SimplePercentageField
-from web_project.helpers import first_true
+from web_project.helpers import first_true, sort_title
 
 
 class BaseModel(models.Model):
@@ -247,9 +247,15 @@ class Vendor(BaseModel):
     state = models.ForeignKey("State", State, blank=True, null=True)
     zip = models.CharField("ZIP Code", max_length=10, blank=True)
     email = models.EmailField(max_length=60, blank=True, null=True)
+    sort_column = models.CharField(max_length=50, editable=False, null=True)
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["sort_column", "name"]
+
+    def save(self, *args, **kwargs):
+        self.sort_column = sort_title(self.name)
+
+        super().save(*args, **kwargs)
 
     def get_absolute_url(self):
         kwargs = {"pk": self.id, "slug": self.slug}
