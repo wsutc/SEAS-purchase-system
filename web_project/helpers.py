@@ -279,6 +279,17 @@ def is_number(s):
         return False
 
 
+def sort_title(title: str) -> str:
+    ARTICLES = {"a", "an", "the"}
+
+    title = title.lower()
+
+    first, _, rest = title.partition(" ")
+    rtitle = f"{rest}, {first}" if first in ARTICLES else title
+
+    return rtitle
+
+
 # -------------------------- Debug tools/helpers ----------------------------------
 def plog(
     logger: logging.Logger, level: int, path: str, text: str, value: (str | float)

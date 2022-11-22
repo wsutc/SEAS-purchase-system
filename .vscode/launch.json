@@ -105,6 +105,7 @@
         "create_user",
         "disconnect_signal",
         "test",
+        "update_sort_column",
       ],
       "default": "makemigrations",
     }
