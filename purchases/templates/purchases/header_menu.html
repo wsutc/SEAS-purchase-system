@@ -25,8 +25,11 @@
     </a>
     <ul class="dropdown-menu" aria-labelledby="dropdownVendors">
       <a href="{% url 'all_vendors' %}" class="nav-link px-2 link-dark">List</a>
+      <a href="{% url 'add_vendor' %}" class="nav-link px-2 link-dark">New Vendor</a>
+      <a href="{% url 'vendororder_list' %}" class="nav-link px-2 link-dark">All Orders</a>
       <a href="{% url 'vendororder_current_list' %}"
          class="nav-link px-2 link-dark">Current Orders</a>
+      <a href="{% url 'vendororder_create' %}" class="nav-link px-2 link-dark">New Order</a>
     </ul>
   </li>
   <li>
