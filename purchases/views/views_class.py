@@ -65,7 +65,7 @@ logger = logging.getLogger(__name__)
 
 class VendorListView(PaginatedListMixin, ListView):
     context_object_name = "vendors"
-    queryset = Vendor.objects.order_by("name")
+    queryset = Vendor.objects.all()
 
 
 class SimpleView(SingleObjectMixin):

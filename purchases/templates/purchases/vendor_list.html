@@ -1,45 +1,50 @@
 {% extends "purchases/list_page.html" %}
-{% block title %}
-All Vendors
-{% endblock %}
-{% block header %}Vendors{% endblock header %}
-{% block new_url %}{% url 'add_vendor' %}{% endblock new_url %}
-
+{% block title %}All Vendors{% endblock %}
+{% block header %}
+  Vendors
+{% endblock header %}
+{% block new_url %}
+  {% url 'add_vendor' %}
+{% endblock new_url %}
 {% block page %}
-    <div class="col">
-        <table class="table table-striped">
-          <thead>
-            <tr>
-                <th scope="col">Vendor</th>
-                <th class="col">Website</th>
-                <th></th>
-                <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for v in object_list %}
-            <tr>
-                <td><a href="{{ v.get_absolute_url }}">{{ v.name }}</td>
-                {% if v.website %}
-                    <td><a href="{{ v.website }}" target="_blank" rel="noopener noreferrer">{{ v.website }}<i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4"></i></a></td>
-                {% else %}
-                    <td></td>
-                {% endif %}
+  <div class="col">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th scope="col">Vendor</th>
+          <th class="col">Website</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in object_list %}
+          <tr>
+            <td>
+              <a href="{{ v.get_absolute_url }}">{{ v.name }}
+              </td>
+              {% if v.website %}
                 <td>
-                    <a href="{% url 'update_vendor' slug=v.slug pk=v.pk %}">
-                        <i class="fa-solid fa-pencil"></i>
-                    </a>
+                  <a href="{{ v.website }}" target="_blank" rel="noopener noreferrer">{{ v.website }}<i class="fa-solid fa-up-right-from-square"
+   data-fa-transform="shrink-6 up-4"></i></a>
                 </td>
-                <td>
-                    <a href="{% url 'delete_vendor' slug=v.slug pk=v.pk %}?next={{ request.get_full_path }}">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </a>
-                </td>
+              {% else %}
+                <td></td>
+              {% endif %}
+              <td class="text-end">
+                <div class="btn-group">
+                  <a href="{% url 'update_vendor' slug=v.slug pk=v.pk %}"><i class="fa-solid fa-pencil px-1"></i></a>
+                  <a href="{% url 'delete_vendor' slug=v.slug pk=v.pk %}?next={{ request.get_full_path }}">
+                    <i class="fa-solid fa-trash-can px-1"></i>
+                  </a>
+                </div>
+              </td>
             </tr>
-        {% empty %}
-            <p>No vendors have been added. Use the <a href="{% url 'add_vendor' %}">Add Vendor</a> form or modify filters.</p>
-        {% endfor %}
-          </tbody>
-        </table>
+          {% empty %}
+            <p>
+              No vendors have been added. Use the <a href="{% url 'add_vendor' %}">Add Vendor</a> form or modify filters.
+            </p>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-{% endblock %}
+  {% endblock %}
