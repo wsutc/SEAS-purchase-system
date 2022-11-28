@@ -322,6 +322,9 @@ class VendorOrder(BaseModel):
     order_placed = models.DateField(_("date order placed"), blank=True)
     invoice_number = models.CharField(_("invoice number"), max_length=50, blank=True)
     invoice_due_date = models.DateField(_("invoice due date"), blank=True, null=True)
+    notes = models.TextField(
+        _("notes"), help_text=_("what has or hasn't been received, etc."), blank=True
+    )
 
     @property
     def grand_total(self) -> Money:

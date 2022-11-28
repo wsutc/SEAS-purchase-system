@@ -89,6 +89,11 @@
             <td>{{ object.invoice_due_date|date:"SHORT_DATE_FORMAT" }}</td>
           </tr>
         </table>
+        {% if object.notes %}
+          <p>
+            {{ object.notes }}
+          </p>
+        {% endif %}
       </div>
     </div>
   </div>
