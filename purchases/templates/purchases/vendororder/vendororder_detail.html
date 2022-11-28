@@ -91,7 +91,7 @@
         </table>
         {% if object.notes %}
           <p>
-            {{ object.notes }}
+            {{ object.notes|linebreaks }}
           </p>
         {% endif %}
       </div>
