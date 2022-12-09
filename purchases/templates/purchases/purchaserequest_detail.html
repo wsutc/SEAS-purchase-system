@@ -24,7 +24,7 @@
 {% endblock delete %}
 {% block page %}
   {% if debug %}
-    <div class="row justify-content-end">
+    <div class="row justify-content-end debug">
       <a href="{% url 'update_pr_totals' slug=object.slug %}"
          class="btn btn-info col-1">Update Totals</a>
     </div>
@@ -45,7 +45,7 @@
           </tr>
           <tr>
             <td class="field-title">Vendor</td>
-            <td>{{ object.vendor|urlizeobject }}</td>
+            <td id="remove-link">{{ object.vendor|urlizeobject }}</td>
             <td class="field-title">Email</td>
             <td>{{ object.requisitioner.user.email|urlize }}</td>
           </tr>
@@ -132,7 +132,7 @@
         </tbody>
       </table>
       {% if debug %}
-        <span class="alert alert-debug">debug ->count:{{ object.purchaserequestaccounts_set.count }}</span>
+        <span class="alert alert-debug debug">debug ->count:{{ object.purchaserequestaccounts_set.count }}</span>
       {% endif %}
       <table class="table table-striped caption-top">
         <caption class="h4">Budget</caption>
@@ -190,7 +190,9 @@
           {% endfor %}
         </tbody>
       </table>
-      {% if debug %}<span class="alert alert-debug">debug ->count:{{ object.simpleproduct_set.count }}</span>{% endif %}
+      {% if debug %}
+        <span class="alert alert-debug debug">debug ->count:{{ object.simpleproduct_set.count }}</span>
+      {% endif %}
       <table class="table table-striped caption-top">
         <caption><a href="{% url 'pr_filtered_simpleproducts' object.slug %}" class="h4">Items</a></caption>
         <thead>

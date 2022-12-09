@@ -113,3 +113,38 @@ input[name=message] {
     width: 10em;
     text-align: right;
 }
+
+@media print {
+    h1 {
+        color: #000;
+        background: none;
+        font-size: 30pt;
+    }
+
+    nav,
+    aside,
+    header,
+    .btn,
+    .svg-inline--fa,
+    .screen-only,
+    .debug {
+        display: none;
+    }
+
+
+
+    body,
+    article {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    #django-debug {
+        display: none;
+    }
+
+    @page {
+        size: letter;
+    }
+}
