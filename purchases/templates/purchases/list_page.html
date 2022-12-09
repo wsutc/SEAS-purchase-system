@@ -19,34 +19,35 @@
           </li>
         {% endfor %}
       </ol>
-    {% endblock breadcrumbs %}
-    {% block listheader %}
-      <div class="row mb-3">
-        <h1 class="wsu-c-heading col-sm">
-          All <span class="header-em">
-          {% block header %}{% endblock %}
-        </span>
-      </h1>
-      <a href="{% block new_url %}{% endblock %}"
-         class="save btn btn-primary col-2">New</a>
-    </div>
-  {% endblock listheader %}
-  {% if show_link %}
-    <div>
-      <a href="{% url show_link.1 %}">{{ show_link.0|title }}</a>
-    </div>
-  {% endif %}
-  {% include "purchases/page_buttons.html" %}
-  <main class="d-flex flex-nowrap">
-    {% block page %}{% endblock %}
-    {% block filter_sidebar %}
-      {% include "purchases/filter_sidebar.html" %}
-    {% endblock filter_sidebar %}
-  </main>
-  {% block pagination %}
-    {% include "purchases/page_buttons.html" %}
-  {% endblock pagination %}
-  <div id="django-debug">
-    <pre>{% debug %}</pre>
+    </nav>
+  {% endblock breadcrumbs %}
+  {% block listheader %}
+    <div class="row mb-3">
+      <h1 class="wsu-c-heading col-sm">
+        All <span class="header-em">
+        {% block header %}{% endblock %}
+      </span>
+    </h1>
+    <a href="{% block new_url %}{% endblock %}"
+       class="save btn btn-primary col-2">New</a>
   </div>
+{% endblock listheader %}
+{% if show_link %}
+  <div>
+    <a href="{% url show_link.1 %}">{{ show_link.0|title }}</a>
+  </div>
+{% endif %}
+{% include "purchases/page_buttons.html" %}
+<main class="d-flex flex-nowrap">
+  {% block page %}{% endblock %}
+  {% block filter_sidebar %}
+    {% include "purchases/filter_sidebar.html" %}
+  {% endblock filter_sidebar %}
+</main>
+{% block pagination %}
+  {% include "purchases/page_buttons.html" %}
+{% endblock pagination %}
+<div id="django-debug">
+  <pre>{% debug %}</pre>
+</div>
 {% endblock content %}
