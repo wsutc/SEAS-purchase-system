@@ -1,37 +1,39 @@
 {% if filter_list %}
-{% load purchases_extras %}
-
-<div class="d-flex flex-column flex-row flex-shrink-0 p-3 bg-light ms-3" style="width: 280px;">
+  {% load purchases_extras %}
+  <div class="filter-sidebar p-3 bg-light ms-3 screen-only">
     <div class="text-center fw-bold">
-        Filters
-        <a href="{{ clear_filter_fragment }}" class="btn btn-link{% if not clear_filter_fragment %} disabled{% endif %}"><i class="fa-solid fa-xmark"></i></a>
+      Filters
+      <a href="{{ clear_filter_fragment }}"
+         class="btn btn-link{% if not clear_filter_fragment %} disabled{% endif %}"><i class="fa-solid fa-xmark"></i></a>
     </div>
     <hr>
     {% for filter_name, filter_objects, clear_fragment in filter_list %}
-        <div class="fw-semibold mt-3">
-            {{ filter_name|replace:"-| "|title }}{{ item.clear_fragment }}
-            <a href="{{ clear_fragment }}" class="btn btn-link{% if not clear_fragment %} disabled{% endif %}"><i class="fa-solid fa-xmark"></i></a>
-        </div>
-        <ul class="nav nav-pills flex-column">
-          {% with filter_objects|dictsort:"display" as display_list %}
-            {% for item in display_list %}
-              <div class="row">
-                <a href="{{ item.query_string }}" class="col-auto nav-link link-dark py-0{% if item.selected %} active{% endif %}">
-                  {% if item.display %}
-                    {{ item.display|truncatechars:20 }}
-                  {% elif object.revision %}
-                    {{ object.revision }}
-                  {% elif object.user %}
-                    {{ object.user.get_full_name|truncatechars:20 }}
-                  {% else %}
-                    {{ object.get_full_name|truncatechars:20 }}
-                  {% endif %}
-                </a>
-                {% comment %} <span class="col text-end">{{ object.count }}</span> {% endcomment %}
-              </div>
-            {% endfor %}
-          {% endwith %}
-        </ul>
+      <div class="fw-semibold mt-3">
+        {{ filter_name|replace:"-| "|title }}{{ item.clear_fragment }}
+        <a href="{{ clear_fragment }}"
+           class="btn btn-link{% if not clear_fragment %} disabled{% endif %}"><i class="fa-solid fa-xmark"></i></a>
+      </div>
+      <ul class="nav nav-pills flex-column">
+        {% with filter_objects|dictsort:"display" as display_list %}
+          {% for item in display_list %}
+            <div class="row">
+              <a href="{{ item.query_string }}"
+                 class="col-auto nav-link link-dark py-0{% if item.selected %} active{% endif %}">
+                {% if item.display %}
+                  {{ item.display|truncatechars:20 }}
+                {% elif object.revision %}
+                  {{ object.revision }}
+                {% elif object.user %}
+                  {{ object.user.get_full_name|truncatechars:20 }}
+                {% else %}
+                  {{ object.get_full_name|truncatechars:20 }}
+                {% endif %}
+              </a>
+              {% comment %} <span class="col text-end">{{ object.count }}</span> {% endcomment %}
+            </div>
+          {% endfor %}
+        {% endwith %}
+      </ul>
     {% endfor %}
-</div>
+  </div>
 {% endif %}

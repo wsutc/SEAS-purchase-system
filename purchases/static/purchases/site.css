@@ -114,6 +114,10 @@ input[name=message] {
     text-align: right;
 }
 
+.filter-sidebar {
+    width: 280px;
+}
+
 @media print {
     h1 {
         color: #000;
