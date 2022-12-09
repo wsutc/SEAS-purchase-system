@@ -124,6 +124,7 @@ input[name=message] {
     nav,
     aside,
     header,
+    .btn,
     .svg-inline--fa,
     .screen-only,
     .debug {
