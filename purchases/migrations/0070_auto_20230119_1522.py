@@ -10,7 +10,7 @@ def create_first_event_time(apps, schema):
         try:
             t.earliest_event_time = t.trackingevent_set.earliest().time_utc
         except Exception as e:
-            print(f"{t.str} has no earliest event. | {e}")
+            print(f"{t} has no earliest event. | {e}")
 
     Tracker.objects.bulk_update(qs, ["earliest_event_time"])
 
