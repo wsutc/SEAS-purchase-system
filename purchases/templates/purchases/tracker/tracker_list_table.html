@@ -11,6 +11,7 @@
         <th>Delivery Estimate</th>
         <th>Purchase Request</th>
         <th>Vendor</th>
+        <th>Earliest Event</th>
         <th></th>
       </tr>
     </thead>
@@ -49,6 +50,7 @@
               {{ o.purchase_request.vendor.name|urlizespecify:o.purchase_request.vendor.get_absolute_url }}
             {% endif %}
           </td>
+          <td>{{ o.earliest_event_time }}</td>
           <td class="text-end">
             <div class="btn-group">
               <a href="{% url 'update_tracker' o.pk %}?next={{ request.get_full_path }}"><i class="fa-solid fa-arrows-rotate px-1"></i></a>

@@ -55,7 +55,7 @@ class Requisitioner(models.Model):
     department = models.ForeignKey(Department, on_delete=models.PROTECT)
 
     class Meta:
-        ordering = ["user"]
+        ordering = ["user__last_name", "user__first_name"]
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.user.get_full_name(), allow_unicode=True)
@@ -630,7 +630,7 @@ class Tracker(models.Model):
                 name="unique_tracking_number_carrier",
             )
         ]
-        ordering = ["-earliest_event_time"]
+        ordering = ["-earliest_event_time", "-purchase_request__number"]
 
     def get_absolute_url(self):
         kwargs = {"pk": slugify(self.id, allow_unicode=True).upper()}
@@ -717,7 +717,9 @@ class Tracker(models.Model):
                 updated_events.append(event_object)
 
         if set_first_time:
-            self.earliest_event_time = self.trackingevent_set.earliest().time_utc
+            tracker = self.__class__.objects.filter(pk=self.pk)
+            time = self.trackingevent_set.earliest().time_utc
+            tracker.update(earliest_event_time=time)
 
         return (created_events, updated_events)
 
