@@ -197,72 +197,73 @@
         <caption><a href="{% url 'pr_filtered_simpleproducts' object.slug %}" class="h4">Items</a></caption>
         <thead>
           <tr>
-            <th class="text-center" style="width: 40%;">
+            <th scope="col" class="text-center">
               Description
             </th>
-            <th class="text-center" style="width: 10%;">
-              Link
-            </th>
-            <th class="text-center" style="width: 15%;">
+            <th scope="col" class="text-center">
               Identifier
             </th>
-            <th class="text-center">
+            <th scope="col" class="text-center">
               Manufacturer
             </th>
-            <th class="text-center" style="width:  5%;">
+            <th scope="col" class="text-center">
               QTY
             </th>
-            <th class="text-center" style="width: 10%;">
+            <th scope="col" class="text-center">
               Unit
             </th>
-            <th class="text-center" style="width: 10%;">
+            <th scope="col" class="text-center">
               Unit Price
             </th>
-            <th class="text-center" style="width: 10%;">
+            <th scope="col" class="text-center" style="width: 10em;">
               Extended Price
             </th>
-            <th>
+            <th scope="col">
             </th>
           </tr>
         </thead>
         <tbody>
           {% for item in object.simpleproduct_set.all|dictsort:"rank" %}
-            <tr>
-              <td>
-                <span class="text-truncate copyText" id="{{ item.pk }}Description">{{ item.name }}</span>
-              </td>
-              {% if item.link %}
-                <td style="text-align: center;">
-                  <a href="{{ item.link }}" target="_blank" rel="noopener noreferrer">
-                    <i class="fa-solid fa-up-right-from-square"></i>
-                  </a>
-                </td>
-              {% else %}
-                <td>
-                </td>
-              {% endif %}
-              <td align="center">
-                {{ item.identifier|default_if_none:"" }}
-              </td>
-              <td>
-                {{ item.manufacturer|default_if_none:"" }}
-              </td>
-              <td align="center">
-                {{ item.quantity|floatformat }}
-              </td>
-              <td align="center">
-                {{ item.unit.unit }}
-              </td>
-              <td>
-                {{ item.unit_price|usd_accounting:simpleproducts_unitprice_maxdigits }}
-              </td>
-              <td>
-                {{ item.extended_price.amount|usd_accounting }}
-              </td>
-              <td>
-                {% if item.taxable %}<i class="fa-solid fa-asterisk" data-fa-transform="shrink-6"></i>{% endif %}
-              </td>
-            </tr>
+            {% with item.identifier|default_if_none:"" as pn %}
+              {% with item.manufacturer as mfg %}
+                <tr>
+                  <td style="max-width: 25em;">
+                    {% if item.link %}
+                      <a href="{{ item.link }}" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title={{ item.name }}>
+                        <span class="d-inline-block text-truncate" style="max-width: 100%;">{{ item.name }}</span>
+                      </a>
+                    {% else %}
+                      <span class="d-inline-block text-truncate copyText"
+                            id="{{ item.pk }}Description"
+                            style="max-width: 100%;">{{ item.name }}</span>
+                    {% endif %}
+                  </td>
+                  <td align="center" style="max-width: 8em;">
+                    <a href="#" data-bs-toggle="tooltip" title="{{ pn }}"><span class="d-inline-block text-truncate" style="max-width: 100%;">{{ pn }}</span></a>
+                  </td>
+                  <td align="center" style="max-width: 8em;">
+                    <a href="#" data-bs-toggle="tooltip" title="{{ mfg }}">
+                      <span class="d-inline-block text-truncate" style="max-width: 100%;">{{ mfg }}</span>
+                    </a>
+                  </td>
+                  <td align="center">
+                    {{ item.quantity|floatformat }}
+                  </td>
+                  <td class="text-truncate" align="center">
+                    {{ item.unit.unit }}
+                  </td>
+                  <td>
+                    {{ item.unit_price|usd_accounting:simpleproducts_unitprice_maxdigits }}
+                  </td>
+                  <td>
+                    {{ item.extended_price.amount|usd_accounting }}
+                  </td>
+                  <td>
+                    {% if item.taxable %}<i class="fa-solid fa-asterisk" data-fa-transform="shrink-6"></i>{% endif %}
+                  </td>
+                </tr>
+              {% endwith %}
+            {% endwith %}
           {% empty %}
             <tr>
               <td colspan="100%" class="text-center">
@@ -273,7 +274,7 @@
         </tbody>
         <tfoot>
           <tr>
-            <td colspan="4">
+            <td colspan="3">
               &nbsp;
             </td>
             <td colspan="3" class="text-end">
@@ -284,7 +285,7 @@
             </td>
           </tr>
           <tr>
-            <td colspan="4">
+            <td colspan="3">
             </td>
             <td colspan="3" class="text-end">
               Shipping
@@ -294,7 +295,7 @@
             </td>
           </tr>
           <tr>
-            <td colspan="4">
+            <td colspan="3">
             </td>
             <td colspan="3" class="text-end">
               Sales Tax ({{ object.sales_tax_rate|numeric2percent:2 }})
@@ -309,7 +310,7 @@
         <td>{{ sales_tax_perc|usd_accounting }}</td>
           </tr> {% endcomment %}
           <tr>
-            <td colspan="4">
+            <td colspan="3">
             </td>
             <td colspan="3" class="text-end">
               Grand Total
