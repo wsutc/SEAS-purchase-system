@@ -1,5 +1,5 @@
 crispy-bootstrap5==0.7
-Django==4.0.8  # pyup: < 4.1
+Django==4.0.9  # pyup: < 4.1
 django[argon2]
 django-bootstrap-datepicker-plus==5.0.2
 # django-crispy-forms>=1.14.0
