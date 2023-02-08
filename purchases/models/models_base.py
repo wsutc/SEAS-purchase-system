@@ -332,7 +332,7 @@ class TrackingWebhookMessage(models.Model):
 
 class Accounts(BaseModel):
     name = None
-    slug = None
+    # slug = None
     account = models.CharField(
         _("account"), help_text=_("in form XXXX-XXXX."), max_length=10
     )
