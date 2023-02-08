@@ -1,5 +1,10 @@
 {
   "env": {
     "DONT_INHERIT_THIS_CONFIG_VAR": "DATABASE"
+  },
+  "environment": {
+    "review": {
+      "STATIC_HOST": ""
+    }
   }
 }
