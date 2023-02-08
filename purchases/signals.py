@@ -36,7 +36,7 @@ def n_trues(iterable, n: int) -> bool:
 
 
 @receiver(pre_save, sender=Accounts)
-def validate_account_program(sender, instance, created, **kwargs):
+def validate_account_program(sender, instance, **kwargs):
     if single_true(instance.identity_list):
         return first_true(instance.identity_list)
 
