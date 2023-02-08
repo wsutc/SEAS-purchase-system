@@ -1,7 +1,5 @@
 {
-  "environments": {
-    "review": {
-      "addons": ["cleardb:ignite"]
-    }
+  "env": {
+    "DONT_INHERIT_THIS_CONFIG_VAR": "DATABASE"
   }
 }
