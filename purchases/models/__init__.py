@@ -6,6 +6,7 @@ from .models_base import (
     Department,
     DocumentNumber,
     Manufacturer,
+    RankManager,
     SpendCategory,
     State,
     Status,

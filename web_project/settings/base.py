@@ -119,6 +119,7 @@ _LOCAL_APPS = [
     "globals",
     "inventory",
     "partnumbers",
+    "projects",
     "purchases",
     "setup_sheets",
     "tool_compatibility",

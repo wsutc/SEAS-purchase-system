@@ -1,0 +1,121 @@
+{% extends 'purchases/detail_page.html' %}
+{% load purchases_extras %}
+{% load i18n %}
+{% block title %}{{ object.name }}{% endblock %}
+{% block header %}Project{% endblock %}
+{% comment %} {% block previous %}{{ object.get_previous_by_sort_order.get_absolute_url }}{% endblock previous %}
+{% block next %}{{ object.get_next_by_tracking_number.get_absolute_url }}{% endblock next %} {% endcomment %}
+{% block breadcrumbs %}
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="{% url 'home' %}">Home</a>
+      </li>
+      <li class="breadcrumb-item">
+        <a href="{% url 'list_project' %}">Projects</a>
+      </li>
+      <li class="breadcrumb-item active">{{ object }}</li>
+    </ol>
+  </nav>
+{% endblock breadcrumbs %}
+{% block navigation %}
+  {% comment %} <div class="row mb-3">
+      <div class="col"></div>
+      <div class="btn-group col-2" role="group" aria-label="Navigation">
+            <a href="{% url 'update_tracker' pk=object.id %}" class="btn btn-secondary">Update Tracker</a>
+            <a href="{% url 'tracker_delete' pk=object.pk %}" class="btn btn-secondary">Delete</a>
+      </div>
+  </div> {% endcomment %}
+{% endblock navigation %}
+{% block page %}
+  <div class="container mt-4">
+    <div class="card col">
+      <h4 class="card-header d-flex justify-content-between align-items-center">
+        <span class="header-em">{{ object }}</span>
+        <div>
+          {% comment %} <a href="{% url 'update_tracker' object.pk %}"><i class="fa-solid fa-arrows-rotate fa-2xs"></i></a> {% endcomment %}
+          {% comment %} <a href="{% url 'admin:purchases_tracker_history' object.pk %}"><i class="fa-solid fa-clock-rotate-left fa-2xs"></i></a> {% endcomment %}
+          <a href="{% url 'admin:projects_project_change' object.pk %}"><i class="fa-solid fa-pencil fa-2xs"></i></a>
+          {% comment %} <a href="{% url 'tracker_delete' object.pk %}"><i class="fa-solid fa-trash-can fa-2xs"></i></a> {% endcomment %}
+        </div>
+      </h4>
+      <div class="card-body">
+        <table>
+          <tr>
+            <td class="pe-2 fw-bold">Manager</td>
+            <td>{{ object.manager|default_if_none:"(unknown)" }}</td>
+          </tr>
+          <tr>
+            <td class="pe-2 fw-bold">Note</td>
+            <td>{{ object.note }}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% comment %} {% with object.trackeritem_set.all as items %}
+    {% if debug %}<div class="alert alert-debug">debug ->count:{{ items|length }}</div>{% endif %}
+
+    <div class="h4">{% translate "Items" %}</div>
+
+    {% include "purchases/trackeritem_list_table.html" with object_list=items %}
+  {% endwith %} {% endcomment %}
+  <div class="col-12">
+    <div class="h2">Purchase Requests</div>
+    <div id="collapsePurchaseRequests">
+      <ul>
+        {% for heading in object.projectpurchaserequest_set.all %}
+          <li>
+            <button class="btn btn-primary"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapse{{ heading.purchase_request }}"
+                    aria-expanded="false"
+                    aria-controls="collapse{{ heading.purchase_request }}">
+              {{ heading.purchase_request }}
+            </button>
+            <div class="collapse" id="collapse{{ heading.purchase_request }}">
+              <table>
+                {% for item in heading.purchase_request.simpleproduct_set.all %}
+                  <tr>
+                    <td>{{ item.name }}</td>
+                  </tr>
+                {% endfor %}
+              </table>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="bd-example-snippet bd-code-snippet">
+      <div class="bd-example">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Request</th>
+              <th>Requisitioner</th>
+              <th>Grand Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in object.projectpurchaserequest_set.all %}
+              <tr>
+                <td>
+                  <a href="{{ row.purchase_request.get_absolute_url }}">{{ row.purchase_request }}</a>
+                </td>
+                <td>
+                  <a href="{{ row.purchase_request.requisitioner.get_absolute_url }}">{{ row.purchase_request.requisitioner }}</a>
+                </td>
+                <td>{{ row.purchase_request.grand_total|default_if_none:"" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock page %}
+{% block related_pr_table %}
+{% endblock related_pr_table %}
+{% block related_simpleproduct_table %}
+{% endblock related_simpleproduct_table %}

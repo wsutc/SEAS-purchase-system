@@ -334,12 +334,13 @@ class Accounts(BaseModel):
     name = None
     slug = None
     account = models.CharField(
-        _("account"), help_text=_("in form XXXX-XXXX."), max_length=10
+        _("account"), help_text=_("in form XXXX-XXXX."), max_length=10, blank=True
     )
     budget_code = models.CharField(
         _("budget code"),
         help_text=_("usually first four characters of account"),
         max_length=5,
+        blank=True,
     )
     # fund = models.CharField("Fund", max_length=5)
     grant = models.CharField(max_length=15, blank=True)
@@ -398,7 +399,7 @@ class Accounts(BaseModel):
             models.UniqueConstraint(
                 "gift", "grant", "program_workday", name="unique_program"
             ),
-            models.UniqueConstraint("account", name="unique_account"),
+            # models.UniqueConstraint("account", name="unique_account"),
         ]
         verbose_name_plural = "Accounts"
         ordering = ["account_title"]
@@ -415,7 +416,7 @@ class Accounts(BaseModel):
 
     def save(self, *args, **kwargs):
         # if identity := self.identity is True:
-        self.slug = slugify(self.identity(), allow_unicode=True)
+        self.slug = slugify(self.identity, allow_unicode=True)
         super().save(*args, **kwargs)
 
     def __str__(self):

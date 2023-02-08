@@ -1,0 +1,43 @@
+{% extends "purchases/list_page.html" %}
+{% block title %}All Projects{% endblock %}
+{% block header %}
+  Projects
+{% endblock header %}
+{% block new_url %}
+  {% url 'create_project' %}
+{% endblock new_url %}
+{% block page %}
+  <div class="col">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th scope="col">Project</th>
+          <th class="col">Manager</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in object_list %}
+          <tr>
+            <td>
+              <a href="{{ v.get_absolute_url }}">{{ v.name }}</a>
+            </td>
+            <td>{{ v.manager }}</td>
+            <td class="text-end">
+              <div class="btn-group">
+                <a href="{% url 'update_vendor' slug=v.slug pk=v.pk %}"><i class="fa-solid fa-pencil px-1"></i></a>
+                <a href="{% url 'delete_vendor' slug=v.slug pk=v.pk %}?next={{ request.get_full_path }}">
+                  <i class="fa-solid fa-trash-can px-1"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <p>
+            No projects have been added. Use the <a href="{% url 'add_vendor' %}">Add Project</a> form or modify filters.
+          </p>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}
