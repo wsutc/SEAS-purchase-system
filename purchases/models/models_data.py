@@ -524,6 +524,17 @@ class RankManager(models.Manager):
 class SimpleProduct(models.Model):
     name = models.CharField(max_length=100)
     purchase_request = models.ForeignKey(PurchaseRequest, on_delete=models.CASCADE)
+    line_account = models.ForeignKey(
+        "purchases.Account",
+        verbose_name=_("account"),
+        on_delete=models.PROTECT,
+        null=True,
+    )
+    line_spend_category = models.ForeignKey(
+        "purchases.SpendCategory",
+        verbose_name=_("spend category"),
+        on_delete=models.PROTECT,
+    )
     manufacturer = models.CharField(
         "Manufacturer (optional)", max_length=50, blank=True, null=True
     )
