@@ -1,7 +1,12 @@
 {
-  "environment": {
+  "environments": {
     "review": {
-      "STATIC_HOST": ""
+      "env": {
+        "STATIC_HOST": "",
+        "DJANGO_SECRET_KEY": {
+          "generator": "secret"
+        }
+      }
     }
   }
 }
