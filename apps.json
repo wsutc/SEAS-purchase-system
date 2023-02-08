@@ -5,7 +5,8 @@
         "STATIC_HOST": "",
         "DJANGO_SECRET_KEY": {
           "generator": "secret"
-        }
+        },
+        "ROOT_URLCONF": "web_project.urls"
       }
     }
   }
