@@ -121,7 +121,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         (
-            # "purchases",
+            "purchases",
             "zerozerozeroone_first_squash",
         )
     ]
