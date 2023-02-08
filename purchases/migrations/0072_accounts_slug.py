@@ -13,11 +13,11 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # migrations.AddField(
-        #     model_name="accounts",
-        #     name="slug",
-        #     field=models.SlugField(null=True, editable=False, unique=True),
-        # ),
+        migrations.AddField(
+            model_name="accounts",
+            name="slug",
+            field=models.SlugField(null=True, editable=False, unique=True),
+        ),
         migrations.RunPython(create_account_slugs),
         migrations.AlterField(
             model_name="accounts",
