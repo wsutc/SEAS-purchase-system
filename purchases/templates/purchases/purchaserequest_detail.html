@@ -225,7 +225,7 @@
         <tbody>
           {% for item in object.simpleproduct_set.all|dictsort:"rank" %}
             {% with item.identifier|default_if_none:"" as pn %}
-              {% with item.manufacturer as mfg %}
+              {% with item.manufacturer|default_if_none:"" as mfg %}
                 <tr>
                   <td style="max-width: 25em;">
                     {% if item.link %}
