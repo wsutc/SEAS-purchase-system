@@ -18,6 +18,8 @@ def link_from_identifier(identifier: str, vendor: Vendor) -> str:
             link = CDWG.link_from_identifier(identifier)
         case "McMaster-Carr":
             link = McMaster.link_from_identifier(identifier)
+        case "MSC":
+            link = MSC.link_from_identifier(identifier)
         case _:
             link = None
 
@@ -88,10 +90,7 @@ class CDWG(VendorBaseClass):
 
 
 class McMaster(VendorBaseClass):
-    """Define any methods related to connections to CDW-G's website.
-    Unfortunately, it doesn't appear that Tormach has an easy way to determine this.
-    Use their search URL instead.
-    """
+    """Define any methods related to connections to McMaster's website."""
 
     base_url = furl("https://www.mcmaster.com/")
 
@@ -99,6 +98,21 @@ class McMaster(VendorBaseClass):
         """Returns a query based on the number. Often redirects to product page."""
 
         url = McMaster.base_url
+        if identifier:
+            url /= identifier
+
+        return url
+
+
+class MSC(VendorBaseClass):
+    """Define any methods related to connections to MSC's website."""
+
+    base_url = furl("https://www.mscdirect.com/product/details/")
+
+    def link_from_identifier(identifier: str) -> str:
+        """Should return a valid product detail page given the MSC#"""
+
+        url = MSC.base_url
         if identifier:
             url /= identifier
 
