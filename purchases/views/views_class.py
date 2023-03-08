@@ -339,6 +339,15 @@ class VendorDetailView(DetailView):
     model = Vendor
     query_pk_and_slug = True
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["purchase_request_statuses"] = Status.objects.filter(
+            parent_model="PR"
+        ).order_by("rank")
+
+        return context
+
 
 def get_status_choices(model: Status.StatusModel):
     statuses = PurchaseRequest.PurchaseRequestStatuses
