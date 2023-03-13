@@ -71,7 +71,7 @@ matplotlib-inline==0.1.3
 mccabe==0.7.0
 model-bakery==1.5.0
 mypy==0.982
-mypy-extensions==0.4.3
+mypy-extensions==1.0.0
 mysqlclient==2.1.1
 nest-asyncio==1.5.5
 nodeenv==1.7.0
