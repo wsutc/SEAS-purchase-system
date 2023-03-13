@@ -569,6 +569,7 @@ class SimpleProductAdmin(admin.ModelAdmin):
     list_filter = ["purchase_request"]
     search_fields = [
         "identifier",
+        "name",
         # "purchase_request",
         # "purchase_request__requisitioner__user__first_name",
         # "purchase_request__requisitioner__user__last_name",
