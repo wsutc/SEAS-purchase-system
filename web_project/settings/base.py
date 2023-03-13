@@ -258,6 +258,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 AWS_S3_CUSTOM_DOMAIN = env.url("DJANGO_AWS_S3_CUSTOM_DOMAIN", default=None)
 
+plog(text="aws_s3_custom_domain", value=AWS_S3_CUSTOM_DOMAIN, **log_kwargs)
+
 if AWS_S3_CUSTOM_DOMAIN:
     AWS_S3_CUSTOM_DOMAIN = AWS_S3_CUSTOM_DOMAIN.path
     STATIC_HOST = f"https://{AWS_S3_CUSTOM_DOMAIN}"
