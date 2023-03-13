@@ -26,4 +26,4 @@ reportlab>=3.6.10
 # django-bootstrap-modal-forms>=2.2.0
 shortuuid==1.0.11
 # smartsheet-python-sdk>=2.105.1
-whitenoise==6.3.0
+whitenoise==6.4.0
