@@ -158,16 +158,25 @@ class PurchaseRequestAdmin(admin.ModelAdmin):
 
 @admin.register(VendorOrder)
 class VendorOrderAdmin(AdminResponseMixin, admin.ModelAdmin):
-    list_display = ["name", "grand_total", "reconciled", "link"]
+    list_display = [
+        "name",
+        "vendor",
+        "grand_total",
+        "reconciled",
+        "order_placed",
+        "link",
+    ]
     list_filter = [
-        ("purchase_requests", admin.RelatedOnlyFieldListFilter),
         # ("vendor", admin.RelatedOnlyFieldListFilter),
-        "purchase_requests__requisitioner__user",
+        "purchase_requests__requisitioner",
         "purchase_requests__status",
         "reconciled",
+        "vendor",
+        ("purchase_requests", admin.RelatedOnlyFieldListFilter),
     ]
     list_editable = ["reconciled"]
     search_fields = ["purchase_requests", "vendor"]
+    date_hierarchy = "order_placed"
 
 
 class RequisitionerInline(admin.StackedInline):
