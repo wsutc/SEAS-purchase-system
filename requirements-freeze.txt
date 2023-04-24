@@ -2,7 +2,7 @@ alabaster==0.7.12
 argon2-cffi==21.3.0
 argon2-cffi-bindings==21.2.0
 asgiref==3.6.0
-asttokens==2.0.5
+asttokens==2.2.1
 async-generator==1.10
 attrs==22.1.0
 Babel==2.10.1
