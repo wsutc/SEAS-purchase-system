@@ -30,6 +30,7 @@ from .models import (  # Transaction,
     Vendor,
     VendorOrder,
 )
+from .tasks import update_all_trackers
 
 
 class PurchaseRequestInline(admin.TabularInline):
@@ -461,6 +462,11 @@ class TrackingEventInline(admin.TabularInline):
     extra = 0
 
 
+@admin.action(description="Update all unreceived trackers")
+def update_all_trackers_action(modeladmin, request, queryset):
+    update_all_trackers()
+
+
 @admin.action(description="Update Tracker(s)")
 def update_selected_trackers(modeladmin, request, queryset):
     list = []
@@ -477,21 +483,23 @@ def update_selected_trackers(modeladmin, request, queryset):
         tracker_objs = []
         event_update_count = 0
         for t in updated_trackers:
-            carrier = Carrier.objects.get(carrier_code=t.get("carrier_code"))
+            t = t["tracker"]
+            # print(f"carrier_code: {t.get('carrier_code')}")
+            carrier = Carrier.objects.get(carrier_code=t.carrier_code)
             t_obj = Tracker.objects.get(
-                tracking_number=t.get("tracking_number"), carrier=carrier
+                tracking_number=t.tracking_number, carrier=carrier
             )
-            t_obj.status = t.get("status")
-            t_obj.sub_status = t.get("sub_status")
-            t_obj.delivery_estimate = t.get("delivery_estimate")
-            t_obj.events = t.get("events")
+            t_obj.status = t.status
+            t_obj.sub_status = t.sub_status
+            t_obj.delivery_estimate = t.delivery_estimate
+            t_obj.events = t.events
 
-            events_hash = t.get("events_hash")
+            events_hash = t.events_hash
 
             if t_obj.events_hash != str(events_hash):
                 event_update_count += 1
-                _, _ = t_obj.create_events(t.get("events"))
-                t_obj.events_hash = t.get("events_hash")
+                _, _ = t_obj.create_events(t.events)
+                t_obj.events_hash = t.events_hash
 
             tracker_objs.append(t_obj)
 
@@ -541,7 +549,11 @@ def add_first_event_time(modeladmin, request, queryset):
 class TrackerAdmin(AdminResponseMixin, admin.ModelAdmin):
     list_display = ["id", "status", "sub_status", "carrier", "earliest_event_time"]
     inlines = [TrackingEventInline]
-    actions = [update_selected_trackers, add_first_event_time]
+    actions = [
+        update_selected_trackers,
+        add_first_event_time,
+        update_all_trackers_action,
+    ]
     list_filter = [TrackerCarrierListFilter, "status"]
     search_fields = ["id", "sub_status"]
 
