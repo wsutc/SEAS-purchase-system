@@ -133,7 +133,7 @@ class PurchaseRequestAdmin(admin.ModelAdmin):
         "requisitioner__user__last_name",
     ]
     date_hierarchy = "created_date"
-    list_filter = ["status", "requisitioner", "vendor"]
+    list_filter = ["status", "requisitioner__user", "vendor"]
 
     @admin.display(description="Tracking Status")
     def get_tracker_status(self, obj):
@@ -158,13 +158,15 @@ class PurchaseRequestAdmin(admin.ModelAdmin):
 
 @admin.register(VendorOrder)
 class VendorOrderAdmin(AdminResponseMixin, admin.ModelAdmin):
-    list_display = ["name", "grand_total", "link"]
+    list_display = ["name", "grand_total", "reconciled", "link"]
     list_filter = [
         ("purchase_requests", admin.RelatedOnlyFieldListFilter),
-        ("vendor", admin.RelatedOnlyFieldListFilter),
-        "purchase_requests__requisitioner",
+        # ("vendor", admin.RelatedOnlyFieldListFilter),
+        "purchase_requests__requisitioner__user",
         "purchase_requests__status",
+        "reconciled",
     ]
+    list_editable = ["reconciled"]
     search_fields = ["purchase_requests", "vendor"]
 
 

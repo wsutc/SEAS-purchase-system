@@ -17,13 +17,18 @@ class Account(BaseModel):
         max_length=200,
     )
     account = models.CharField(
-        _("account"), help_text=_("in form XXXX-XXXX."), max_length=10, blank=True
+        _("account"),
+        help_text=_("in form XXXX-XXXX."),
+        max_length=10,
+        blank=True,
+        null=True,
     )
     budget_code = models.CharField(
         _("budget code"),
         help_text=_("usually first four characters of account"),
         max_length=5,
         blank=True,
+        null=True,
     )
 
     class FundType(models.TextChoices):
