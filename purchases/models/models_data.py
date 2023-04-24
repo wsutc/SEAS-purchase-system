@@ -325,6 +325,7 @@ class VendorOrder(BaseModel):
     notes = models.TextField(
         _("notes"), help_text=_("what has or hasn't been received, etc."), blank=True
     )
+    reconciled = models.BooleanField(_("reconciled"), default=False)
 
     @property
     def grand_total(self) -> Money:
