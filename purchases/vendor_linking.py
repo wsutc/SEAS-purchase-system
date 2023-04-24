@@ -70,10 +70,7 @@ class Tormach(VendorBaseClass):
 
 
 class CDWG(VendorBaseClass):
-    """Define any methods related to connections to CDW-G's website.
-    Unfortunately, it doesn't appear that Tormach has an easy way to determine this.
-    Use their search URL instead.
-    """
+    """Define any methods related to connections to CDW-G's website."""
 
     base_url = furl("https://www.cdwg.com/")
 
