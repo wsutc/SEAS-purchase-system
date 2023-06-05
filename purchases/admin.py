@@ -73,6 +73,13 @@ def make_ordered(modeladmin, request, queryset):
     queryset.update(status="6")
 
 
+@admin.action(description="Change Selected to 'Received'")
+def make_received(modeladmin, request, queryset):
+    status_obj = Status.objects.get(parent_model="PR", name="Received")
+
+    queryset.update(status=status_obj)
+
+
 @admin.action(description="Update Totals")
 def save_requests(modeladmin, request, queryset):
     for r in queryset:
@@ -125,7 +132,12 @@ class PurchaseRequestAdmin(admin.ModelAdmin):
     ]
     list_editable = ["status"]
     inlines = [SimpleProductInline, PurchaseRequestAccountInline]
-    actions = [make_awaiting_approval, save_requests]  # ,update_trackers]
+    actions = [
+        make_awaiting_approval,
+        make_received,
+        save_requests,
+        # ,update_trackers
+    ]
     search_fields = [
         "number",
         "vendor__name",
@@ -226,7 +238,6 @@ class AccountGroupAdmin(admin.ModelAdmin):
     ]
 
     def account_count(self, obj):
-
         count = obj.accounts.count()
         return count
 
@@ -267,9 +278,21 @@ class HasSlugFilter(admin.SimpleListFilter):
 
 @admin.register(Accounts)
 class AccountsAdmin(admin.ModelAdmin):
-    list_display = ["account", "account_title", "program_workday", "grant", "gift"]
+    list_display = [
+        "account",
+        "account_title",
+        "program_workday",
+        "grant",
+        "gift",
+    ]
     # inlines = [PurchaseRequestAccountInline]
-    search_fields = ["account", "account_title", "program_workday", "grant", "gift"]
+    search_fields = [
+        "account",
+        "account_title",
+        "program_workday",
+        "grant",
+        "gift",
+    ]
     list_filter = [
         # "program_workday__is_null",
         AccountGroupsListFilter,
@@ -508,7 +531,13 @@ def update_selected_trackers(modeladmin, request, queryset):
 
         update_count = Tracker.objects.bulk_update(
             tracker_objs,
-            ["status", "sub_status", "delivery_estimate", "events", "events_hash"],
+            [
+                "status",
+                "sub_status",
+                "delivery_estimate",
+                "events",
+                "events_hash",
+            ],
         )
 
         if update_count == 0:
@@ -550,7 +579,13 @@ def add_first_event_time(modeladmin, request, queryset):
 
 @admin.register(Tracker)
 class TrackerAdmin(AdminResponseMixin, admin.ModelAdmin):
-    list_display = ["id", "status", "sub_status", "carrier", "earliest_event_time"]
+    list_display = [
+        "id",
+        "status",
+        "sub_status",
+        "carrier",
+        "earliest_event_time",
+    ]
     inlines = [TrackingEventInline]
     actions = [update_selected_trackers, add_first_event_time]
     list_filter = [TrackerCarrierListFilter, "status"]
