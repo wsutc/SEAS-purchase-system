@@ -136,7 +136,7 @@ pyzmq==23.0.0
 rcssmin==1.1.0
 regex==2022.4.24
 reportlab==3.6.10
-requests==2.27.1
+requests==2.31.0
 requests-toolbelt==0.9.1
 rjsmin==1.2.0
 shortuuid==1.0.11
