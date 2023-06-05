@@ -13,6 +13,7 @@ django-listview-filters==0.0.1b1.dev1
 django-modelclone @ git+https://github.com/xuhcc/django-modelclone.git@6234f3d03f7ec70f95ef99f2d6171fa1d045787a
 django-money>=2.1.1
 django-phonenumber-field>=6.1.0
+django-river @ git+https://github.com/santiago1114/django-river.git
 django-select2>=7.10.0
 django-widget-tweaks>=1.4.12
 fdfgen>=0.16.1
