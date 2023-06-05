@@ -324,7 +324,6 @@ CURRENCY_CHOICES = [
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("purchases", "0001_initial"),
         ("inventory", "0003_remove_item_product"),
@@ -459,13 +458,18 @@ class Migration(migrations.Migration):
             model_name="carrier",
             name="slug",
             field=models.CharField(
-                blank=True, max_length=10, null=True, verbose_name="Carrier Slug"
+                blank=True,
+                max_length=10,
+                null=True,
+                verbose_name="Carrier Slug",
             ),
         ),
         migrations.AlterField(
             model_name="carrier",
             name="tracking_link",
-            field=models.URLField(blank=True, verbose_name="URL stub for tracking"),
+            field=models.URLField(
+                blank=True, verbose_name="URL stub for tracking"
+            ),
         ),
         migrations.AlterField(
             model_name="carrier",
@@ -509,7 +513,9 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="tracker",
-            index=models.Index(fields=["id"], name="purchases_t_id_fafc95_idx"),
+            index=models.Index(
+                fields=["id"], name="purchases_t_id_fafc95_idx"
+            ),
         ),
         migrations.AlterField(
             model_name="tracker",
@@ -748,7 +754,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="purchaserequest",
             name="sales_tax_rate",
-            field=models.DecimalField(decimal_places=3, default=".086", max_digits=5),
+            field=models.DecimalField(
+                decimal_places=3, default=".086", max_digits=5
+            ),
         ),
         migrations.CreateModel(
             name="SimpleProduct",
@@ -773,10 +781,15 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 ("link", models.URLField(blank=True, null=True)),
-                ("unit_price", models.DecimalField(decimal_places=2, max_digits=14)),
+                (
+                    "unit_price",
+                    models.DecimalField(decimal_places=2, max_digits=14),
+                ),
                 (
                     "quantity",
-                    models.DecimalField(decimal_places=3, default=1, max_digits=14),
+                    models.DecimalField(
+                        decimal_places=3, default=1, max_digits=14
+                    ),
                 ),
                 (
                     "extended_price_currency",
@@ -831,10 +844,16 @@ class Migration(migrations.Migration):
                 (
                     "document",
                     models.CharField(
-                        max_length=50, primary_key=True, serialize=False, unique=True
+                        max_length=50,
+                        primary_key=True,
+                        serialize=False,
+                        unique=True,
                     ),
                 ),
-                ("prefix", models.CharField(blank=True, max_length=10, null=True)),
+                (
+                    "prefix",
+                    models.CharField(blank=True, max_length=10, null=True),
+                ),
                 ("padding_digits", models.IntegerField(blank=True, null=True)),
                 ("next_counter", models.IntegerField(default=1)),
                 (
@@ -862,7 +881,10 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterModelOptions(
             name="spendcategory",
-            options={"ordering": ["code"], "verbose_name_plural": "Spend Categories"},
+            options={
+                "ordering": ["code"],
+                "verbose_name_plural": "Spend Categories",
+            },
         ),
         migrations.AlterModelOptions(
             name="vendor",
@@ -958,7 +980,10 @@ class Migration(migrations.Migration):
                 ("time_utc", models.DateTimeField()),
                 ("description", models.TextField(max_length=150, null=True)),
                 ("location", models.CharField(max_length=100, null=True)),
-                ("stage", models.CharField(blank=True, max_length=50, null=True)),
+                (
+                    "stage",
+                    models.CharField(blank=True, max_length=50, null=True),
+                ),
                 (
                     "tracker",
                     models.ForeignKey(
@@ -1062,13 +1087,15 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="carrier",
             name="slug",
-            field=models.SlugField(blank=True, null=True, verbose_name="Carrier Slug"),
+            field=models.SlugField(
+                blank=True, null=True, verbose_name="Carrier Slug"
+            ),
         ),
-        migrations.AlterField(
-            model_name="purchaserequest",
-            name="sales_tax_rate",
-            field=models.DecimalField(decimal_places=3, default=".087", max_digits=5),
-        ),
+        # migrations.AlterField(
+        #     model_name="purchaserequest",
+        #     name="sales_tax_rate",
+        #     field=models.DecimalField(decimal_places=3, default=".087", max_digits=5),
+        # ),
         migrations.AlterField(
             model_name="purchaserequest",
             name="status",

@@ -33,6 +33,11 @@ repos:
           - id: trailing-whitespace
           - id: detect-private-key
           # - id: requirements-txt-fixer
+    - repo: https://github.com/adamchainz/django-upgrade
+      rev: 1.13.0
+      hooks:
+          - id: django-upgrade
+            args: [--target-version, "4.2"]
     - repo: https://github.com/pycqa/isort
       rev: 5.10.1
       hooks:
@@ -57,6 +62,6 @@ repos:
                 ]
 
 ci:
-  autoupdate_schedule: weekly
-  skip: []
-  submodules: false
+    autoupdate_schedule: weekly
+    skip: []
+    submodules: false

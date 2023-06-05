@@ -112,7 +112,14 @@ aws_s3_domain = (
 
 # STATIC
 # ------------------------
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 # STATIC_HOST = env.url("DJANGO_AWS_S3_CUSTOM_DOMAIN", default="")
 
 # STATIC_HOST = f"https://{AWS_S3_CUSTOM_DOMAIN.path}"
@@ -120,7 +127,6 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # MEDIA
 # ------------------------------------------------------------------------------
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 MEDIA_URL = f"https://{aws_s3_domain}/media/"
 
 # EMAIL
