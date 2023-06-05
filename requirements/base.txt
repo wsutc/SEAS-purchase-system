@@ -1,5 +1,5 @@
 crispy-bootstrap5==0.7
-Django==4.2.1 # dependabot.yml prevents major or minor updates, only patches allowed
+Django==4.2.2 # dependabot.yml prevents major or minor updates, only patches allowed
 django[argon2]
 django-bootstrap-datepicker-plus==5.0.2
 # django-crispy-forms>=1.14.0
