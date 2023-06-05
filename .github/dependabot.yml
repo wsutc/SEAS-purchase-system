@@ -9,3 +9,7 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "Django"
+        update-types:
+          ["version-update:semver-minor", "version-update:semver-major"]

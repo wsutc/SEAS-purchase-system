@@ -34,7 +34,6 @@ from .migration_tools import (
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         # ("accounts", "0003_alter_basetransaction_amount_and_more"),
         ("purchases", "migration_tools"),
@@ -83,11 +82,12 @@ class Migration(migrations.Migration):
             name="created_date",
             field=models.DateTimeField(auto_now_add=True),
         ),
-        migrations.AlterField(
-            model_name="purchaserequest",
-            name="sales_tax_rate",
-            field=models.DecimalField(decimal_places=5, default=".087", max_digits=10),
-        ),
+        # migrations.AlterField(
+        #     model_name="purchaserequest",
+        #     name="sales_tax_rate",
+        #     field=models.DecimalField(
+        # decimal_places=5, default=".087", max_digits=10),
+        # ),
         migrations.AlterField(
             model_name="simpleproduct",
             name="unit_price",
@@ -118,7 +118,10 @@ class Migration(migrations.Migration):
                         verbose_name="quantity in shipment",
                     ),
                 ),
-                ("missing", models.BooleanField(default=False, verbose_name="missing")),
+                (
+                    "missing",
+                    models.BooleanField(default=False, verbose_name="missing"),
+                ),
                 (
                     "simple_product",
                     models.ForeignKey(
@@ -132,7 +135,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="tracker",
             name="received",
-            field=models.BooleanField(default=False, verbose_name="package received"),
+            field=models.BooleanField(
+                default=False, verbose_name="package received"
+            ),
         ),
         migrations.AddField(
             model_name="tracker",
@@ -157,12 +162,18 @@ class Migration(migrations.Migration):
                 ),
                 ("slug", models.SlugField(editable=False, unique=True)),
                 ("created_date", models.DateTimeField(auto_now_add=True)),
-                ("name", models.CharField(max_length=50, verbose_name="order number")),
+                (
+                    "name",
+                    models.CharField(
+                        max_length=50, verbose_name="order number"
+                    ),
+                ),
                 ("link", models.URLField(blank=True, verbose_name="link")),
                 (
                     "purchase_requests",
                     models.ManyToManyField(
-                        to="purchases.purchaserequest", verbose_name="purchase_requests"
+                        to="purchases.purchaserequest",
+                        verbose_name="purchase_requests",
                     ),
                 ),
                 (
@@ -238,12 +249,16 @@ class Migration(migrations.Migration):
                 (
                     "invoice_number",
                     models.CharField(
-                        blank=True, max_length=50, verbose_name="invoice number"
+                        blank=True,
+                        max_length=50,
+                        verbose_name="invoice number",
                     ),
                 ),
                 (
                     "order_placed",
-                    models.DateField(blank=True, verbose_name="date order placed"),
+                    models.DateField(
+                        blank=True, verbose_name="date order placed"
+                    ),
                 ),
             ],
             options={
@@ -316,7 +331,9 @@ class Migration(migrations.Migration):
                 (
                     "rank",
                     models.PositiveSmallIntegerField(
-                        help_text="rank in sort order", unique=True, verbose_name="rank"
+                        help_text="rank in sort order",
+                        unique=True,
+                        verbose_name="rank",
                     ),
                 ),
             ],
@@ -365,7 +382,9 @@ class Migration(migrations.Migration):
             model_name="accounts",
             name="account",
             field=models.CharField(
-                help_text="in form XXXX-XXXX.", max_length=10, verbose_name="account"
+                help_text="in form XXXX-XXXX.",
+                max_length=10,
+                verbose_name="account",
             ),
         ),
         migrations.AlterField(
@@ -417,7 +436,9 @@ class Migration(migrations.Migration):
             model_name="accounts",
             name="account",
             field=models.CharField(
-                help_text="in form XXXX-XXXX.", max_length=10, verbose_name="account"
+                help_text="in form XXXX-XXXX.",
+                max_length=10,
+                verbose_name="account",
             ),
         ),
         migrations.AddField(
@@ -429,7 +450,9 @@ class Migration(migrations.Migration):
             model_name="accounts",
             name="account",
             field=models.CharField(
-                help_text="in form XXXX-XXXX.", max_length=10, verbose_name="account"
+                help_text="in form XXXX-XXXX.",
+                max_length=10,
+                verbose_name="account",
             ),
         ),
         migrations.AddField(
@@ -532,7 +555,8 @@ class Migration(migrations.Migration):
             model_name="purchaserequest",
             name="status",
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.PROTECT, to="purchases.status"
+                on_delete=django.db.models.deletion.PROTECT,
+                to="purchases.status",
             ),
         ),
         migrations.AlterField(
@@ -573,7 +597,8 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="accounts",
             constraint=models.UniqueConstraint(
-                django.db.models.expressions.F("account"), name="unique_account"
+                django.db.models.expressions.F("account"),
+                name="unique_account",
             ),
         ),
         migrations.DeleteModel(
@@ -603,7 +628,9 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="vendor",
             name="discount_percentage",
-            field=models.DecimalField(decimal_places=2, default=0, max_digits=15),
+            field=models.DecimalField(
+                decimal_places=2, default=0, max_digits=15
+            ),
         ),
         migrations.AlterField(
             model_name="vendor",
@@ -649,7 +676,8 @@ class Migration(migrations.Migration):
             model_name="purchaserequest",
             name="accounts_external",
             field=models.ManyToManyField(
-                through="purchases.PurchaseRequestAccount", to="accounts.account"
+                through="purchases.PurchaseRequestAccount",
+                to="accounts.account",
             ),
         ),
         migrations.AddField(
@@ -673,23 +701,23 @@ class Migration(migrations.Migration):
             name="instruction",
             field=models.TextField(verbose_name="Special Instructions"),
         ),
-        migrations.AlterField(
-            model_name="purchaserequest",
-            name="sales_tax_rate",
-            field=web_project.fields.SimplePercentageField(
-                decimal_places=6, max_digits=10
-            ),
-        ),
-        migrations.AlterField(
-            model_name="purchaserequest",
-            name="sales_tax_rate",
-            field=models.FloatField(),
-        ),
-        migrations.AlterField(
-            model_name="purchaserequest",
-            name="sales_tax_rate",
-            field=models.DecimalField(decimal_places=5, max_digits=10),
-        ),
+        # migrations.AlterField(
+        #     model_name="purchaserequest",
+        #     name="sales_tax_rate",
+        #     field=web_project.fields.SimplePercentageField(
+        #         decimal_places=6, max_digits=10
+        #     ),
+        # ),
+        # migrations.AlterField(
+        #     model_name="purchaserequest",
+        #     name="sales_tax_rate",
+        #     field=models.FloatField(),
+        # ),
+        # migrations.AlterField(
+        #     model_name="purchaserequest",
+        #     name="sales_tax_rate",
+        #     field=models.DecimalField(decimal_places=5, max_digits=10),
+        # ),
         migrations.RunPython(
             code=change_account_foreign_relationship,  # noqa: E501
         ),
@@ -749,67 +777,67 @@ class Migration(migrations.Migration):
         migrations.DeleteModel(
             name="PurchaseRequestAccounts",
         ),
-        migrations.AlterField(
-            model_name="purchaserequest",
-            name="sales_tax_rate",
-            field=web_project.fields.SimplePercentageField(
-                decimal_places=9, max_digits=10
-            ),
-        ),
-        migrations.AlterField(
-            model_name="purchaserequest",
-            name="sales_tax_rate",
-            field=web_project.fields.SimplePercentageField(
-                decimal_places=6, max_digits=10
-            ),
-        ),
-        migrations.AlterField(
-            model_name="purchaserequest",
-            name="sales_tax_rate",
-            field=web_project.fields.SimplePercentageField(
-                decimal_places=6, max_digits=10
-            ),
-        ),
+        # migrations.AlterField(
+        #     model_name="purchaserequest",
+        #     name="sales_tax_rate",
+        #     field=web_project.fields.SimplePercentageField(
+        #         decimal_places=9, max_digits=10
+        #     ),
+        # ),
+        # migrations.AlterField(
+        #     model_name="purchaserequest",
+        #     name="sales_tax_rate",
+        #     field=web_project.fields.SimplePercentageField(
+        #         decimal_places=6, max_digits=10
+        #     ),
+        # ),
+        # migrations.AlterField(
+        #     model_name="purchaserequest",
+        #     name="sales_tax_rate",
+        #     field=web_project.fields.SimplePercentageField(
+        #         decimal_places=6, max_digits=10
+        #     ),
+        # ),
         migrations.AddField(
             model_name="simpleproduct",
             name="taxable",
             field=models.BooleanField(default=True, verbose_name="taxable"),
         ),
-        migrations.AlterField(
-            model_name="purchaserequest",
-            name="sales_tax_rate",
-            field=web_project.fields.SimplePercentageField(
-                decimal_places=6, max_digits=10
-            ),
-        ),
-        migrations.AlterField(
-            model_name="purchaserequest",
-            name="sales_tax_rate",
-            field=web_project.fields.SimplePercentageField(
-                decimal_places=6, max_digits=10
-            ),
-        ),
-        migrations.AlterField(
-            model_name="purchaserequest",
-            name="sales_tax_rate",
-            field=web_project.fields.SimplePercentageField(
-                decimal_places=6, max_digits=10
-            ),
-        ),
-        migrations.AlterField(
-            model_name="purchaserequest",
-            name="sales_tax_rate",
-            field=web_project.fields.SimplePercentageField(
-                decimal_places=6, max_digits=10
-            ),
-        ),
-        migrations.AlterField(
-            model_name="purchaserequest",
-            name="sales_tax_rate",
-            field=web_project.fields.SimplePercentageField(
-                decimal_places=2, max_digits=10
-            ),
-        ),
+        # migrations.AlterField(
+        #     model_name="purchaserequest",
+        #     name="sales_tax_rate",
+        #     field=web_project.fields.SimplePercentageField(
+        #         decimal_places=6, max_digits=10
+        #     ),
+        # ),
+        # migrations.AlterField(
+        #     model_name="purchaserequest",
+        #     name="sales_tax_rate",
+        #     field=web_project.fields.SimplePercentageField(
+        #         decimal_places=6, max_digits=10
+        #     ),
+        # ),
+        # migrations.AlterField(
+        #     model_name="purchaserequest",
+        #     name="sales_tax_rate",
+        #     field=web_project.fields.SimplePercentageField(
+        #         decimal_places=6, max_digits=10
+        #     ),
+        # ),
+        # migrations.AlterField(
+        #     model_name="purchaserequest",
+        #     name="sales_tax_rate",
+        #     field=web_project.fields.SimplePercentageField(
+        #         decimal_places=6, max_digits=10
+        #     ),
+        # ),
+        # migrations.AlterField(
+        #     model_name="purchaserequest",
+        #     name="sales_tax_rate",
+        #     field=web_project.fields.SimplePercentageField(
+        #         decimal_places=2, max_digits=10
+        #     ),
+        # ),
         migrations.AlterField(
             model_name="vendor",
             name="discount_percentage",
@@ -841,16 +869,16 @@ class Migration(migrations.Migration):
                 decimal_places=2, default=0, max_digits=15
             ),
         ),
-        migrations.AddField(
-            model_name="purchaserequest",
-            name="sales_tax_rate",
-            field=web_project.fields.SimplePercentageField(
-                decimal_places=4,
-                max_digits=10,
-                null=True,
-                verbose_name="sales tax rate",
-            ),
-        ),
+        # migrations.AddField(
+        #     model_name="purchaserequest",
+        #     name="sales_tax_rate",
+        #     field=web_project.fields.SimplePercentageField(
+        #         decimal_places=4,
+        #         max_digits=10,
+        #         null=True,
+        #         verbose_name="sales tax rate",
+        #     ),
+        # ),
         migrations.AddField(
             model_name="vendororder",
             name="approved_request",
@@ -859,7 +887,9 @@ class Migration(migrations.Migration):
                 help_text="pdf",
                 upload_to=purchases.models.models_data.vendor_order_attachments_path,
                 validators=[
-                    django.core.validators.FileExtensionValidator(["pdf", "pdfa"])
+                    django.core.validators.FileExtensionValidator(
+                        ["pdf", "pdfa"]
+                    )
                 ],
                 verbose_name="approved purchase request",
             ),
