@@ -165,7 +165,6 @@ class SimpleProductListView(PaginatedListMixin, ListView):
     ]
 
     def get_context_data(self, **kwargs):
-
         context = super().get_context_data(**kwargs)
 
         # TODO: make this more elegant
@@ -519,15 +518,22 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
             print(purchase_request_accounts_formset.errors)
         if form.is_valid() and priValid and praValid:
             return self.form_valid(
-                form, purchase_request_items_formset, purchase_request_accounts_formset
+                form,
+                purchase_request_items_formset,
+                purchase_request_accounts_formset,
             )
         else:
             return self.form_invalid(
-                form, purchase_request_items_formset, purchase_request_accounts_formset
+                form,
+                purchase_request_items_formset,
+                purchase_request_accounts_formset,
             )
 
     def form_valid(
-        self, form, purchase_request_items_formset, purchase_request_accounts_formset
+        self,
+        form,
+        purchase_request_items_formset,
+        purchase_request_accounts_formset,
     ):
         self.object = form.save(commit=False)
         self.object.save()
@@ -550,7 +556,10 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
         return redirect(self.object)
 
     def form_invalid(
-        self, form, purchase_request_items_formset, purchase_request_accounts_formset
+        self,
+        form,
+        purchase_request_items_formset,
+        purchase_request_accounts_formset,
     ):
         return self.render_to_response(
             self.get_context_data(
@@ -597,15 +606,22 @@ class CustomPurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
             print(purchase_request_accounts_formset.errors)
         if form.is_valid() and priValid and praValid:
             return self.form_valid(
-                form, purchase_request_items_formset, purchase_request_accounts_formset
+                form,
+                purchase_request_items_formset,
+                purchase_request_accounts_formset,
             )
         else:
             return self.form_invalid(
-                form, purchase_request_items_formset, purchase_request_accounts_formset
+                form,
+                purchase_request_items_formset,
+                purchase_request_accounts_formset,
             )
 
     def form_valid(
-        self, form, purchase_request_items_formset, purchase_request_accounts_formset
+        self,
+        form,
+        purchase_request_items_formset,
+        purchase_request_accounts_formset,
     ):
         self.object = form.save(commit=False)
         self.object.save()
@@ -628,7 +644,10 @@ class CustomPurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
         return redirect(self.object)
 
     def form_invalid(
-        self, form, purchase_request_items_formset, purchase_request_accounts_formset
+        self,
+        form,
+        purchase_request_items_formset,
+        purchase_request_accounts_formset,
     ):
         return self.render_to_response(
             self.get_context_data(
@@ -781,7 +800,7 @@ class BalancesDetailView(DetailView):
 #     template_name = "purchases/ledgers_list.html"
 
 
-class TrackerListView(PaginatedListMixin, ListView):
+class TrackerListView(ListView):
     template_name = "purchases/tracker/tracker_list.html"
     context_object_name = "tracker"
     queryset = Tracker.objects.all()
