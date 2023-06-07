@@ -1,0 +1,37 @@
+{% load purchases_extras %}
+{% load i18n %}
+<div class="col">
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th scope="col">
+          <a href="#" data-column="carrier__name">Carrier</a>
+        </th>
+        <th>
+          <a href="#" data-column="tracking_number">Tracking Number</a>
+        </th>
+        <th>
+          <a href="#" data-column="link">Track</a>
+        </th>
+        <th>
+          <a href="#" data-column="status">Status</a>
+        </th>
+        <th>
+          <a href="#" data-column="delivery_estimate">Delivery Estimate</a>
+        </th>
+        <th>
+          <a href="#" data-column="purchase_request__number">Purchase Request</a>
+        </th>
+        <th>
+          <a href="#" data-column="vendor__name">Vendor</a>
+        </th>
+        <th>
+          <a href="#" data-column="earliest_event_time">Earliest Event</a>
+        </th>
+      </tr>
+    </thead>
+    <tbody id="table-body">
+    </tbody>
+  </table>
+  {% comment %} {% bootstrap_pagination page_obj %} {% endcomment %}
+</div>

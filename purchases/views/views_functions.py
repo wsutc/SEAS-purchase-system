@@ -10,8 +10,15 @@ from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import mail_admins
 from django.db.transaction import atomic, non_atomic_requests
-from django.http import FileResponse, HttpRequest, HttpResponse, HttpResponseForbidden
+from django.http import (
+    FileResponse,
+    HttpRequest,
+    HttpResponse,
+    HttpResponseForbidden,
+    JsonResponse,
+)
 from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse  # , reverse_lazy
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
@@ -27,6 +34,7 @@ from reportlab.platypus.frames import Frame
 from reportlab.platypus.paragraph import Paragraph
 
 from purchases.exceptions import TrackerInvalidApiKey, TrackerNotRegistered
+from purchases.templatetags.purchases_extras import camel_case_split
 from web_project.helpers import login_exempt, redirect_to_next, truncate_string
 
 from ..models import (
@@ -95,7 +103,6 @@ def flush_old_webhooks(days_offset: int) -> int:
 @require_POST
 @non_atomic_requests
 def tracking_webhook(request):
-
     if request.method == "HEAD":
         response = HttpResponse(
             "Message successfully received.", content_type="text/plain"
@@ -118,7 +125,8 @@ def tracking_webhook(request):
                     message=f"Token does not match signature: {given_token}",
                 )
                 return HttpResponseForbidden(
-                    "Inconsistency in response signature.", content_type="text/plain"
+                    "Inconsistency in response signature.",
+                    content_type="text/plain",
                 )
 
             payload = json.loads(request.body)
@@ -206,7 +214,9 @@ def generate_pr_pdf(request, slug):
         canvas.saveState()
         w, h = content.wrap(doc.width, doc.topMargin)
         content.drawOn(
-            canvas, doc.leftMargin, doc.height + doc.bottomMargin + doc.topMargin - h
+            canvas,
+            doc.leftMargin,
+            doc.height + doc.bottomMargin + doc.topMargin - h,
         )
         canvas.restoreState()
 
@@ -295,7 +305,12 @@ def generate_pr_pdf(request, slug):
             "Email",
             purchase_request.requisitioner.user.email,
         ],
-        ["Address", address_line, "Phone", purchase_request.requisitioner.phone],
+        [
+            "Address",
+            address_line,
+            "Phone",
+            purchase_request.requisitioner.phone,
+        ],
         ["", "", "Department", purchase_request.requisitioner.department.code],
         ["Phone", purchase_request.vendor.phone],
         ["Email", purchase_request.vendor.email],
@@ -336,7 +351,15 @@ def generate_pr_pdf(request, slug):
 
     # Define Table
     data = [
-        ["Description", "Identifier", "Vendor ID", "QTY", "Unit", "Price", "Ext. Price"]
+        [
+            "Description",
+            "Identifier",
+            "Vendor ID",
+            "QTY",
+            "Unit",
+            "Price",
+            "Ext. Price",
+        ]
     ]
 
     # Create rows for each item
@@ -356,7 +379,15 @@ def generate_pr_pdf(request, slug):
     sw = doc.width / 100
 
     # Use the sw to generate a table that is exactly the same width as doc.width
-    column_widths = [38 * sw, 14 * sw, 14 * sw, 7 * sw, 7 * sw, 8 * sw, 12 * sw]
+    column_widths = [
+        38 * sw,
+        14 * sw,
+        14 * sw,
+        7 * sw,
+        7 * sw,
+        8 * sw,
+        12 * sw,
+    ]
 
     items_table = Table(data, colWidths=column_widths)  # Create table
 
@@ -370,7 +401,12 @@ def generate_pr_pdf(request, slug):
                 ("FONTNAME", (0, 1), (-1, 0), "Helvetica"),
                 ("ALIGN", (1, 1), (-3, -1), "CENTER"),
                 ("ALIGN", (-2, 1), (-1, -5), "RIGHT"),
-                ("ROWBACKGROUNDS", (0, 1), (-1, -5), [colors.aliceblue, colors.white]),
+                (
+                    "ROWBACKGROUNDS",
+                    (0, 1),
+                    (-1, -5),
+                    [colors.aliceblue, colors.white],
+                ),
                 ("BOX", (0, 0), (-1, -5), 0.5, colors.black),
                 ("INNERGRID", (0, 0), (-1, -5), 0.1, colors.darkgray),
                 # ('BOX',(-3,-4),(-1,-1),0.5,colors.black),
@@ -464,7 +500,8 @@ def update_tracker(request, pk, *args, **kwargs):
         )
     except Exception:
         messages.error(
-            request, "Unknown error updating tracker, please contact site admin."
+            request,
+            "Unknown error updating tracker, please contact site admin.",
         )
         logger.error("Unknown exception running `update_tracker`.", exc_info=1)
     else:
@@ -507,7 +544,6 @@ def update_tracker(request, pk, *args, **kwargs):
 
 
 def update_purchase_request_totals(request, slug):
-
     redirect_url = redirect_to_next(request, "purchaserequest_detail", slug=slug)
     return_redirect = redirect(redirect_url)
 
@@ -529,3 +565,48 @@ def update_purchase_request_totals(request, slug):
         )
 
     return return_redirect
+
+
+def dynamic_tracker_data(request):
+    carrier_filter = request.GET.get("carrier")
+    sort_column = request.GET.get("sort")
+
+    queryset = Tracker.objects.all()
+    if carrier_filter:
+        queryset = queryset.filter(carrer__icontains=carrier_filter)
+
+    if sort_column:
+        queryset = queryset.order_by(sort_column)
+
+    data = []
+    for tracker in queryset:
+        tracker_url = reverse("tracker_detail", kwargs={"pk": tracker.pk})
+        purchase_request_url = reverse(
+            "purchaserequest_detail",
+            kwargs={"slug": tracker.purchase_request.slug},
+        )
+        # vendor_url = reverse()
+        data.append(
+            {
+                "carrier__name": tracker.carrier.name,
+                "carrier__website": tracker.carrier.website,
+                "tracking_number": tracker.tracking_number,
+                "tracking_detail": tracker_url,
+                "link": tracker.get_tracking_link(),
+                "status": camel_case_split(tracker.status),
+                "delivery_estimate": tracker.delivery_estimate,
+                "purchase_request__number": tracker.purchase_request.number,
+                "purchase_request_detail": purchase_request_url,
+                "vendor__name": tracker.purchase_request.vendor.name,
+                "vendor_url": reverse(
+                    "vendor_detail",
+                    kwargs={
+                        "pk": tracker.purchase_request.vendor.pk,
+                        "slug": tracker.purchase_request.vendor.slug,
+                    },
+                ),
+                "earliest_event_time": tracker.earliest_event_time,
+            }
+        )
+
+    return JsonResponse(data, safe=False)

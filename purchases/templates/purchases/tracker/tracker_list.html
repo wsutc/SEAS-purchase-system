@@ -8,5 +8,89 @@
   {% url 'create_tracker' %}
 {% endblock new_url %}
 {% block page %}
-  {% include "purchases/tracker/tracker_list_table.html" with tracker_list=object_list %}
+  {% include "purchases/tracker/tracker_list_table_dynamic.html"  %}
+  <script>
+    $(document).ready(function() {
+      loadTableData();
+      // Trigger AJAX request when column headers are clicked
+      $('th a').click(function(e) {
+        e.preventDefault();
+        var column = $(this).data('column');
+        loadTableData(column);
+      });
+    });
+
+    function loadTableData(sortColumn) {
+      var url = "{% url 'dynamic-tracker-list' %}"; // Replace with the actual URL
+      var filters = {
+        carrier: $('#id_carrier').val(),
+        sort: sortColumn
+      };
+
+      $.ajax({
+        url: url,
+        type: 'GET',
+        data: filters,
+        success: function(response) {
+          var tableBody = $('#table-body');
+          tableBody.empty();
+
+          $.each(response, function(index, tracker) {
+            let newRow = tableBody[0].insertRow(index);
+
+            let carrierCell = newRow.insertCell(0);
+            let numberCell = newRow.insertCell(1);
+            let linkCell = newRow.insertCell(2);
+            let statusCell = newRow.insertCell(3);
+            let etaCell = newRow.insertCell(4);
+            let purchaseRequestCell = newRow.insertCell(5);
+            let vendorCell = newRow.insertCell(6);
+            let firstEventCell = newRow.insertCell(7);
+
+            let carrierText = document.createTextNode(tracker.carrier__name);
+            let carrierWebsite = document.createElement('a');
+            carrierWebsite.setAttribute('href', tracker.carrier__website);
+            carrierWebsite.setAttribute('target', "_blank");
+            carrierWebsite.appendChild(carrierText);
+            carrierCell.appendChild(carrierWebsite);
+
+            let numberText = document.createTextNode(tracker.tracking_number);
+            let numberLink = document.createElement('a');
+            numberLink.setAttribute('href', tracker.tracking_detail );
+            numberLink.appendChild(numberText);
+            numberCell.appendChild(numberLink);
+
+            let linkText = document.createTextNode("Go To Site");
+            let linkURL = document.createElement('a');
+            linkURL.setAttribute('href', tracker.link);
+            linkURL.setAttribute('target', "_blank");
+            linkURL.appendChild(linkText);
+            linkCell.appendChild(linkURL);
+
+            let statusText = document.createTextNode(tracker.status);
+            statusCell.appendChild(statusText);
+
+            let prText = document.createTextNode(tracker.purchase_request__number);
+
+            let prURL = document.createElement('a');
+            prURL.setAttribute('href', tracker.purchase_request_detail);
+            prURL.appendChild(prText);
+            purchaseRequestCell.appendChild(prURL);
+
+            let vendorText = document.createTextNode(tracker.vendor__name);
+            let vendorURL = document.createElement('a');
+            vendorURL.setAttribute('href', tracker.vendor_url);
+            vendorURL.appendChild(vendorText);
+            vendorCell.appendChild(vendorURL);
+
+            let firstEventText = document.createTextNode(tracker.earliest_event_time);
+            firstEventCell.appendChild(firstEventText);
+          });
+        },
+        error: function(xhr, status, error) {
+        console.log(error);
+        }
+      });
+    }
+  </script>
 {% endblock %}
