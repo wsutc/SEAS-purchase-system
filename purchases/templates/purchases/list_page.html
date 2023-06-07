@@ -1,5 +1,7 @@
 {% extends 'purchases/layout.html' %}
-{% block title %}List{% endblock %}
+{% block title %}
+  List
+{% endblock title %}
 {% block content %}
   {% if messages %}
     <ul class="messages">
@@ -38,15 +40,16 @@
   </div>
 {% endif %}
 {% include "purchases/page_buttons.html" %}
-<main class="d-flex flex-nowrap">
+<main>
   {% block page %}{% endblock %}
-  {% block filter_sidebar %}
+  {% comment %} {% block filter_sidebar %}
     {% include "purchases/filter_sidebar.html" %}
-  {% endblock filter_sidebar %}
+  {% endblock filter_sidebar %} {% endcomment %}
 </main>
-{% block pagination %}
+{% comment %} {% block pagination %}
   {% include "purchases/page_buttons.html" %}
 {% endblock pagination %}
+{% endcomment %}
 <div id="django-debug">
   <pre>{% debug %}</pre>
 </div>
