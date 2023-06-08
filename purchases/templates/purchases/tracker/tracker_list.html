@@ -40,11 +40,11 @@
       });
       table.searchPanes()
       let verticalPanes = $("div.dtsp-verticalPanes");
-      verticalPanes.append(table.searchPanes.container());
-      if ($("dtsp-hidden")) {
+      let verticalContainer = table.searchPanes.container()
+      verticalPanes.append(verticalContainer);
+      if (verticalContainer.hasClass("dtsp-hidden")) {
         verticalPanes.remove()
       }
-
     });
   </script>
 {% endblock %}

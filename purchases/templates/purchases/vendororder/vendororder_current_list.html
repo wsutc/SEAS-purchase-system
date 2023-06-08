@@ -1,21 +1,47 @@
 {% extends "purchases/list_page.html" %}
 {% load purchases_extras %}
-{% block title %}
-Orders
-{% endblock %}
+{% block title %}Orders{% endblock %}
 {% comment %} {% block header %}Orders{% endblock header %} {% endcomment %}
 {% comment %} {% block new_url %}{% url 'vendororder_create' %}{% endblock new_url %} {% endcomment %}
-
 {% block listheader %}
-<div class="row mb-3">
-    <h1 class="wsu-c-heading col-sm">Current <span class="header-em">Orders</span></h1>
-    <a href="{% url 'vendororder_create' %}" class="save btn btn-primary col-2">New</a>
-</div>
-<a href="{% url 'vendororder_list' %}">Show All Orders</a>
+  <div class="row mb-3">
+    <h1 class="wsu-c-heading col-sm">
+      Current <span class="header-em">Orders</span>
+    </h1>
+    <a href="{% url 'vendororder_create' %}"
+       class="save btn btn-primary col-2">New</a>
+  </div>
+  <a href="{% url 'vendororder_list' %}">Show All Orders</a>
 {% endblock listheader %}
-
 {% block page %}
+  {% include "purchases/vendororder/vendororder_list_table.html" %}
+  <script>
+    $(document).ready( function () {
+      var table = $('#orders').DataTable({
+        responsive: true,
+        "language": {
+          emptyTable: "No records to show, check your filters if any..."
+        },
+        searchPanes: {
+          layout: 'columns-1',
+          i18n: {
+            emptyPanes: null
+          }
+        },
+        columnDefs: [
+          { orderable: false, targets: 2}
+        ],
+        dom: '<"dtsp-dataTable"prftilp>',
+        pageLength: 10
+      });
+      table.searchPanes()
+      let verticalPanes = $("div.dtsp-verticalPanes");
+      let verticalContainer = table.searchPanes.container()
+      verticalPanes.append(verticalContainer);
+      if (verticalContainer.hasClass("dtsp-hidden")) {
+        verticalPanes.remove()
+      }
 
-    {% include "purchases/vendororder/vendororder_list_table.html" %}
-
+    });
+  </script>
 {% endblock %}

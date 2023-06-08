@@ -5,6 +5,7 @@
     <th>Number</th>
     <th>Vendor</th>
     <th>Status</th>
+    <th>Open</th>
     <th>Total</th>
     <th>Shipping Status</th>
     <th></th>
@@ -35,6 +36,7 @@
                     <li><a class="dropdown-item" href="{% url 'update_pr_status' slug=o.slug %}?status=pt&&next={{ request.get_full_path }}">Receive - Partial</a></li>
         </ul> {% endcomment %}
       </td>
+      <td>{{ o.status.open }}</td>
       {% comment %} <td>{{ o.get_status_display }}</td> {% endcomment %}
       <td>{{ o.grand_total|usd_accounting }}</td>
       <td>{{ o.tracker_set.first.status|camel_case_split }}</td>

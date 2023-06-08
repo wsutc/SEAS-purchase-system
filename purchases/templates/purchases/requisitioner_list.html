@@ -8,35 +8,66 @@
   {% url 'new_requisitioner' %}
 {% endblock new_url %}
 {% block page %}
-  <div class="col">
-    <table class="table table-striped">
-      <thead>
-        <tr>
-          <th class="col-3">User</th>
-          <th>Email</th>
-          <th>Phone</th>
-          <th class="col-1"></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for v in object_list %}
+  <div class="dtsp-verticalContainer">
+    <div class="dtsp-verticalPanes"></div>
+    <div class="container">
+      <table class="display nowrap" id="requisitioners" width="100%">
+        <thead>
           <tr>
-            <td>{{ v.user.get_full_name|urlizespecify:v.get_absolute_url }}</td>
-            <td>{{ v.user.email|urlize }}</td>
-            <td>{{ v.phone|default_if_none:"" }}</td>
-            <td class="text-end">
-              <div class="btn-group">
-                <a href="{% url 'admin:purchases_requisitioner_change' v.pk %}?next={{ request.get_full_path }}"><i class="fa-solid fa-pencil px-1"></i></a>
-                <a href="{% url 'admin:purchases_requisitioner_delete' v.pk %}?next={{ request.get_full_path }}"><i class="fa-solid fa-trash-can px-1"></i></a>
-              </div>
-            </td>
+            <th>User</th>
+            <th>ln</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th></th>
           </tr>
-        {% empty %}
-          <tr>
-            <td colspan="100%">No requisitioners match filters.</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {% for v in object_list %}
+            <tr>
+              <td>{{ v.user.get_full_name|urlizespecify:v.get_absolute_url }}</td>
+              <td>{{ v.user.last_name }}</td>
+              <td>{{ v.user.email|urlize }}</td>
+              <td>{{ v.phone|default_if_none:"" }}</td>
+              <td class="text-end">
+                <div class="btn-group">
+                  <a href="{% url 'admin:purchases_requisitioner_change' v.pk %}?next={{ request.get_full_path }}"><i class="fa-solid fa-pencil px-1"></i></a>
+                  <a href="{% url 'admin:purchases_requisitioner_delete' v.pk %}?next={{ request.get_full_path }}"><i class="fa-solid fa-trash-can px-1"></i></a>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
+  <script>
+    $(document).ready( function () {
+      var table = $('#requisitioners').DataTable({
+        order: [[1, "asc"]],
+        responsive: true,
+        "language": {
+          emptyTable: "No records to show, check your filters if any..."
+        },
+        searchPanes: {
+          layout: 'columns-1',
+          i18n: {
+            emptyPanes: null
+          }
+        },
+        columnDefs: [
+          { visible: false, targets: 1 },
+          { orderable: false, targets: 4 },
+        ],
+        dom: '<"dtsp-dataTable"prftilp>',
+        pageLength: 10
+      });
+      table.searchPanes()
+      let verticalPanes = $("div.dtsp-verticalPanes");
+      let verticalContainer = table.searchPanes.container()
+      verticalPanes.append(verticalContainer);
+      if (verticalContainer.hasClass("dtsp-hidden")) {
+        verticalPanes.remove()
+      }
+    });
+  </script>
 {% endblock %}
