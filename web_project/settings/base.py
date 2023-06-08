@@ -293,7 +293,8 @@ INTERNAL_IPS = ("127.0.0.1",)
 # EMAIL
 # -----------------------------------------------------------------------------
 EMAIL_BACKEND = env(
-    "DJANGO_EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend"
+    "DJANGO_EMAIL_BACKEND",
+    default="django.core.mail.backends.smtp.EmailBackend",
 )
 
 EMAIL_TIMEOUT = 5
