@@ -49,16 +49,22 @@ class Account(BaseModel):
         max_length=30,
         unique=True,
     )
-    cost_center = models.CharField(max_length=15, blank=True)
+    cost_center = models.CharField(max_length=15, blank=True, null=True)
     starting_balance = MoneyField(
-        _("starting balance"), max_digits=14, decimal_places=2, default_currency="USD"
+        _("starting balance"),
+        max_digits=14,
+        decimal_places=2,
+        default_currency="USD",
     )
     starting_balance_datetime = models.DateTimeField(
         help_text=_("date and time that starting balance is valid from")
     )
 
     current_balance = MoneyField(
-        _("current balance"), max_digits=14, decimal_places=2, default_currency="USD"
+        _("current balance"),
+        max_digits=14,
+        decimal_places=2,
+        default_currency="USD",
     )
     changed_datetime = models.DateTimeField(auto_now=True)
 
@@ -137,16 +143,15 @@ class BaseTransaction(models.Model):
         default_currency="USD",
     )
     date_time = models.DateTimeField(
-        _("time and date that adjustment affects balance"), default=timezone.now
+        _("time and date that adjustment affects balance"),
+        default=timezone.now,
     )
 
     class Meta:
         ordering = ["date_time"]
 
     def __str__(self):
-        return (
-            f"{self.account.fund}|{self.amount} - {self.date_time:%m/%d/%y %H:%M:%S %Z}"
-        )
+        return f"{self.account.fund}|{self.amount} - {self.date_time:%m/%d/%y %H:%M:%S %Z}"  # noqa: E501
 
 
 class BalanceAdjustment(BaseTransaction):
