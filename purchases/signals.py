@@ -48,11 +48,12 @@ def create_requisitioner(sender, instance, created, **kwargs):
             code="SEAS", defaults={"name": "School of Engineering and Applied Sciences"}
         )
         Requisitioner.objects.create(user=instance, department=department)
-
-
-@receiver(post_save, sender=User)
-def save_requisitioner(sender, instance, **kwargs):
     instance.requisitioner.save()
+
+
+# @receiver(post_save, sender=User)
+# def save_requisitioner(sender, instance, **kwargs):
+#     instance.requisitioner.save()
 
 
 @receiver(pre_save, sender=SimpleProduct)
