@@ -8,10 +8,10 @@
       "name": "Python: Django",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}\\manage.py",
+      "program": "${workspaceFolder}/manage.py",
       "args": [
         "runserver",
-        "8001",
+        "${input:randomPort}",
       ],
       "django": true,
       "justMyCode": true
@@ -108,6 +108,17 @@
         "update_sort_column",
       ],
       "default": "makemigrations",
-    }
-  ]
+    },
+    {
+      "id": "randomPort",
+      "type": "command",
+      "command": "extension.commandvariable.number",
+      "args": {
+        "name": "randomPort",
+        "range": [8005, 8100],
+        "random": true,
+        "uniqueCount": 10
+      }
+    },
+    ]
 }
