@@ -10,12 +10,14 @@
   {% url 'new_pr' %}
 {% endblock new_url %}
 {% block page %}
-  {% comment %} <style>
-    .inline {
-      --bs-btn-padding-y: 0rem
-    }
-  </style> {% endcomment %}
-  {% include "purchases/purchaserequest_list_table.html" %}
+  <div class="dtsp-verticalContainer">
+    <div class="dtsp-verticalPanes"></div>
+    <div class="container">
+      <table class="display nowrap" id="purchase_requests" width="100%">
+        {% include "purchases/purchaserequest_list_table.html" %}
+      </table>
+    </div>
+  </div>
   <script>
     $(document).ready( function () {
       var table = $('#purchase_requests').DataTable({
