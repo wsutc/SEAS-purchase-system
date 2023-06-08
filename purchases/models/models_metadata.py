@@ -35,4 +35,4 @@ class PurchaseRequestAccount(models.Model):
         verbose_name_plural = _("purchase request accounts")
 
     def __str__(self):
-        return f"{self.account.fund} | {self.spend_category_ext.code}"
+        return f"{self.account.fund} | {self.spend_category_ext.name}"
