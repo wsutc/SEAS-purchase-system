@@ -1,17 +1,19 @@
 from typing import Any
-from django.db import transaction
+
+from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
+from django.db import transaction
+
+from accounts.models import Account, SpendCategory
 
 # from factory import debug  # , create, generate_batch
 from factories import (
     AccountFactory,
-    UserFactory,
     PurchaseRequestFactory,
     UnitFactory,
+    UserFactory,
     VendorFactory,
 )
-
-from django.contrib.auth.models import User
 from purchases.models import (
     Department,
     PurchaseRequest,
@@ -21,8 +23,8 @@ from purchases.models import (
     Unit,
     Urgency,
     Vendor,
+    VendorOrder,
 )
-from accounts.models import Account, SpendCategory
 
 NUM_USERS = 15
 NUM_REQUESTS = 50
@@ -42,6 +44,7 @@ class Command(BaseCommand):
             PurchaseRequest,
             Account,
             SpendCategory,
+            VendorOrder,
             Vendor,
             State,
             Requisitioner,
@@ -53,7 +56,15 @@ class Command(BaseCommand):
         for m in models:
             self.stdout.write(f"Current Model: {m}")
             self.stdout.write(f"Count of objects to delete: {m.objects.count()}")
-            m.objects.all().delete()
+            if m is Requisitioner:
+                qs = m.objects.all().exclude(user__is_superuser=True)
+            elif m is Department:
+                requisitioners = Requisitioner.objects.all()
+                qs = m.objects.all().exclude(requisitioner__in=requisitioners)
+            else:
+                qs = m.objects.all()
+
+            qs.delete()
 
         User.objects.all().exclude(is_superuser=True).delete()
 

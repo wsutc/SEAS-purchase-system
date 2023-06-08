@@ -1,28 +1,21 @@
 # from decimal import Decimal
 import random
 from random import choice  # , randint  # random,
-from factory import (
+
+import pytz  # , mute_signals
+from django.contrib.auth.models import User
+from factory import (  # Iterator,; List,; random,; RelatedFactory,; SelfAttribute,
     Faker,
-    # Iterator,
     LazyAttribute,
     LazyAttributeSequence,
-    # List,
-    # random,
-    # RelatedFactory,
     RelatedFactoryList,
-    # SelfAttribute,
     Sequence,
     SubFactory,
 )
 from factory.django import DjangoModelFactory
-import pytz  # , mute_signals
-
-# from django.db.models.signals import post_save
 
 from accounts.models import Account, SpendCategory
-
-from purchases.models import (
-    # Accounts,
+from purchases.models import (  # Accounts,
     Department,
     PurchaseRequest,
     PurchaseRequestAccount,
@@ -35,7 +28,7 @@ from purchases.models import (
     Vendor,
 )
 
-from django.contrib.auth.models import User
+# from django.db.models.signals import post_save
 
 
 class StateFactory(DjangoModelFactory):
@@ -44,8 +37,8 @@ class StateFactory(DjangoModelFactory):
         exclude = ["name_base"]
 
     name_base = Faker("word")
-    name = LazyAttributeSequence(lambda b, n: "{}{}".format(b.name_base, n))
-    abbreviation = LazyAttribute(lambda n: "{}".format(n.name[-2:]))
+    name = LazyAttributeSequence(lambda b, n: f"{b.name_base}{n}")
+    abbreviation = LazyAttribute(lambda n: f"{n.name[-2:]}")
 
 
 class VendorFactory(DjangoModelFactory):
@@ -68,7 +61,7 @@ class SpendCategoryFactory(DjangoModelFactory):
         exclude = ["name_base"]
 
     name_base = Faker("word")
-    name = LazyAttributeSequence(lambda b, n: "{}-{}".format(b.name_base, n))
+    name = LazyAttributeSequence(lambda b, n: f"{b.name_base}-{n}")
     description = Faker("sentence")
     object = Faker("word")
     subobject = Faker("word")
@@ -84,7 +77,7 @@ class AccountFactory(DjangoModelFactory):
     account = Faker("numerify", text="####-####")
     fund_type = Faker("random_element", elements=Account.FundType.values)
     fund_base = Faker("bothify", text="??########")
-    fund = LazyAttributeSequence(lambda b, n: "{}{}".format(b.fund_base, n))
+    fund = LazyAttributeSequence(lambda b, n: f"{b.fund_base}{n}")
     # account_title = Faker("sentence", nb_words=3)
     in_use = True
     starting_balance = 0
@@ -99,7 +92,8 @@ class PurchaseRequestAccountFactory(DjangoModelFactory):
     account = Faker("random_element", elements=Account.objects.all())
     spend_category_ext = SubFactory(SpendCategoryFactory)
     distribution_type = Faker(
-        "random_element", elements=PurchaseRequestAccount.DistributionType.values
+        "random_element",
+        elements=PurchaseRequestAccount.DistributionType.values,
     )
 
 
@@ -109,7 +103,7 @@ class UnitFactory(DjangoModelFactory):
         # exclude = ["unit_abbr_str"]
 
     unit = Faker("word")
-    abbreviation = LazyAttribute(lambda n: "{}".format(n.unit[:2]))
+    abbreviation = LazyAttribute(lambda n: f"{n.unit[:2]}")
 
 
 class SimpleProductFactory(DjangoModelFactory):
@@ -130,15 +124,17 @@ class UserFactory(DjangoModelFactory):
         model = User
         exclude = "sequence"
 
-    sequence = Sequence(lambda n: "{}".format(n))
+    sequence = Sequence(lambda n: f"{n}")
 
-    email = Faker("company_email")
+    email = LazyAttribute(lambda n: f"{n.username}@test.wsu.edu")
     password = Faker("password", length=8)
     first_name = Faker("first_name")
     last_name = Faker("last_name")
 
     username = LazyAttribute(
-        lambda n: "{}.{}{}".format(n.first_name, n.last_name, n.sequence)
+        lambda n: "{}.{}{}".format(
+            n.first_name.lower(), n.last_name.lower(), n.sequence
+        )
     )
 
     # requisitioner = RelatedFactory(
@@ -152,7 +148,7 @@ class UrgencyFactory(DjangoModelFactory):
         exclude = ["name_base"]
 
     name_base = Faker("word")
-    name = LazyAttributeSequence(lambda b, n: "{}{}".format(b.name_base, n))
+    name = LazyAttributeSequence(lambda b, n: f"{b.name_base}{n}")
 
     # name = Faker("word")
     note = Faker("text", max_nb_chars=25)
