@@ -10,15 +10,19 @@
   {% url 'new_pr' %}
 {% endblock new_url %}
 {% block page %}
-  {% comment %} <style>
-    .inline {
-      --bs-btn-padding-y: 0rem
-    }
-  </style> {% endcomment %}
-  {% include "purchases/purchaserequest_list_table.html" %}
+  <div class="dtsp-verticalContainer">
+    <div class="dtsp-verticalPanes"></div>
+    <div class="container">
+      <table class="display nowrap" id="purchase_requests" width="100%">
+        {% include "purchases/purchaserequest_list_table.html" %}
+      </table>
+    </div>
+  </div>
   <script>
     $(document).ready( function () {
       var table = $('#purchase_requests').DataTable({
+        order: [[1, "desc"]],
+        responsive: true,
         "language": {
           emptyTable: "No records to show, check your filters if any..."
         },
@@ -26,15 +30,25 @@
           layout: 'columns-1',
           i18n: {
             emptyPanes: null
-          }
+          },
         },
-        dom: '<"dtsp-dataTable"frtip>',
-        pageLength: 20
+        columnDefs: [
+          { orderable: false, targets: 6 },
+          { visible: false, targets: 4 },
+          { searchPanes: {
+             className: "openPRClass"
+            },
+            targets: 4,
+          }
+        ],
+        dom: '<"dtsp-dataTable"Pprtilp>',
+        pageLength: 10
       });
       table.searchPanes()
       let verticalPanes = $("div.dtsp-verticalPanes");
-      verticalPanes.append(table.searchPanes.container());
-      if ($("dtsp-hidden")) {
+      let verticalContainer = table.searchPanes.container()
+      verticalPanes.append(verticalContainer);
+      if (verticalContainer.hasClass("dtsp-hidden")) {
         verticalPanes.remove()
       }
     });

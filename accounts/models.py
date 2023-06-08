@@ -49,7 +49,7 @@ class Account(BaseModel):
         max_length=30,
         unique=True,
     )
-    cost_center = models.CharField(max_length=15, null=True)
+    cost_center = models.CharField(max_length=15, blank=True)
     starting_balance = MoneyField(
         _("starting balance"), max_digits=14, decimal_places=2, default_currency="USD"
     )

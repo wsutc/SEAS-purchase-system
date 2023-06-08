@@ -24,5 +24,9 @@
     "python.linting.enabled": true,
     "python.analysis.extraPaths": [
         "./django-listview-filters/src"
-    ]
+    ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "python.formatting.provider": "none"
 }

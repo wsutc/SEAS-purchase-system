@@ -66,6 +66,8 @@
   <script>
     $(document).ready( function () {
       var table = $('#simple_items').DataTable({
+        order: [[1, "asc"], [2, "asc"], [0, "asc"]],
+        responsive: true,
         "language": {
           emptyTable: "No records to show, check your filters if any..."
         },
@@ -76,14 +78,16 @@
           }
         },
         columnDefs: [
+          { orderable: false, targets: 6}
         ],
-        dom: '<"dtsp-dataTable"frtip>',
-        pageLength: 20
+        dom: '<"dtsp-dataTable"prtilp>',
+        pageLength: 10
       });
       table.searchPanes()
       let verticalPanes = $("div.dtsp-verticalPanes");
-      verticalPanes.append(table.searchPanes.container());
-      if ($("dtsp-hidden")) {
+      let verticalContainer = table.searchPanes.container()
+      verticalPanes.append(verticalContainer);
+      if (verticalContainer.hasClass("dtsp-hidden")) {
         verticalPanes.remove()
       }
 

@@ -8,7 +8,7 @@
 {% endblock new_url %}
 {% block page %}
   <div class="dtsp-verticalContainer">
-    <div class="dtsp-verticalP"></div>
+    <div class="dtsp-verticalPanes"></div>
     <div class="container">
       <table class="display nowrap" id="vendors" width="100%">
         <thead>
@@ -49,6 +49,7 @@
     <script>
     $(document).ready( function () {
       var table = $('#vendors').DataTable({
+        responsive: true,
         "language": {
           emptyTable: "No records to show, check your filters if any..."
         },
@@ -58,13 +59,17 @@
             emptyPanes: null
           }
         },
-        dom: '<"dtsp-dataTable"frtip>',
-        pageLength: 20
+        columnDefs: [
+          { orderable: false, targets: 2}
+        ],
+        dom: '<"dtsp-dataTable"prftilp>',
+        pageLength: 10
       });
       table.searchPanes()
       let verticalPanes = $("div.dtsp-verticalPanes");
-      verticalPanes.append(table.searchPanes.container());
-      if ($("dtsp-hidden")) {
+      let verticalContainer = table.searchPanes.container()
+      verticalPanes.append(verticalContainer);
+      if (verticalContainer.hasClass("dtsp-hidden")) {
         verticalPanes.remove()
       }
 

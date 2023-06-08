@@ -2,7 +2,7 @@ import datetime
 import logging
 from decimal import Decimal
 
-from django.conf import settings
+# from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 
@@ -63,7 +63,7 @@ from web_project.helpers import (  # truncate_string,; print_attributes,
 logger = logging.getLogger(__name__)
 
 
-class VendorListView(PaginatedListMixin, ListView):
+class VendorListView(ListView):
     context_object_name = "vendors"
     queryset = Vendor.objects.all()
 
@@ -153,9 +153,9 @@ class VendorOrderCurrentListView(VendorOrderListView):
     queryset = VendorOrder.objects.filter(purchase_requests__status__open=True)
 
 
-class SimpleProductListView(PaginatedListMixin, ListView):
+class SimpleProductListView(ListView):
     context_object_name = "simpleproduct"
-    queryset = SimpleProduct.objects.order_by("purchase_request__vendor", "name")
+    queryset = SimpleProduct.objects.all()
     list_filter = [
         ("purchase_request__vendor", RelatedFieldListViewFilter),
         ("purchase_request__requisitioner", RelatedFieldListViewFilter),
@@ -167,33 +167,6 @@ class SimpleProductListView(PaginatedListMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # TODO: make this more elegant
-        # sort vendor as lower case (python sorts lower different than upper by default)
-        filter_name = "purchase_request__vendor"
-
-        # django-listview-filters added `get_filter_by_name` in later versions
-        # (should be removed)
-        try:
-            filter = self.get_filter_by_name(filter_name)
-        except Exception:
-            if len(self.filter_specs) > 0:
-                for filter_spec in self.filter_specs:
-                    filter = (
-                        filter_spec if filter_spec.field_path == filter_name else None
-                    )
-            else:
-                filter = None
-
-        if filter:
-            filter.lookup_choices = sorted(
-                filter.lookup_choices, key=lambda x: x[1].lower()
-            )
-
-            if settings.DEBUG:
-                for counter, choice in enumerate(filter.lookup_choices):
-                    logger.debug(f"Choice {counter}: {choice}")
-
-        # add context for max digits of unit price field for formatting
         qs = context["object_list"]
 
         unitprice_values = qs.values_list("unit_price", flat=True)
@@ -243,14 +216,14 @@ class SimpleProductPRListView(SimpleProductListView):
         return context
 
 
-class PurchaseRequestListViewBase(PaginatedListMixin, ListView):
+class PurchaseRequestListViewBase(ListView):
     context_object_name = "purchaserequests"
-    queryset = PurchaseRequest.objects.order_by("-created_date")
-    list_filter = [
-        ("status", RelatedFieldListViewFilter),
-        ("vendor", RelatedFieldListViewFilter),
-        ("requisitioner", RelatedFieldListViewFilter),
-    ]
+    queryset = PurchaseRequest.objects.all()
+    # list_filter = [
+    #     ("status", RelatedFieldListViewFilter),
+    #     ("vendor", RelatedFieldListViewFilter),
+    #     ("requisitioner", RelatedFieldListViewFilter),
+    # ]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -274,7 +247,7 @@ class PurchaseRequestListView(PurchaseRequestListViewBase):
         #     parent_model="PR"
         # ).order_by("rank")
 
-        context["show_link"] = (_("show open"), "open_pr")
+        # context["show_link"] = (_("show open"), "open_pr")
 
         return context
 
@@ -431,10 +404,10 @@ class RequisitionerDetailView(DetailView):
     query_pk_and_slug = True
 
 
-class RequisitionerListView(PaginatedListMixin, ListView):
+class RequisitionerListView(ListView):
     context_object_name = "requisitioners"
     # admin_user = User.objects.filter(username="admin").first()
-    queryset = Requisitioner.objects.exclude(user__username="admin").order_by("user")
+    queryset = Requisitioner.objects.exclude(user__username="admin").all()
 
 
 class RequisitionerUpdateView(UpdateView):

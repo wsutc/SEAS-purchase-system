@@ -24,10 +24,11 @@ env = environ.Env(DEBUG=(bool, False))
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-DEV_MACHINES = ["tc-metech-5080", "wtsmain-m01"]
+DEV_MACHINES = ["tc-metech-5080", "wtsmain-m01", "wtsmain-linux"]
 
 hostname = gethostname()
 if hostname.lower() in DEV_MACHINES:
+    print(f"Current hostname: {hostname}")
     READ_DOT_ENV_FILE = True
 else:
     READ_DOT_ENV_FILE = env.bool("DJANGO_READ_DOT_ENV_FILE", default=False)
