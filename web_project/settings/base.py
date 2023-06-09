@@ -138,6 +138,7 @@ MIDDLEWARE = [
     "web_project.helpers.LoginRequiredMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django_cprofile_middleware.middleware.ProfileMiddleware",
 ]
 
 ROOT_URLCONF = "web_project.urls"

@@ -217,39 +217,30 @@ class SimpleProductPRListView(SimpleProductListView):
 
 
 class PurchaseRequestListViewBase(ListView):
-    context_object_name = "purchaserequests"
-    queryset = PurchaseRequest.objects.all()
+    model = PurchaseRequest
+    # context_object_name = "purchaserequests"
+    # queryset = PurchaseRequest.objects.all()
     # list_filter = [
     #     ("status", RelatedFieldListViewFilter),
     #     ("vendor", RelatedFieldListViewFilter),
     #     ("requisitioner", RelatedFieldListViewFilter),
     # ]
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    # def get_context_data(self, **kwargs):
+    #     context = super().get_context_data(**kwargs)
 
-        context["purchase_request_statuses"] = Status.objects.filter(
-            parent_model="PR"
-        ).order_by("rank")
+    #     context["purchase_request_statuses"] = Status.objects.filter(
+    #         parent_model="PR"
+    #     ).order_by("rank")
 
-        return context
+    #     return context
 
     class Meta:
         abstract = True
 
 
-class PurchaseRequestListView(PurchaseRequestListViewBase):
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        # ------- sort statuses by 'rank' ---------------
-        # context["purchase_request_statuses"] = Status.objects.filter(
-        #     parent_model="PR"
-        # ).order_by("rank")
-
-        # context["show_link"] = (_("show open"), "open_pr")
-
-        return context
+class PurchaseRequestListView(ListView):
+    model = PurchaseRequest
 
 
 class RequisitionerPurchaseRequestListView(PurchaseRequestListViewBase):
