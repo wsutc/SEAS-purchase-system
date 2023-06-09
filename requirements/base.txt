@@ -14,6 +14,7 @@ django-modelclone-next==0.8.2
 django-money==3.1.0
 django-phonenumber-field==6.1.0
 django-select2==7.10.0
+django-silk==5.0.3
 django-widget-tweaks==1.4.12
 fdfgen==0.16.1
 furl==2.1.3

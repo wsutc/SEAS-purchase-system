@@ -85,7 +85,23 @@ else:
 plog(text="last 4 of secret key", value=SECRET_KEY[-4:], **log_kwargs)
 plog(text="Current hostname", value=hostname, **log_kwargs)
 
-DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
+DEBUG_TOOLBAR_CONFIG = {
+    "DISABLE_PANELS": {
+        # 'debug_toolbar.panels.history.HistoryPanel',
+        # 'debug_toolbar.panels.versions.VersionsPanel',
+        # 'debug_toolbar.panels.timer.TimerPanel',
+        "debug_toolbar.panels.settings.SettingsPanel",
+        "debug_toolbar.panels.headers.HeadersPanel",
+        "debug_toolbar.panels.request.RequestPanel",
+        "debug_toolbar.panels.sql.SQLPanel",
+        "debug_toolbar.panels.staticfiles.StaticFilesPanel",
+        "debug_toolbar.panels.templates.TemplatesPanel",
+        "debug_toolbar.panels.cache.CachePanel",
+        "debug_toolbar.panels.signals.SignalsPanel",
+        "debug_toolbar.panels.redirects.RedirectsPanel",
+        # 'debug_toolbar.panels.profiling.ProfilingPanel',
+    },
+}
 
 # Application definition
 
@@ -110,7 +126,7 @@ _THIRD_PARTY_APPS = [
     "django_gravatar",
     "django_listview_filters",
     "phonenumber_field",
-    # "debug_toolbar",
+    "debug_toolbar",
     "djmoney",
     "django_select2",
     "modelclone",
@@ -134,7 +150,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "silk.middleware.SilkyMiddleware",
-    # "debug_toolbar.middleware.DebugToolbarMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -401,47 +417,8 @@ GRAVATAR_DEFAULT_IMAGE = "retro"
 GRAVATAR_DEFAULT_RATING = "g"
 
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
+SILKY_AUTHORISATION = True
 SILKY_META = True
-SILKY_PYTHON_PROFILER = True
-SILKY_PYTHON_PROFILER_BINARY = True
-SILKY_DYNAMIC_PROFILING = [
-    # {
-    #     "module": "django.utils.deprecation",
-    #     "function": "MiddlewareMixin.__call__",
-    # },
-    {
-        "module": "django.core.handlers.exception",
-        "function": "convert_exception_to_response",
-    },
-    {
-        "module": "django.core.handlers.exception",
-        "function": "get_exception_response",
-        "name": "get_exception_response",
-    },
-    {
-        "module": "django.shortcuts",
-        "function": "render",
-        "name": "django.shortcuts.render",
-    },
-    # {
-    # "module": "django.core.handlers.base",
-    # "function": "BaseHandler.get_response",
-    # },
-    {
-        "module": "web_project.helpers",
-        "function": "LoginRequiredMiddleware.process_view",
-    },
-    # {
-    #     "module": "django.core.handlers.exception",
-    #     "function": "convert_exception_to_response.inner",
-    # },
-    # {
-    #     "module": "web_project.helpers",
-    #     "function": "LoginRequiredMiddleware.__call__",
-    # },
-]
-
-DEBUG_PROPAGATE_EXCEPTIONS = True
 
 CONSTANCE_CONFIG = {
     # "SILKY_PYTHON_PROFILER": (
