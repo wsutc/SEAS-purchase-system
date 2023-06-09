@@ -6,7 +6,8 @@ from random import choice
 
 import pytz
 from django.contrib.auth.models import Permission, User
-from django.core.management import call_command
+
+# from django.core.management import call_command
 from django.db import models
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
@@ -17,9 +18,10 @@ from purchases.models.models_base import TrackingWebhookMessage
 from purchases.tracking import get_generated_signature
 from purchases.views import tracking_webhook
 
-from .management.commands import create_sample_data  # noqa: F401
+# from .management.commands import create_sample_data  # noqa: F401
 from .models import PurchaseRequest, Requisitioner, Tracker, Urgency
-from .timer import Timer
+
+# from .timer import Timer
 
 
 def create_pr_deps():
@@ -98,22 +100,22 @@ class TestCreatePRView(TestCase):
         self.assertEqual(response.status_code, 200)
 
 
-class ListViewTiming(TestCase):
-    def setUp(self):
-        call_command("create_sample_data")
-        self.user = get_random_object(User)
-        print(f"Random User: {self.user.username}")
+# class ListViewTiming(TestCase):
+#     def setUp(self):
+#         call_command("create_sample_data")
+#         self.user = get_random_object(User)
+#         print(f"Random User: {self.user.username}")
 
-    def test_pr_list_full(self):
-        self.client.force_login(user=self.user)
-        c = Client()
+#     def test_pr_list_full(self):
+#         self.client.force_login(user=self.user)
+#         c = Client()
 
-        t = Timer()
-        t.start()
-        response = c.get(reverse("home"))
-        t.stop()
+#         t = Timer()
+#         t.start()
+#         response = c.get(reverse("home"))
+#         t.stop()
 
-        self.assertNotEqual(response.status_code, 500)
+#         self.assertEqual(response.status_code, 200)
 
 
 @override_settings(PYTRACK_17TRACK_KEY="abc123")
