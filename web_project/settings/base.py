@@ -419,6 +419,7 @@ GRAVATAR_DEFAULT_RATING = "g"
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
 SILKY_AUTHORISATION = True
 SILKY_META = True
+SILKY_PYTHON_PROFILER = env.bool("SILKY_PYTHON_PROFILER", default="False")
 
 CONSTANCE_CONFIG = {
     # "SILKY_PYTHON_PROFILER": (
