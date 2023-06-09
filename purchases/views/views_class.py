@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 # from django.contrib.auth.models import User
 from django.db.models import ExpressionWrapper, F, OuterRef, Subquery, Sum
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import (
@@ -25,6 +25,7 @@ from django_listview_filters.filters import (  # AllValuesFieldListFilter,
     RelatedFieldListViewFilter,
 )
 from djmoney.models.fields import MoneyField
+from silk.profiling.profiler import silk_profile
 
 from globals.models import DefaultValue
 from purchases.forms import (
@@ -217,39 +218,36 @@ class SimpleProductPRListView(SimpleProductListView):
 
 
 class PurchaseRequestListViewBase(ListView):
-    context_object_name = "purchaserequests"
-    queryset = PurchaseRequest.objects.all()
+    model = PurchaseRequest
+    # context_object_name = "purchaserequests"
+    # queryset = PurchaseRequest.objects.all()
     # list_filter = [
     #     ("status", RelatedFieldListViewFilter),
     #     ("vendor", RelatedFieldListViewFilter),
     #     ("requisitioner", RelatedFieldListViewFilter),
     # ]
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    # def get_context_data(self, **kwargs):
+    #     context = super().get_context_data(**kwargs)
 
-        context["purchase_request_statuses"] = Status.objects.filter(
-            parent_model="PR"
-        ).order_by("rank")
+    #     context["purchase_request_statuses"] = Status.objects.filter(
+    #         parent_model="PR"
+    #     ).order_by("rank")
 
-        return context
+    #     return context
 
     class Meta:
         abstract = True
 
 
-class PurchaseRequestListView(PurchaseRequestListViewBase):
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        # ------- sort statuses by 'rank' ---------------
-        # context["purchase_request_statuses"] = Status.objects.filter(
-        #     parent_model="PR"
-        # ).order_by("rank")
-
-        # context["show_link"] = (_("show open"), "open_pr")
-
-        return context
+class PurchaseRequestListView(ListView):
+    # model = PurchaseRequest
+    @silk_profile(name="PR List View")
+    def get(self, request):
+        pr = PurchaseRequest.objects.all()
+        return render(
+            request, "purchases/purchaserequest_list.html", {"object_list": pr}
+        )
 
 
 class RequisitionerPurchaseRequestListView(PurchaseRequestListViewBase):

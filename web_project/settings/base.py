@@ -85,7 +85,23 @@ else:
 plog(text="last 4 of secret key", value=SECRET_KEY[-4:], **log_kwargs)
 plog(text="Current hostname", value=hostname, **log_kwargs)
 
-DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
+DEBUG_TOOLBAR_CONFIG = {
+    "DISABLE_PANELS": {
+        # 'debug_toolbar.panels.history.HistoryPanel',
+        # 'debug_toolbar.panels.versions.VersionsPanel',
+        # 'debug_toolbar.panels.timer.TimerPanel',
+        "debug_toolbar.panels.settings.SettingsPanel",
+        "debug_toolbar.panels.headers.HeadersPanel",
+        "debug_toolbar.panels.request.RequestPanel",
+        "debug_toolbar.panels.sql.SQLPanel",
+        "debug_toolbar.panels.staticfiles.StaticFilesPanel",
+        "debug_toolbar.panels.templates.TemplatesPanel",
+        "debug_toolbar.panels.cache.CachePanel",
+        "debug_toolbar.panels.signals.SignalsPanel",
+        "debug_toolbar.panels.redirects.RedirectsPanel",
+        # 'debug_toolbar.panels.profiling.ProfilingPanel',
+    },
+}
 
 # Application definition
 
@@ -102,6 +118,8 @@ _DJANGO_APPS = [
 ]
 
 _THIRD_PARTY_APPS = [
+    "silk",
+    # "constance",
     "bootstrap_datepicker_plus",
     "crispy_bootstrap5",
     "crispy_forms",
@@ -113,6 +131,7 @@ _THIRD_PARTY_APPS = [
     "django_select2",
     "modelclone",
     "widget_tweaks",
+    # "constance.backends.database",
 ]
 
 _LOCAL_APPS = [
@@ -128,16 +147,19 @@ _LOCAL_APPS = [
 INSTALLED_APPS = _DJANGO_APPS + _THIRD_PARTY_APPS + _LOCAL_APPS
 
 MIDDLEWARE = [
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "silk.middleware.SilkyMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # "login_required.middleware.LoginRequiredMiddleware",
     "web_project.helpers.LoginRequiredMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # "django_cprofile_middleware.middleware.ProfilerMiddleware",
 ]
 
 ROOT_URLCONF = "web_project.urls"
@@ -293,7 +315,8 @@ INTERNAL_IPS = ("127.0.0.1",)
 # EMAIL
 # -----------------------------------------------------------------------------
 EMAIL_BACKEND = env(
-    "DJANGO_EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend"
+    "DJANGO_EMAIL_BACKEND",
+    default="django.core.mail.backends.smtp.EmailBackend",
 )
 
 EMAIL_TIMEOUT = 5
@@ -392,6 +415,36 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 GRAVATAR_DEFAULT_IMAGE = "retro"
 GRAVATAR_DEFAULT_RATING = "g"
+
+CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
+SILKY_AUTHORISATION = True
+SILKY_META = True
+
+CONSTANCE_CONFIG = {
+    # "SILKY_PYTHON_PROFILER": (
+    #     False,
+    #     "Whether to run the Silk Profiler.",
+    #     bool,
+    # ),
+    # "SILKY_INTERCEPT_PERCENT": (
+    #     100,
+    #     (
+    #         "What percent of requests to log; set to 0 to prevent Silk from "
+    #         "collecting any data."
+    #     ),
+    #     int,
+    # ),
+    # "SILKY_META": (
+    #     False,
+    #     "Whether to show the effect of Slik on the request.",
+    #     bool,
+    # ),
+    # "SILKY_PYTHON_PROFILER_BINARY": (
+    #     False,
+    #     "Generate binary .prof file.",
+    #     bool,
+    # ),
+}
 
 # CUSTOM
 # -------------------------------------------------------------------

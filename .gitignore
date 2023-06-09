@@ -107,6 +107,7 @@ celerybeat.pid
 .env
 .venv
 .venv4.0.x
+.venv*
 env/
 venv/
 ENV/

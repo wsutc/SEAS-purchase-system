@@ -31,9 +31,10 @@
       "name": "Python: Django - allcode",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}\\manage.py",
+      "program": "${workspaceFolder}/manage.py",
       "args": [
-        "runserver"
+        "runserver",
+        "${input:randomPort}"
       ],
       "django": true,
       "justMyCode": false
