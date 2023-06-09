@@ -8,6 +8,8 @@ from types import FunctionType
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.auth.decorators import login_required
+
+# from django.contrib.auth.middleware import AuthenticationMiddleware
 from django.http import HttpRequest
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -15,6 +17,8 @@ from django.views.generic import ListView, View
 from django.views.generic.list import MultipleObjectMixin
 from django_listview_filters.mixins import FilterViewMixin
 from furl import furl
+
+# from silk.profiling.profiler import silk_profile
 
 
 def paginate(view: ListView, **kwargs) -> tuple[bool, HTTPResponse]:
@@ -292,7 +296,11 @@ def sort_title(title: str) -> str:
 
 # -------------------------- Debug tools/helpers ----------------------------------
 def plog(
-    logger: logging.Logger, level: int, path: str, text: str, value: (str | float)
+    logger: logging.Logger,
+    level: int,
+    path: str,
+    text: str,
+    value: (str | float),
 ):
     message = f"`{path}` {text}: {value}"
     logger.log(level, message)
@@ -322,6 +330,7 @@ def login_exempt(view):
 
 
 class LoginRequiredMiddleware:
+    # @silk_profile(name="Login Required Middleware")
     def __init__(self, get_response):
         self.get_response = get_response
 
@@ -379,11 +388,9 @@ class AdminResponseMixin(admin.ModelAdmin):
     """
 
     def response_change(self, request, obj, post_url_continue=...):
-
         return redirect_object_or_next(obj, request)
 
     def response_delete(self, request, obj, post_url_continue=...):
-
         return redirect_object_or_next(obj, request)
 
 

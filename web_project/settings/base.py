@@ -102,17 +102,20 @@ _DJANGO_APPS = [
 ]
 
 _THIRD_PARTY_APPS = [
+    "silk",
+    # "constance",
     "bootstrap_datepicker_plus",
     "crispy_bootstrap5",
     "crispy_forms",
     "django_gravatar",
     "django_listview_filters",
     "phonenumber_field",
-    "debug_toolbar",
+    # "debug_toolbar",
     "djmoney",
     "django_select2",
     "modelclone",
     "widget_tweaks",
+    # "constance.backends.database",
 ]
 
 _LOCAL_APPS = [
@@ -128,17 +131,19 @@ _LOCAL_APPS = [
 INSTALLED_APPS = _DJANGO_APPS + _THIRD_PARTY_APPS + _LOCAL_APPS
 
 MIDDLEWARE = [
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "silk.middleware.SilkyMiddleware",
+    # "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "web_project.helpers.LoginRequiredMiddleware",
+    "login_required.middleware.LoginRequiredMiddleware",
+    # "web_project.helpers.LoginRequiredMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "django_cprofile_middleware.middleware.ProfileMiddleware",
+    # "django_cprofile_middleware.middleware.ProfilerMiddleware",
 ]
 
 ROOT_URLCONF = "web_project.urls"
@@ -394,6 +399,75 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 GRAVATAR_DEFAULT_IMAGE = "retro"
 GRAVATAR_DEFAULT_RATING = "g"
+
+CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
+SILKY_META = True
+SILKY_PYTHON_PROFILER = True
+SILKY_PYTHON_PROFILER_BINARY = True
+SILKY_DYNAMIC_PROFILING = [
+    # {
+    #     "module": "django.utils.deprecation",
+    #     "function": "MiddlewareMixin.__call__",
+    # },
+    {
+        "module": "django.core.handlers.exception",
+        "function": "convert_exception_to_response",
+    },
+    {
+        "module": "django.core.handlers.exception",
+        "function": "get_exception_response",
+        "name": "get_exception_response",
+    },
+    {
+        "module": "django.shortcuts",
+        "function": "render",
+        "name": "django.shortcuts.render",
+    },
+    # {
+    # "module": "django.core.handlers.base",
+    # "function": "BaseHandler.get_response",
+    # },
+    {
+        "module": "web_project.helpers",
+        "function": "LoginRequiredMiddleware.process_view",
+    },
+    # {
+    #     "module": "django.core.handlers.exception",
+    #     "function": "convert_exception_to_response.inner",
+    # },
+    # {
+    #     "module": "web_project.helpers",
+    #     "function": "LoginRequiredMiddleware.__call__",
+    # },
+]
+
+DEBUG_PROPAGATE_EXCEPTIONS = True
+
+CONSTANCE_CONFIG = {
+    # "SILKY_PYTHON_PROFILER": (
+    #     False,
+    #     "Whether to run the Silk Profiler.",
+    #     bool,
+    # ),
+    # "SILKY_INTERCEPT_PERCENT": (
+    #     100,
+    #     (
+    #         "What percent of requests to log; set to 0 to prevent Silk from "
+    #         "collecting any data."
+    #     ),
+    #     int,
+    # ),
+    # "SILKY_META": (
+    #     False,
+    #     "Whether to show the effect of Slik on the request.",
+    #     bool,
+    # ),
+    # "SILKY_PYTHON_PROFILER_BINARY": (
+    #     False,
+    #     "Generate binary .prof file.",
+    #     bool,
+    # ),
+}
 
 # CUSTOM
 # -------------------------------------------------------------------

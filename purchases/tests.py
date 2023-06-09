@@ -2,9 +2,12 @@ import json
 from datetime import datetime, timedelta
 from http import HTTPStatus
 from json import JSONDecodeError
+from random import choice
 
 import pytz
 from django.contrib.auth.models import Permission, User
+from django.core.management import call_command
+from django.db import models
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from model_bakery import baker
@@ -14,7 +17,9 @@ from purchases.models.models_base import TrackingWebhookMessage
 from purchases.tracking import get_generated_signature
 from purchases.views import tracking_webhook
 
+from .management.commands import create_sample_data  # noqa: F401
 from .models import PurchaseRequest, Requisitioner, Tracker, Urgency
+from .timer import Timer
 
 
 def create_pr_deps():
@@ -38,6 +43,13 @@ def create_pr_deps():
     }
 
     return rvalue
+
+
+def get_random_object(model: models):
+    pk_list = model.objects.values_list("pk", flat=True)
+    random_pk = choice(pk_list)
+
+    return model.objects.get(pk=random_pk)
 
 
 class PurchaseRequestTestModel(TestCase):
@@ -82,7 +94,26 @@ class TestCreatePRView(TestCase):
 
         self.client.force_login(user=self.user)
         response = self.client.get(reverse("new_pr"))
+        print(f"response.status_code: {response.status_code}")
         self.assertEqual(response.status_code, 200)
+
+
+class ListViewTiming(TestCase):
+    def setUp(self):
+        call_command("create_sample_data")
+        self.user = get_random_object(User)
+        print(f"Random User: {self.user.username}")
+
+    def test_pr_list_full(self):
+        self.client.force_login(user=self.user)
+        c = Client()
+
+        t = Timer()
+        t.start()
+        response = c.get(reverse("home"))
+        t.stop()
+
+        self.assertNotEqual(response.status_code, 500)
 
 
 @override_settings(PYTRACK_17TRACK_KEY="abc123")
@@ -108,7 +139,9 @@ class TrackingWebhookTests(TestCase):
         assert response.status_code == HTTPStatus.FORBIDDEN
 
     def test_bad_token(self):
-        response = self.client.post(reverse(tracking_webhook), HTTP_SIGN="def456")
+        response = self.client.post(
+            reverse(tracking_webhook), headers={"sign": "def456"}
+        )
 
         assert response.status_code == HTTPStatus.FORBIDDEN
         assert response.content.decode() == "Inconsistency in response signature."
@@ -135,7 +168,7 @@ class TrackingWebhookTests(TestCase):
 
         response = self.client.post(
             reverse(tracking_webhook),
-            HTTP_SIGN=sign,
+            headers={"sign": sign},
             content_type="application/json",
             data=WEBHOOK_DATA,
         )
@@ -215,7 +248,11 @@ WEBHOOK_DATA = {
             "days_of_transit": 4,
             "days_of_transit_done": 4,
             "days_after_last_update": 0,
-            "estimated_delivery_date": {"source": null, "from": null, "to": null},
+            "estimated_delivery_date": {
+                "source": null,
+                "from": null,
+                "to": null,
+            },
         },
         "milestone": [
             {
@@ -226,7 +263,11 @@ WEBHOOK_DATA = {
             {"key_stage": "PickedUp", "time_iso": null, "time_utc": null},
             {"key_stage": "Departure", "time_iso": null, "time_utc": null},
             {"key_stage": "Arrival", "time_iso": null, "time_utc": null},
-            {"key_stage": "AvailableForPickup", "time_iso": null, "time_utc": null},
+            {
+                "key_stage": "AvailableForPickup",
+                "time_iso": null,
+                "time_utc": null,
+            },
             {
                 "key_stage": "OutForDelivery",
                 "time_iso": "2022-04-04T08:46:06-07:00",
@@ -282,7 +323,10 @@ WEBHOOK_DATA = {
                                 "city": "GASQUET",
                                 "street": null,
                                 "postal_code": null,
-                                "coordinates": {"longitude": null, "latitude": null},
+                                "coordinates": {
+                                    "longitude": null,
+                                    "latitude": null,
+                                },
                             },
                         },
                         {
@@ -297,7 +341,10 @@ WEBHOOK_DATA = {
                                 "city": "Crescent City",
                                 "street": null,
                                 "postal_code": null,
-                                "coordinates": {"longitude": null, "latitude": null},
+                                "coordinates": {
+                                    "longitude": null,
+                                    "latitude": null,
+                                },
                             },
                         },
                         {
@@ -312,7 +359,10 @@ WEBHOOK_DATA = {
                                 "city": "Anderson",
                                 "street": null,
                                 "postal_code": null,
-                                "coordinates": {"longitude": null, "latitude": null},
+                                "coordinates": {
+                                    "longitude": null,
+                                    "latitude": null,
+                                },
                             },
                         },
                         {
@@ -327,7 +377,10 @@ WEBHOOK_DATA = {
                                 "city": "Ontario",
                                 "street": null,
                                 "postal_code": null,
-                                "coordinates": {"longitude": null, "latitude": null},
+                                "coordinates": {
+                                    "longitude": null,
+                                    "latitude": null,
+                                },
                             },
                         },
                         {
@@ -342,7 +395,10 @@ WEBHOOK_DATA = {
                                 "city": null,
                                 "street": null,
                                 "postal_code": null,
-                                "coordinates": {"longitude": null, "latitude": null},
+                                "coordinates": {
+                                    "longitude": null,
+                                    "latitude": null,
+                                },
                             },
                         },
                     ],

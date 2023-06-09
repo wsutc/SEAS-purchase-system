@@ -36,9 +36,7 @@
               <td>
                 <a href="{{ o.vendor.get_absolute_url }}">{{ o.vendor }}</a>
               </td>
-              <td class="dropdown align-right">
-                {% include "purchases/status_change_button.html" with purchase_request=o %}
-              </td>
+              <td class="dropdown align-right">{% include "purchases/status_change_button.html" with purchase_request=o %}</td>
               <td>{{ o.status.open }}</td>
               {% comment %} <td>{{ o.get_status_display }}</td> {% endcomment %}
               <td>{{ o.grand_total }}</td>
