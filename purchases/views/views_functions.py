@@ -10,7 +10,13 @@ from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import mail_admins
 from django.db.transaction import atomic, non_atomic_requests
-from django.http import FileResponse, HttpRequest, HttpResponse, HttpResponseForbidden
+from django.http import (
+    FileResponse,
+    HttpRequest,
+    HttpResponse,
+    HttpResponseForbidden,
+    JsonResponse,
+)
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -33,9 +39,11 @@ from ..models import (
     Balance,
     Carrier,
     PurchaseRequest,
+    Requisitioner,
     Status,
     Tracker,
     TrackingWebhookMessage,
+    Vendor,
 )
 from ..tracking import TrackerObject, get_generated_signature, update_tracking_details
 
@@ -45,7 +53,7 @@ logger = logging.getLogger(__name__)
 
 
 def update_pr_status(request: HttpRequest, slug: str, *args, **kwargs) -> HttpResponse:
-    new_status = request.GET.get("status", None)
+    new_status = request.GET.get("status")
 
     redirect_url = redirect_to_next(request, "purchaserequest_detail", slug=slug)
     return_redirect = redirect(redirect_url)
@@ -95,7 +103,6 @@ def flush_old_webhooks(days_offset: int) -> int:
 @require_POST
 @non_atomic_requests
 def tracking_webhook(request):
-
     if request.method == "HEAD":
         response = HttpResponse(
             "Message successfully received.", content_type="text/plain"
@@ -118,7 +125,8 @@ def tracking_webhook(request):
                     message=f"Token does not match signature: {given_token}",
                 )
                 return HttpResponseForbidden(
-                    "Inconsistency in response signature.", content_type="text/plain"
+                    "Inconsistency in response signature.",
+                    content_type="text/plain",
                 )
 
             payload = json.loads(request.body)
@@ -206,7 +214,9 @@ def generate_pr_pdf(request, slug):
         canvas.saveState()
         w, h = content.wrap(doc.width, doc.topMargin)
         content.drawOn(
-            canvas, doc.leftMargin, doc.height + doc.bottomMargin + doc.topMargin - h
+            canvas,
+            doc.leftMargin,
+            doc.height + doc.bottomMargin + doc.topMargin - h,
         )
         canvas.restoreState()
 
@@ -295,7 +305,12 @@ def generate_pr_pdf(request, slug):
             "Email",
             purchase_request.requisitioner.user.email,
         ],
-        ["Address", address_line, "Phone", purchase_request.requisitioner.phone],
+        [
+            "Address",
+            address_line,
+            "Phone",
+            purchase_request.requisitioner.phone,
+        ],
         ["", "", "Department", purchase_request.requisitioner.department.code],
         ["Phone", purchase_request.vendor.phone],
         ["Email", purchase_request.vendor.email],
@@ -336,7 +351,15 @@ def generate_pr_pdf(request, slug):
 
     # Define Table
     data = [
-        ["Description", "Identifier", "Vendor ID", "QTY", "Unit", "Price", "Ext. Price"]
+        [
+            "Description",
+            "Identifier",
+            "Vendor ID",
+            "QTY",
+            "Unit",
+            "Price",
+            "Ext. Price",
+        ]
     ]
 
     # Create rows for each item
@@ -356,7 +379,15 @@ def generate_pr_pdf(request, slug):
     sw = doc.width / 100
 
     # Use the sw to generate a table that is exactly the same width as doc.width
-    column_widths = [38 * sw, 14 * sw, 14 * sw, 7 * sw, 7 * sw, 8 * sw, 12 * sw]
+    column_widths = [
+        38 * sw,
+        14 * sw,
+        14 * sw,
+        7 * sw,
+        7 * sw,
+        8 * sw,
+        12 * sw,
+    ]
 
     items_table = Table(data, colWidths=column_widths)  # Create table
 
@@ -370,7 +401,12 @@ def generate_pr_pdf(request, slug):
                 ("FONTNAME", (0, 1), (-1, 0), "Helvetica"),
                 ("ALIGN", (1, 1), (-3, -1), "CENTER"),
                 ("ALIGN", (-2, 1), (-1, -5), "RIGHT"),
-                ("ROWBACKGROUNDS", (0, 1), (-1, -5), [colors.aliceblue, colors.white]),
+                (
+                    "ROWBACKGROUNDS",
+                    (0, 1),
+                    (-1, -5),
+                    [colors.aliceblue, colors.white],
+                ),
                 ("BOX", (0, 0), (-1, -5), 0.5, colors.black),
                 ("INNERGRID", (0, 0), (-1, -5), 0.1, colors.darkgray),
                 # ('BOX',(-3,-4),(-1,-1),0.5,colors.black),
@@ -464,7 +500,8 @@ def update_tracker(request, pk, *args, **kwargs):
         )
     except Exception:
         messages.error(
-            request, "Unknown error updating tracker, please contact site admin."
+            request,
+            "Unknown error updating tracker, please contact site admin.",
         )
         logger.error("Unknown exception running `update_tracker`.", exc_info=1)
     else:
@@ -507,7 +544,6 @@ def update_tracker(request, pk, *args, **kwargs):
 
 
 def update_purchase_request_totals(request, slug):
-
     redirect_url = redirect_to_next(request, "purchaserequest_detail", slug=slug)
     return_redirect = redirect(redirect_url)
 
@@ -529,3 +565,31 @@ def update_purchase_request_totals(request, slug):
         )
 
     return return_redirect
+
+
+def purchaserequest_list_json(request):
+    list_qs = PurchaseRequest.objects.all()
+
+    pre_json = []
+    for pr in list_qs:
+        requisitioner = Requisitioner.objects.get(user=pr.requisitioner.user)
+        vendor = Vendor.objects.get(pk=pr.vendor.pk)
+        status = Status.objects.get(pk=pr.status.pk)
+        trackers = Tracker.objects.filter(purchase_request=pr)
+        if trackers:
+            shipping_status = trackers.first().status
+        else:
+            shipping_status = ""
+
+        pre_json += [
+            {
+                "number": pr.number,
+                "requisitioner_name": requisitioner.user.get_full_name(),
+                "vendor_name": vendor.name,
+                "status": status.name,
+                "grand_total": pr.grand_total.amount,
+                "shipping_status": shipping_status,
+            }
+        ]
+
+    return JsonResponse(pre_json, safe=False)
