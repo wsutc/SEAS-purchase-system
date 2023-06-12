@@ -39,11 +39,9 @@ from ..models import (
     Balance,
     Carrier,
     PurchaseRequest,
-    Requisitioner,
     Status,
     Tracker,
     TrackingWebhookMessage,
-    Vendor,
 )
 from ..tracking import TrackerObject, get_generated_signature, update_tracking_details
 
@@ -568,28 +566,49 @@ def update_purchase_request_totals(request, slug):
 
 
 def purchaserequest_list_json(request):
-    list_qs = PurchaseRequest.objects.all()
+    # list_qs = PurchaseRequest.objects.all()
 
-    pre_json = []
-    for pr in list_qs:
-        requisitioner = Requisitioner.objects.get(user=pr.requisitioner.user)
-        vendor = Vendor.objects.get(pk=pr.vendor.pk)
-        status = Status.objects.get(pk=pr.status.pk)
-        trackers = Tracker.objects.filter(purchase_request=pr)
-        if trackers:
-            shipping_status = trackers.first().status
-        else:
-            shipping_status = ""
+    purchase_requests = list(
+        PurchaseRequest.objects.all().values(
+            "number",
+            "grand_total",
+            "requisitioner",
+            "vendor__name",
+            "status__name",
+        )
+    )
 
-        pre_json += [
-            {
-                "number": pr.number,
-                "requisitioner_name": requisitioner.user.get_full_name(),
-                "vendor_name": vendor.name,
-                "status": status.name,
-                "grand_total": pr.grand_total.amount,
-                "shipping_status": shipping_status,
-            }
-        ]
+    # pre_json = []
+    # for pr in (
+    #     PurchaseRequest.objects.all()
+    #     .values(
+    #         "number",
+    #         "grand_total",
+    #         "requisitioner__user__username",
+    #         "vendor__name",
+    #         "status__name",
+    #     )
+    #     .iterator()
+    # ):
+    #     print(pr)
+    #     # requisitioner = Requisitioner.objects.get(user=pr.requisitioner.user)
+    #     # vendor = Vendor.objects.get(pk=pr.vendor.pk)
+    #     # status = Status.objects.get(pk=pr.status.pk)
+    #     # trackers = Tracker.objects.filter(purchase_request=pr)
+    #     # if trackers:
+    #     #     shipping_status = trackers.first().status
+    #     # else:
+    #     #     shipping_status = ""
 
-    return JsonResponse(pre_json, safe=False)
+    #     pre_json += [
+    #         {
+    #             "number": pr.get("number"),
+    #             "requisitioner_name": pr.get("requisitioner__user__username"),
+    #             "vendor_name": pr.get("vendor_name"),
+    #             "status": pr.get("status"),
+    #             "grand_total": pr.get("grand_total")
+    #             # "shipping_status": shipping_status,
+    #         }
+    #     ]
+
+    return JsonResponse(purchase_requests, safe=False)
