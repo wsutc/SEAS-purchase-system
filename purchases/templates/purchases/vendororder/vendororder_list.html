@@ -1,6 +1,8 @@
 {% extends "purchases/list_page.html" %}
 {% load purchases_extras %}
-{% block title %}Orders{% endblock %}
+{% block title %}
+  Orders
+{% endblock title %}
 {% block header %}
   Orders
 {% endblock header %}
@@ -12,6 +14,8 @@
   <script>
     $(document).ready( function () {
       var table = $('#orders').DataTable({
+        order: [[10, "desc"]],
+        responsive: true,
         "language": {
           emptyTable: "No records to show, check your filters if any..."
         },
@@ -21,16 +25,22 @@
             emptyPanes: null
           }
         },
-        dom: '<"dtsp-dataTable"prftilp>',
-        pageLength: 10
+        columnDefs: [
+          {
+            targets: [3],
+            render: DataTable.render.datetime('Do MMM YYYY')
+          },
+        ],
+        dom: '<"dtsp-dataTable"Pprtilp>',
+        pageLength: 25
       });
       table.searchPanes()
       let verticalPanes = $("div.dtsp-verticalPanes");
-      verticalPanes.append(table.searchPanes.container());
-      if ($("dtsp-hidden")) {
+      let verticalContainer = table.searchPanes.container()
+      verticalPanes.append(verticalContainer);
+      if (verticalContainer.hasClass("dtsp-hidden")) {
         verticalPanes.remove()
       }
-
     });
   </script>
-{% endblock %}
+{% endblock page %}

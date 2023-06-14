@@ -27,20 +27,24 @@
           </tr>
         </thead>
         <tbody>
-          {% for o in object_list %}
+          {% for o in purchase_requests %}
             <tr>
-              <td><a href="{{ o.requisitioner_url }}">{{ o.requisitioner_name }}</a></td>
               <td>
-                <a href="{{ o.purchaserequest_url }}">{{ o.number }}</a>
+                <a href="{{ o.requisitioner.get_absolute_url }}">{{ o.requisitioner }}</a>
               </td>
               <td>
-                <a href="{{ o.vendor_url }}">{{ o.vendor }}</a>
+                <a href="{{ o.get_absolute_url }}">{{ o.number }}</a>
               </td>
-              <td class="dropdown align-right">{% include "purchases/status_change_button.html" with purchase_request=o %}</td>
-              <td>{{ o.status_open }}</td>
+              <td>
+                <a href="{{ o.vendor.get_absolute_url }}">{{ o.vendor }}</a>
+              </td>
+              <td class="dropdown align-right">
+                {% include "purchases/status_change_button.html" with purchase_request=o %}
+              </td>
+              <td>{{ o.status.open }}</td>
               {% comment %} <td>{{ o.get_status_display }}</td> {% endcomment %}
               <td>{{ o.grand_total|usd_accounting }}</td>
-              <td>{{ o.shipping_status }}</td>
+              <td>{{ o.tracker_set.first.status }}</td>
               <td class="text-end">
                 <div class="btn-group">
                   <a href="{% url 'pr_filtered_simpleproducts' o.slug %}"><i class="fa-solid fa-rectangle-list px-1"></i></a>
@@ -79,7 +83,7 @@
           }
         ],
         dom: '<"dtsp-dataTable"Pprtilp>',
-        pageLength: 10
+        pageLength: 25
       });
       table.searchPanes()
       let verticalPanes = $("div.dtsp-verticalPanes");

@@ -11,7 +11,7 @@
       "program": "${workspaceFolder}/manage.py",
       "args": [
         "runserver",
-        "${input:randomPort}",
+        "8010",
       ],
       "django": true,
       "justMyCode": true
@@ -116,10 +116,13 @@
       "command": "extension.commandvariable.number",
       "args": {
         "name": "randomPort",
-        "range": [8005, 8100],
+        "range": [
+          8005,
+          8100
+        ],
         "random": true,
         "uniqueCount": 10
       }
     },
-    ]
+  ]
 }

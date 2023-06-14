@@ -13,11 +13,12 @@
           <th>Request</th>
           <th>Vendor</th>
           <th>Earliest Event</th>
+          <th>Latest Update</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
-        {% for o in tracker_list %}
+        {% for o in trackers %}
           <tr>
             <td>
               <a href="{{ o.carrier.website }}">{{ o.carrier }}<i class="fa-solid fa-up-right-from-square"
@@ -51,7 +52,8 @@
                 {{ o.purchase_request.vendor.name|urlizespecify:o.purchase_request.vendor.get_absolute_url }}
               {% endif %}
             </td>
-            <td>{{ o.earliest_event_time|date:"c" }}</td>
+            <td>{{ o.trackingevent_set.last.time_utc }}</td>
+            <td>{{ o.trackingevent_set.first.time_utc }}</td>
             <td class="text-end">
               <div class="btn-group">
                 <a href="{% url 'update_tracker' o.pk %}?next={{ request.get_full_path }}"><i class="fa-solid fa-arrows-rotate px-1"></i></a>
