@@ -118,7 +118,7 @@ _DJANGO_APPS = [
 ]
 
 _THIRD_PARTY_APPS = [
-    "silk",
+    # "silk",
     # "constance",
     "bootstrap_datepicker_plus",
     "crispy_bootstrap5",
@@ -149,7 +149,7 @@ INSTALLED_APPS = _DJANGO_APPS + _THIRD_PARTY_APPS + _LOCAL_APPS
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
-    "silk.middleware.SilkyMiddleware",
+    # "silk.middleware.SilkyMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -204,7 +204,7 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": Path(BASE_DIR, "db.sqlite3"),
-    }
+    },
 }
 
 # DATABASES = {
@@ -417,9 +417,9 @@ GRAVATAR_DEFAULT_IMAGE = "retro"
 GRAVATAR_DEFAULT_RATING = "g"
 
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
-SILKY_AUTHORISATION = True
-SILKY_META = True
-SILKY_PYTHON_PROFILER = env.bool("SILKY_PYTHON_PROFILER", default="False")
+# SILKY_AUTHORISATION = True
+# SILKY_META = True
+# SILKY_PYTHON_PROFILER = env.bool("SILKY_PYTHON_PROFILER", default="False")
 
 CONSTANCE_CONFIG = {
     # "SILKY_PYTHON_PROFILER": (
