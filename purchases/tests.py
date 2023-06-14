@@ -36,7 +36,7 @@ def create_pr_deps():
     # create_requisitioner(sender=User, instance=user, created=True)
     rvalue = {
         "default_sales_tax_rate": baker.make_recipe(
-            "purchases.sales_tax_rate_settings"
+            "purchases.sales_tax_rate_settings",
         ),
         "vendor": baker.make_recipe("purchases.vendor_tormach"),
         "urgency": baker.make(Urgency, name="Standard"),
@@ -49,7 +49,7 @@ def create_pr_deps():
 
 def get_random_object(model: models):
     pk_list = model.objects.values_list("pk", flat=True)
-    random_pk = choice(pk_list)
+    random_pk = choice(pk_list)  # noqa: S311
 
     return model.objects.get(pk=random_pk)
 
@@ -86,12 +86,13 @@ class TestCreatePRView(TestCase):
     def test_anonymous_cannot_see_page(self):
         response = self.client.get(reverse("new_pr"))
         self.assertRedirects(
-            response, "/accounts/login/?next=/purchases/purchase-request/new/"
+            response,
+            "/accounts/login/?next=/purchases/purchase-request/new/",
         )
 
     def test_permissed_user_can_see_page(self):
         self.user.user_permissions.add(
-            Permission.objects.get(codename="add_purchaserequest")
+            Permission.objects.get(codename="add_purchaserequest"),
         )
 
         self.client.force_login(user=self.user)
@@ -124,37 +125,44 @@ class TrackingWebhookTests(TestCase):
         self.client = Client(enforce_csrf_checks=True)
         self.purchase_request = baker.prepare_recipe("purchases.default_pr")
         self.tracker = baker.prepare(Tracker)
-        # TODO - find a way to get the message instead of hard coding it
+        # TODO(karl.wooster): find a way to get the message instead of hard coding it
+        # https://git.tricity.wsu.edu/karl.wooster/SEAS-purchase-system/-/issues/141
         self.valid_signature = get_generated_signature(
-            b"--BoUnDaRyStRiNg--\r\n", "abc123"
+            b"--BoUnDaRyStRiNg--\r\n",
+            "abc123",
         )
 
     def test_bad_method(self):
         url = reverse(tracking_webhook)
         print(f"Webhook URL: {url}")
         response = self.client.get(url)
-        assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_missing_token(self):
         response = self.client.post(reverse(tracking_webhook))
 
-        assert response.status_code == HTTPStatus.FORBIDDEN
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
 
     def test_bad_token(self):
         response = self.client.post(
-            reverse(tracking_webhook), headers={"sign": "def456"}
+            reverse(tracking_webhook),
+            headers={"sign": "def456"},
         )
 
-        assert response.status_code == HTTPStatus.FORBIDDEN
-        assert response.content.decode() == "Inconsistency in response signature."
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertEqual(
+            response.content.decode(),
+            "Inconsistency in response signature.",
+        )
 
     def test_valid_token(self):
         # since there is no body, post will fail, but with known exception
+
         self.assertRaises(
             JSONDecodeError,
             self.client.post,
             path=reverse(tracking_webhook),
-            HTTP_SIGN=self.valid_signature,
+            headers={"sign": self.valid_signature},
         )
 
     def test_success(self):
@@ -162,7 +170,7 @@ class TrackingWebhookTests(TestCase):
         start_aware = pytz.utc.localize(start)
         received = start - timedelta(days=100)
         old_message = TrackingWebhookMessage.objects.create(
-            received_at=pytz.utc.localize(received)
+            received_at=pytz.utc.localize(received),
         )
 
         message = json.dumps(WEBHOOK_DATA).encode("utf-8")
@@ -181,7 +189,7 @@ class TrackingWebhookTests(TestCase):
         # assert response.status_code == HTTPStatus.OK
         # assert response.content.decode() == "Message successfully received."
         self.assertFalse(
-            TrackingWebhookMessage.objects.filter(id=old_message.id).exists()
+            TrackingWebhookMessage.objects.filter(id=old_message.id).exists(),
         )
 
         awm = TrackingWebhookMessage.objects.get()
@@ -214,7 +222,7 @@ WEBHOOK_DATA = {
                     "street": null,
                     "postal_code": null,
                     "coordinates": {"longitude": null, "latitude": null},
-                }
+                },
             },
             "recipient_address": {
                 "country": "US",
@@ -404,7 +412,7 @@ WEBHOOK_DATA = {
                             },
                         },
                     ],
-                }
+                },
             ],
         },
     },

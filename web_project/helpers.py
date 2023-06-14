@@ -2,6 +2,7 @@ import logging
 from decimal import Decimal
 from http.client import HTTPResponse
 from inspect import getmembers
+from json import JSONDecodeError
 from pprint import pprint
 from types import FunctionType
 
@@ -345,6 +346,9 @@ class LoginRequiredMiddleware:
     def __call__(self, request):
         try:
             response = self.get_response(request)
+        except JSONDecodeError as e:
+            print(f"Invalid JSON: {e}")
+            raise
         except Exception as e:
             print(f"LoginRequiredMiddleware exception: {e}")
         return response
