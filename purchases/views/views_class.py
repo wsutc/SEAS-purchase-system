@@ -3,12 +3,13 @@ import logging
 from decimal import Decimal
 from typing import Any
 
+# from typing import Any
 # from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 
 # from django.contrib.auth.models import User
-from django.db.models import ExpressionWrapper, F, OuterRef, Subquery, Sum
+from django.db.models import ExpressionWrapper, F, OuterRef, Subquery, Sum  # , Value
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
@@ -48,6 +49,7 @@ from purchases.models import (  # Transaction,
     SimpleProduct,
     Status,
     Tracker,
+    # TrackingEvent,
     Vendor,
     VendorOrder,
     requisitioner_from_user,
@@ -58,6 +60,8 @@ from web_project.helpers import (  # truncate_string,; print_attributes,
     max_decimal_places,
     redirect_to_next,
 )
+
+# from web_project.timer import Timer
 
 # from typing import Any, Dict
 
@@ -143,7 +147,7 @@ class VendorOrderListView(PaginatedListMixin, ListView):
         ).annotate(
             difference=ExpressionWrapper(
                 F("calculated_total")
-                - (F("subtotal") + F("shipping") + F("sales_tax")),
+                - (F("subtotal") + F("shipping") + F("sales_tax")),  # type: ignore
                 output_field=MoneyField(),
             ),
         )
@@ -229,14 +233,16 @@ class PurchaseRequestListViewBase(ListView):
     #     ("requisitioner", RelatedFieldListViewFilter),
     # ]
 
-    # def get_context_data(self, **kwargs):
-    #     context = super().get_context_data(**kwargs)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
 
-    #     context["purchase_request_statuses"] = Status.objects.filter(
-    #         parent_model="PR"
-    #     ).order_by("rank")
+        context["purchase_request_statuses"] = Status.objects.filter(
+            parent_model="PR",
+        ).order_by("rank")
 
-    #     return context
+        print(f"first status: {context['purchase_request_statuses'].first()}")
+
+        return context
 
     class Meta:
         abstract = True
@@ -244,6 +250,7 @@ class PurchaseRequestListViewBase(ListView):
 
 class PurchaseRequestListView(ListView):
     model = PurchaseRequest
+    template_name = "purchases/purchaserequest_list.html"
     # @silk_profile(name="PR List View")
     # def get(self, request):
     #     pr = PurchaseRequest.objects.all()
@@ -251,14 +258,14 @@ class PurchaseRequestListView(ListView):
     #         request, "purchases/purchaserequest_list.html", {"object_list": pr}
     #     )
 
-    def get_context_data(self, **kwargs: Any):
+    def get_queryset(self):
         class SimpleObject:
             def __init__(
                 self,
                 input_dict: dict,
                 base_model: str,
                 view_name: str,
-                name_dict: dict = None,
+                name_dict: dict = None,  # type: ignore
             ) -> None:
                 self.input = input_dict
                 if not name_dict:
@@ -271,13 +278,30 @@ class PurchaseRequestListView(ListView):
                 self.slug = input_dict.get(f"{base_model}__{name_dict.get('slug')}")
                 self.view_name = view_name
 
-        def get_url(self):
-            return reverse(self.view_name, kwargs={"pk": self.pk, "slug": self.slug})
+            def get_url(self):
+                kwargs = {}
+                if self.pk:
+                    kwargs["pk"] = self.pk
+                if self.slug:
+                    kwargs["slug"] = self.slug
+                return reverse(self.view_name, kwargs=kwargs)
 
-        pre_json = []
+        qs = super().get_queryset()
+
+        first_tracker_sq = Tracker.objects.filter(purchase_request=OuterRef("pk"))
+        # first_tracker_event_sq = TrackingEvent.objects.filter(
+        #     tracker=Subquery(first_tracker_sq)
+        # )
+
+        object_list = []
         for pr in (
-            PurchaseRequest.objects.all()
+            qs.annotate(
+                first_tracker_status=Subquery(
+                    Subquery(first_tracker_sq.values("status")[:1]),
+                ),
+            )
             .values(
+                "pk",
                 "number",
                 "slug",
                 "grand_total",
@@ -288,6 +312,8 @@ class PurchaseRequestListView(ListView):
                 "vendor__name",
                 "vendor__slug",
                 "status__name",
+                "status__open",
+                "first_tracker_status",
             )
             .iterator()
         ):
@@ -298,26 +324,53 @@ class PurchaseRequestListView(ListView):
                 "requisitioner_detail",
                 name_dict={"name": "user__username", "slug": "slug"},
             )
-            request = SimpleObject(
-                pr,
-                "purchaserequest",
+            # request = SimpleObject(
+            #     pr,
+            #     "purchaserequest",
+            #     "purchaserequest_detail",
+            #     name_dict={"name": "number", "slug": "slug"},
+            # )
+
+            request_slug = pr.get("slug")
+            request_url = reverse(
                 "purchaserequest_detail",
-                kwargs={"name": "number", "slug": "slug"},
+                kwargs={"slug": request_slug},
             )
 
-            pre_json += [
+            # first_tracker_status = (
+            #     Tracker.objects.filter(purchase_request__id=pr.get("pk"))
+            #     .values("status")
+            #     .first()
+            # )
+            first_tracker_status = pr.get("first_tracker_status")
+            first_tracker_status = first_tracker_status if first_tracker_status else ""
+
+            object_list.append(
                 {
-                    "number": request.name,
-                    "purchaserequest_url": request.get_url(),
+                    "number": pr.get("number"),
+                    "purchaserequest_url": request_url,
                     "requisitioner_name": requisitioner.name,
                     "requisitioner_url": requisitioner.get_url(),
                     "vendor": vendor.name,
                     "vendor_url": vendor.get_url(),
                     "status": pr.get("status__name"),
+                    "status_open": pr.get("status__open"),
                     "grand_total": pr.get("grand_total"),
-                    "shipping_status": "n/a",
+                    "shipping_status": first_tracker_status,
+                    "slug": pr.get("slug"),
                 },
-            ]
+            )
+
+        return object_list
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+
+        context["purchase_request_statuses"] = Status.objects.filter(
+            parent_model="PR",
+        ).order_by("rank")
+
+        return context
 
 
 class RequisitionerPurchaseRequestListView(PurchaseRequestListViewBase):

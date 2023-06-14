@@ -41,5 +41,5 @@
     "django-html": "html",
     // "urls": "python",
   },
-  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.typeCheckingMode": "off",
 }

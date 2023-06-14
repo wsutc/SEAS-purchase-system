@@ -19,7 +19,7 @@ profile = "django"
 [tool.ruff]
 extend-exclude = ["migrations"]
 ignore = ["T20"]
-fixable = ["E", "COM812"]
+fixable = ["E", "COM812", "I001"]
 unfixable = ["F841"]
 line-length = 88
 select = [

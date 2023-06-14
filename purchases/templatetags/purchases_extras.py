@@ -23,7 +23,8 @@ def currency(value: float, currency: str = "USD"):
         case "USD":
             dollars = round(float(value), 2)
             return_value = "${}{}".format(
-                intcomma(int(dollars)), ("%0.2f" % dollars)[-3:]
+                intcomma(int(dollars)),
+                ("%0.2f" % dollars)[-3:],
             )
 
             return return_value
@@ -37,7 +38,7 @@ def usd_accounting(value: float, decimals: int = 2, autoescape=True):
 
     For USD adds whitespace between $ and numbers to right align digits and left align $
     """
-    if value is None:
+    if not value:
         return value
 
     if autoescape:
@@ -53,7 +54,8 @@ def usd_accounting(value: float, decimals: int = 2, autoescape=True):
             <td align="right">{value:,.{prec}f}</td>
         </table>
     """.format(
-        value=dollars, prec=decimals
+        value=dollars,
+        prec=decimals,
     )
 
     return mark_safe(string)
@@ -96,16 +98,11 @@ def percent(value: float, decimal_places: int = None):
          '95.436'|numeric2percent:2 becomes '95.44%'
          '95.4'|numeric2percent:2 becomes '95.4%'
     """
-    if not decimal_places:
+    if not decimal_places or value.is_integer():
         return_value = f"{value:g}%"
     else:
-        # rounded = round(value, decimal_places)
-        # return_value = "%g%%" % (rounded)
-        if value.is_integer():
-            return_value = f"{value:g}%"
-        else:
-            value = round(value, decimal_places)
-            return_value = f"{value:g}%"
+        value = round(value, decimal_places)
+        return_value = f"{value:g}%"
 
     return return_value
 
@@ -170,7 +167,8 @@ def urlizespecifyblank(value: str, href: str, autoescape=True) -> str:
     tag = '<a href="{href}" target="_blank" rel="noopener noreferrer">{text}\
         <i class="fa-solid fa-up-right-from-square" data-fa-transform="shrink-6 up-4">\
             </i></a>'.format(
-        text=value, href=href
+        text=value,
+        href=href,
     )
 
     return mark_safe(tag)
