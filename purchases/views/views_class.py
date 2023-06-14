@@ -1,6 +1,7 @@
 import datetime
 import logging
 from decimal import Decimal
+from typing import Any
 
 # from django.conf import settings
 from django.contrib import messages
@@ -9,8 +10,8 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 # from django.contrib.auth.models import User
 from django.db.models import ExpressionWrapper, F, OuterRef, Subquery, Sum
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse_lazy
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import (
     CreateView,
@@ -25,7 +26,6 @@ from django_listview_filters.filters import (  # AllValuesFieldListFilter,
     RelatedFieldListViewFilter,
 )
 from djmoney.models.fields import MoneyField
-from silk.profiling.profiler import silk_profile
 
 from globals.models import DefaultValue
 from purchases.forms import (
@@ -74,7 +74,7 @@ class SimpleView(SingleObjectMixin):
         context = super().get_context_data(**kwargs)
 
         context["purchase_request_statuses"] = Status.objects.filter(
-            parent_model="PR"
+            parent_model="PR",
         ).order_by("rank")
 
         return context
@@ -135,15 +135,17 @@ class VendorOrderListView(PaginatedListMixin, ListView):
             .values("pk")
         )
         calculated_total = prs.annotate(calc_total=Sum("grand_total")).values(
-            "calc_total"
+            "calc_total",
         )
 
-        qs = qs.annotate(calculated_total=Subquery(calculated_total),).annotate(
+        qs = qs.annotate(
+            calculated_total=Subquery(calculated_total),
+        ).annotate(
             difference=ExpressionWrapper(
                 F("calculated_total")
                 - (F("subtotal") + F("shipping") + F("sales_tax")),
                 output_field=MoneyField(),
-            )
+            ),
         )
 
         return qs
@@ -241,13 +243,81 @@ class PurchaseRequestListViewBase(ListView):
 
 
 class PurchaseRequestListView(ListView):
-    # model = PurchaseRequest
-    @silk_profile(name="PR List View")
-    def get(self, request):
-        pr = PurchaseRequest.objects.all()
-        return render(
-            request, "purchases/purchaserequest_list.html", {"object_list": pr}
-        )
+    model = PurchaseRequest
+    # @silk_profile(name="PR List View")
+    # def get(self, request):
+    #     pr = PurchaseRequest.objects.all()
+    #     return render(
+    #         request, "purchases/purchaserequest_list.html", {"object_list": pr}
+    #     )
+
+    def get_context_data(self, **kwargs: Any):
+        class SimpleObject:
+            def __init__(
+                self,
+                input_dict: dict,
+                base_model: str,
+                view_name: str,
+                name_dict: dict = None,
+            ) -> None:
+                self.input = input_dict
+                if not name_dict:
+                    name_dict = {
+                        "name": "name",
+                        "slug": "slug",
+                    }
+                self.name = input_dict.get(f"{base_model}__{name_dict.get('name')}")
+                self.pk = input_dict.get(base_model)
+                self.slug = input_dict.get(f"{base_model}__{name_dict.get('slug')}")
+                self.view_name = view_name
+
+        def get_url(self):
+            return reverse(self.view_name, kwargs={"pk": self.pk, "slug": self.slug})
+
+        pre_json = []
+        for pr in (
+            PurchaseRequest.objects.all()
+            .values(
+                "number",
+                "slug",
+                "grand_total",
+                "requisitioner",
+                "requisitioner__user__username",
+                "requisitioner__slug",
+                "vendor",
+                "vendor__name",
+                "vendor__slug",
+                "status__name",
+            )
+            .iterator()
+        ):
+            vendor = SimpleObject(pr, "vendor", "vendor_detail")
+            requisitioner = SimpleObject(
+                pr,
+                "requisitioner",
+                "requisitioner_detail",
+                name_dict={"name": "user__username", "slug": "slug"},
+            )
+            request = SimpleObject(
+                pr,
+                "purchaserequest",
+                "purchaserequest_detail",
+                kwargs={"name": "number", "slug": "slug"},
+            )
+
+            pre_json += [
+                {
+                    "number": request.name,
+                    "purchaserequest_url": request.get_url(),
+                    "requisitioner_name": requisitioner.name,
+                    "requisitioner_url": requisitioner.get_url(),
+                    "vendor": vendor.name,
+                    "vendor_url": vendor.get_url(),
+                    "status": pr.get("status__name"),
+                    "grand_total": pr.get("grand_total"),
+                    "shipping_status": "n/a",
+                },
+            ]
 
 
 class RequisitionerPurchaseRequestListView(PurchaseRequestListViewBase):
@@ -261,7 +331,7 @@ class RequisitionerPurchaseRequestListView(PurchaseRequestListViewBase):
 
         # ------- sort statuses by 'rank' ---------------
         context["purchase_request_statuses"] = Status.objects.filter(
-            parent_model="PR"
+            parent_model="PR",
         ).order_by("rank")
 
         context["show_link"] = (_("show open"), "open_pr")
@@ -270,10 +340,11 @@ class RequisitionerPurchaseRequestListView(PurchaseRequestListViewBase):
 
     def get_queryset(self):
         self.requisitioner = get_object_or_404(
-            Requisitioner, slug=self.kwargs["requisitioner"]
+            Requisitioner,
+            slug=self.kwargs["requisitioner"],
         )
         qs = PurchaseRequest.objects.filter(requisitioner=self.requisitioner).order_by(
-            "-created_date"
+            "-created_date",
         )
 
         qs = self.filter_queryset(qs)
@@ -285,7 +356,7 @@ class OpenPurchaseRequestListView(PurchaseRequestListViewBase):
     # pr = PurchaseRequest.PurchaseRequestStatuses
     # current_statuses = [pr.WL, pr.AP, pr.OR, pr.PT, pr.SH, pr.AA]
     queryset = PurchaseRequest.objects.filter(status__open=True).order_by(
-        "-created_date"
+        "-created_date",
     )
     list_filter = [
         ("vendor", RelatedFieldListViewFilter),
@@ -297,7 +368,7 @@ class OpenPurchaseRequestListView(PurchaseRequestListViewBase):
 
         # ------- sort statuses by 'rank' ---------------
         context["purchase_request_statuses"] = Status.objects.filter(
-            parent_model="PR"
+            parent_model="PR",
         ).order_by("rank")
 
         context["show_link"] = (_("show all"), "home")
@@ -313,7 +384,7 @@ class VendorDetailView(DetailView):
         context = super().get_context_data(**kwargs)
 
         context["purchase_request_statuses"] = Status.objects.filter(
-            parent_model="PR"
+            parent_model="PR",
         ).order_by("rank")
 
         return context
@@ -324,8 +395,7 @@ def get_status_choices(model: Status.StatusModel):
     status_choices = statuses.values
 
     def dict_f(input):
-        output = f'"name": {statuses(input).name}, "label": {statuses(input).label}'
-        return output
+        return f'"name": {statuses(input).name}, "label": {statuses(input).label}'
 
     # dict_f = lambda x: {"name": statuses(x).name, "label": statuses(x).label}
 
@@ -343,11 +413,12 @@ class PurchaseRequestDetailView(SimpleView, DetailView):
 
         # Add context for max digits of unit price field for formatting
         unitprice_values = self.object.simpleproduct_set.values_list(
-            "unit_price", flat=True
+            "unit_price",
+            flat=True,
         )
 
         context["simpleproducts_unitprice_maxdigits"] = max_decimal_places(
-            unitprice_values
+            unitprice_values,
         )
 
         # add context for fund type column
@@ -460,7 +531,7 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
                 "sales_tax_rate": Decimal(sales_tax_rate),
                 "instruction": instruction,
                 "need_by_date": need_by_date,
-            }
+            },
         )
         return initial
 
@@ -468,7 +539,7 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context["purchase_request_items_formset"] = SimpleProductFormset(prefix="items")
         context["purchase_request_accounts_formset"] = PurchaseRequestAccountFormset(
-            prefix="accounts"
+            prefix="accounts",
         )
         # context['requisitioner'] = Requisitioner.objects.get(user=self.request.user)
         return context
@@ -478,27 +549,36 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         purchase_request_items_formset = SimpleProductFormset(
-            self.request.POST, prefix="items"
+            self.request.POST,
+            prefix="items",
         )
         purchase_request_accounts_formset = PurchaseRequestAccountFormset(
-            self.request.POST, prefix="accounts"
+            self.request.POST,
+            prefix="accounts",
         )
-        if not (priValid := purchase_request_items_formset.is_valid()):
+        if not (
+            purchase_request_items_valid := purchase_request_items_formset.is_valid()
+        ):
             print(purchase_request_items_formset.errors)
-        if not (praValid := purchase_request_accounts_formset.is_valid()):
+        if not (
+            purchase_request_accounts_valid := purchase_request_accounts_formset.is_valid()  # noqa: E501
+        ):
             print(purchase_request_accounts_formset.errors)
-        if form.is_valid() and priValid and praValid:
+        if (
+            form.is_valid()
+            and purchase_request_items_valid
+            and purchase_request_accounts_valid
+        ):
             return self.form_valid(
                 form,
                 purchase_request_items_formset,
                 purchase_request_accounts_formset,
             )
-        else:
-            return self.form_invalid(
-                form,
-                purchase_request_items_formset,
-                purchase_request_accounts_formset,
-            )
+        return self.form_invalid(
+            form,
+            purchase_request_items_formset,
+            purchase_request_accounts_formset,
+        )
 
     def form_valid(
         self,
@@ -537,7 +617,7 @@ class PurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
                 form=form,
                 purchase_request_items_formset=purchase_request_items_formset,
                 purchase_request_accounts_formset=purchase_request_accounts_formset,
-            )
+            ),
         )
 
 
@@ -556,7 +636,7 @@ class CustomPurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context["purchase_request_items_formset"] = SimpleProductFormset(prefix="items")
         context["purchase_request_accounts_formset"] = PurchaseRequestAccountFormset(
-            prefix="accounts"
+            prefix="accounts",
         )
         # context['requisitioner'] = Requisitioner.objects.get(user=self.request.user)
         return context
@@ -566,27 +646,36 @@ class CustomPurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         purchase_request_items_formset = SimpleProductFormset(
-            self.request.POST, prefix="items"
+            self.request.POST,
+            prefix="items",
         )
         purchase_request_accounts_formset = PurchaseRequestAccountFormset(
-            self.request.POST, prefix="accounts"
+            self.request.POST,
+            prefix="accounts",
         )
-        if not (priValid := purchase_request_items_formset.is_valid()):
+        if not (
+            purchase_request_items_valid := purchase_request_items_formset.is_valid()
+        ):
             print(purchase_request_items_formset.errors)
-        if not (praValid := purchase_request_accounts_formset.is_valid()):
+        if not (
+            purchase_request_accounts_valid := purchase_request_accounts_formset.is_valid()  # noqa: E501
+        ):
             print(purchase_request_accounts_formset.errors)
-        if form.is_valid() and priValid and praValid:
+        if (
+            form.is_valid()
+            and purchase_request_items_valid
+            and purchase_request_accounts_valid
+        ):
             return self.form_valid(
                 form,
                 purchase_request_items_formset,
                 purchase_request_accounts_formset,
             )
-        else:
-            return self.form_invalid(
-                form,
-                purchase_request_items_formset,
-                purchase_request_accounts_formset,
-            )
+        return self.form_invalid(
+            form,
+            purchase_request_items_formset,
+            purchase_request_accounts_formset,
+        )
 
     def form_valid(
         self,
@@ -625,7 +714,7 @@ class CustomPurchaseRequestCreateView(PermissionRequiredMixin, CreateView):
                 form=form,
                 purchase_request_items_formset=purchase_request_items_formset,
                 purchase_request_accounts_formset=purchase_request_accounts_formset,
-            )
+            ),
         )
 
 
@@ -640,16 +729,21 @@ class PurchaseRequestUpdateView(PermissionRequiredMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         if self.request.POST:
             context["purchase_request_items_formset"] = SimpleProductFormset(
-                self.request.POST, instance=self.object, prefix="items"
+                self.request.POST,
+                instance=self.object,
+                prefix="items",
             )
             context[
                 "purchase_request_accounts_formset"
             ] = PurchaseRequestAccountFormset(
-                self.request.POST, instance=self.object, prefix="accounts"
+                self.request.POST,
+                instance=self.object,
+                prefix="accounts",
             )
         else:
             context["purchase_request_items_formset"] = SimpleProductFormset(
-                instance=self.object, prefix="items"
+                instance=self.object,
+                prefix="items",
             )
             context[
                 "purchase_request_accounts_formset"
@@ -690,7 +784,7 @@ class PurchaseRequestUpdateView(PermissionRequiredMixin, UpdateView):
                 purchase_request_accounts_formset=context[
                     "purchase_request_accounts_formset"
                 ],
-            )
+            ),
         )
 
 
@@ -791,12 +885,12 @@ class TrackerCreateView(CreateView):
         purchase_request_param = self.request.GET.get("purchase-request", None)
         if purchase_request_param:
             purchase_request = get_object_or_404(
-                PurchaseRequest, slug=purchase_request_param
+                PurchaseRequest,
+                slug=purchase_request_param,
             )
 
             return {"purchase_request": purchase_request}
-        else:
-            return
+        return None
 
     def form_valid(self, form):
         if hasattr(form, "message"):

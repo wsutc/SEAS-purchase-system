@@ -1,14 +1,13 @@
 import os
 import sys
+from pathlib import Path
 
 from django import setup as django_setup
 from django.conf import settings
 
-# from django.conf import settings
-# sys.path.insert(0, os.path.abspath('../../purchases/'))
-# sys.path.insert(0, os.path.normpath('C:/Users/karl.wooster/repos/wsutc/SEAS-purchase-system/'))
 sys.path.insert(
-    0, os.path.abspath("../..")
+    0,
+    Path("../.."),
 )  # 'C:/Users/karl.wooster/repos/wsutc/SEAS-purchase-system/purchases/')
 print(f"Path: {sys.path[0]}")
 
@@ -39,7 +38,7 @@ print(settings["BASE_DIR"])
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "SEAS Purchase System"
-copyright = "2022, Karl Wooster"
+copyright = "2023, Karl Wooster"
 author = "Karl Wooster"
 
 # -- General configuration ---------------------------------------------------

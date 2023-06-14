@@ -19,8 +19,30 @@ profile = "django"
 [tool.ruff]
 extend-exclude = ["migrations"]
 ignore = ["T20"]
+fixable = ["E", "COM812"]
+unfixable = ["F841"]
 line-length = 88
-select = ["C9", "E", "F", "T2", "W"]
+select = [
+    "B",
+    "C4",
+    "C9",
+    "COM",
+    # "DJ",
+    "E",
+    "F",
+    "I",
+    "T2",
+    "W",
+    "N",
+    "PTH",
+    "Q",
+    # "RET",
+    "S",
+    "SIM",
+    "TD",
+    "TID",
+    "UP",
+]
 ignore-init-module-imports = true
 target-version = "py310"
 

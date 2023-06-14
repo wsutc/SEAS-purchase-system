@@ -112,10 +112,15 @@ class PurchaseRequest(models.Model):
     tax_exempt = models.BooleanField("Tax Exempt?", default=False)
     # accounts = models.ManyToManyField(Accounts, through="PurchaseRequestAccounts")
     accounts = models.ManyToManyField(
-        "accounts.account", through="PurchaseRequestAccount"
+        "accounts.account",
+        through="PurchaseRequestAccount",
     )
     subtotal = MoneyField(
-        "Subtotal", decimal_places=2, max_digits=14, default_currency="USD", default=0
+        "Subtotal",
+        decimal_places=2,
+        max_digits=14,
+        default_currency="USD",
+        default=0,
     )
     shipping = MoneyField(
         "Shipping ($)",
@@ -125,7 +130,10 @@ class PurchaseRequest(models.Model):
         default=0,
     )
     sales_tax_rate = SimplePercentageField(
-        _("sales tax rate"), max_digits=10, decimal_places=4, null=True
+        _("sales tax rate"),
+        max_digits=10,
+        decimal_places=4,
+        null=True,
     )
     # new_st = PercentageField(
     #     _("new sales tax"), max_digits=10, decimal_places=4, blank=True, null=True
@@ -192,7 +200,7 @@ class PurchaseRequest(models.Model):
 
     def get_subtotal(self):
         extended_price = SimpleProduct.objects.filter(
-            purchase_request_id=self.id
+            purchase_request_id=self.id,
         ).aggregate(Sum("extended_price", default=0))
         # if extended_price["extended_price__sum"] != None:
         #     pass
@@ -308,22 +316,34 @@ class VendorOrder(BaseModel):
     )
 
     purchase_requests = models.ManyToManyField(
-        PurchaseRequest, verbose_name=_("purchase_requests")
+        PurchaseRequest,
+        verbose_name=_("purchase_requests"),
     )
     subtotal = MoneyField(
-        _("subtotal"), max_digits=14, default_currency="USD", default=0
+        _("subtotal"),
+        max_digits=14,
+        default_currency="USD",
+        default=0,
     )
     shipping = MoneyField(
-        _("shipping"), max_digits=14, default_currency="USD", default=0
+        _("shipping"),
+        max_digits=14,
+        default_currency="USD",
+        default=0,
     )
     sales_tax = MoneyField(
-        _("sales tax"), max_digits=14, default_currency="USD", default=0
+        _("sales tax"),
+        max_digits=14,
+        default_currency="USD",
+        default=0,
     )
     order_placed = models.DateField(_("date order placed"), blank=True)
     invoice_number = models.CharField(_("invoice number"), max_length=50, blank=True)
     invoice_due_date = models.DateField(_("invoice due date"), blank=True, null=True)
     notes = models.TextField(
-        _("notes"), help_text=_("what has or hasn't been received, etc."), blank=True
+        _("notes"),
+        help_text=_("what has or hasn't been received, etc."),
+        blank=True,
     )
     reconciled = models.BooleanField(_("reconciled"), default=False)
 
@@ -398,7 +418,8 @@ class VendorOrder(BaseModel):
 
     def __str__(self):
         custom_str = "{vendor} {number}".format(
-            vendor=self.vendor.name, number=self.name
+            vendor=self.vendor.name,
+            number=self.name,
         )
         return custom_str
 
@@ -409,14 +430,14 @@ class RankManager(models.Manager):
             raise ValueError("Unable to set rank below '1'; already highest rank.")
         elif new_rank == obj.get_next_rank():
             raise ValueError(
-                f"Unable to set rank above '{obj.rank}'; already lowest rank."
+                f"Unable to set rank above '{obj.rank}'; already lowest rank.",
             )
 
         qs = self.get_queryset()
         current_rank = obj.rank  # set temp variable for filters below
         # obj.rank = 0
         qs.filter(pk=obj.pk).update(
-            rank=0
+            rank=0,
         )  # avoid unique constraint (no values should be zero)
 
         with transaction.atomic():
@@ -425,7 +446,7 @@ class RankManager(models.Manager):
                     parent_model=obj.parent_model,
                     rank__lt=current_rank,
                     rank__gte=new_rank,
-                ).exclude(pk=obj.pk,).order_by("-rank").update(
+                ).exclude(pk=obj.pk).order_by("-rank").update(
                     rank=F("rank") + 1,
                 )
             else:
@@ -433,7 +454,9 @@ class RankManager(models.Manager):
                     parent_model=obj.parent_model,
                     rank__lte=new_rank,
                     rank__gt=current_rank,
-                ).exclude(pk=obj.pk,).update(
+                ).exclude(
+                    pk=obj.pk,
+                ).update(
                     rank=F("rank") - 1,
                 )
 
@@ -454,7 +477,7 @@ class RankManager(models.Manager):
 
         if (obj.get_next_rank() - 1) == current_rank:
             raise ValueError(
-                f"Unable to move to end; '{current_rank}' already lowest rank."
+                f"Unable to move to end; '{current_rank}' already lowest rank.",
             )
 
         qs = self.get_queryset()
@@ -465,8 +488,11 @@ class RankManager(models.Manager):
             # if current_rank == obj.rank: raise ValueError("Unable to move to end; '{}'
             #     already lowest rank.".format(current_rank))
 
-            qs.filter(parent_model=obj.parent_model, rank__gt=current_rank,).order_by(
-                "rank"
+            qs.filter(
+                parent_model=obj.parent_model,
+                rank__gt=current_rank,
+            ).order_by(
+                "rank",
             ).update(rank=F("rank") - 1)
 
     def move_to_top(self, obj):
@@ -480,8 +506,11 @@ class RankManager(models.Manager):
         with transaction.atomic():
             qs.filter(pk=obj.pk).update(rank=0)
 
-            qs.filter(parent_model=obj.parent_model, rank__lt=current_rank,).order_by(
-                "-rank"
+            qs.filter(
+                parent_model=obj.parent_model,
+                rank__lt=current_rank,
+            ).order_by(
+                "-rank",
             ).update(rank=F("rank") + 1)
 
     def normalize_ranks(self, field: str, model: str = None):
@@ -526,17 +555,26 @@ class SimpleProduct(models.Model):
     name = models.CharField(max_length=100)
     purchase_request = models.ForeignKey(PurchaseRequest, on_delete=models.CASCADE)
     manufacturer = models.CharField(
-        "Manufacturer (optional)", max_length=50, blank=True, null=True
+        "Manufacturer (optional)",
+        max_length=50,
+        blank=True,
+        null=True,
     )
     identifier = models.CharField(
-        "Part Number/ASIN/etc.", max_length=50, blank=True, null=True
+        "Part Number/ASIN/etc.",
+        max_length=50,
+        blank=True,
+        null=True,
     )
     link = models.URLField(blank=True, null=True)
     unit_price = models.DecimalField(max_digits=14, decimal_places=4)
     quantity = models.DecimalField(max_digits=14, decimal_places=3, default=1)
     unit = models.ForeignKey(Unit, on_delete=models.PROTECT, default=1)
     extended_price = MoneyField(
-        max_digits=14, decimal_places=2, default_currency="USD", blank=True
+        max_digits=14,
+        decimal_places=2,
+        default_currency="USD",
+        blank=True,
     )
     taxable = models.BooleanField(_("taxable"), default=True)
     rank = models.SmallIntegerField(_("in pr ordering"), editable=False)
@@ -546,7 +584,7 @@ class SimpleProduct(models.Model):
             models.UniqueConstraint(
                 fields=("purchase_request", "identifier", "name"),
                 name="unique_purchase_request_part_number",
-            )
+            ),
         ]
 
     def extend_price(self):
@@ -596,7 +634,10 @@ class Tracker(models.Model):
     id = models.CharField(max_length=100, primary_key=True, editable=False, null=False)
     active = models.BooleanField(default=True)
     carrier = models.ForeignKey(
-        Carrier, on_delete=models.PROTECT, blank=True, null=True
+        Carrier,
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
     )
     tracking_number = models.CharField(max_length=100)
     events = models.JSONField(default=None, blank=True, null=True)
@@ -606,7 +647,9 @@ class Tracker(models.Model):
     sub_status = models.CharField(max_length=50, editable=False, null=True)
     delivery_estimate = models.DateTimeField(blank=True, null=True)
     purchase_request = models.ForeignKey(
-        PurchaseRequest, on_delete=models.CASCADE, null=True
+        PurchaseRequest,
+        on_delete=models.CASCADE,
+        null=True,
     )
     # order_shipment = models.ForeignKey(Shipment, on_delete=models.CASCADE, null=True)
     earliest_event_time = models.DateTimeField(blank=True, null=True, editable=False)
@@ -615,7 +658,9 @@ class Tracker(models.Model):
     #     SimpleProduct, verbose_name=_("items"), through="TrackerItem"
     # )
     note = models.TextField(
-        _("note"), help_text=_("which items, how many, etc."), blank=True
+        _("note"),
+        help_text=_("which items, how many, etc."),
+        blank=True,
     )
 
     @property
@@ -629,7 +674,7 @@ class Tracker(models.Model):
             models.UniqueConstraint(
                 fields=("tracking_number", "carrier"),
                 name="unique_tracking_number_carrier",
-            )
+            ),
         ]
         ordering = ["-earliest_event_time", "-purchase_request__number"]
 
@@ -757,7 +802,9 @@ class TrackingEvent(models.Model):
 class TrackerStatusSteps(models.Model):
     tracker_status = models.CharField(_("status"), max_length=50)
     rank = models.PositiveSmallIntegerField(
-        _("rank"), help_text=_("rank in sort order"), unique=True
+        _("rank"),
+        help_text=_("rank in sort order"),
+        unique=True,
     )
 
 
@@ -769,7 +816,10 @@ class Balance(models.Model):
     balance = MoneyField(max_digits=14, decimal_places=2, default_currency="USD")
     updated_datetime = models.DateTimeField(auto_now_add=True)
     starting_balance = MoneyField(
-        max_digits=14, decimal_places=2, default_currency="USD", default=0
+        max_digits=14,
+        decimal_places=2,
+        default_currency="USD",
+        default=0,
     )
 
     def get_absolute_url(self):
