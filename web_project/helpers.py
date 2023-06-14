@@ -33,7 +33,9 @@ def paginate(view: ListView, **kwargs) -> tuple[bool, HTTPResponse]:
     e.g. (True,redirect('home'))
     """
     paginator = view.get_paginator(
-        view.queryset, view.paginate_by, view.paginate_orphans
+        view.queryset,
+        view.paginate_by,
+        view.paginate_orphans,
     )
 
     page = view.request.GET.get("page", None)
@@ -59,7 +61,8 @@ def paginate(view: ListView, **kwargs) -> tuple[bool, HTTPResponse]:
             messages.info(
                 view.request,
                 "Page '{og}' not valid, changed to '{new}.'".format(
-                    og=page, new=page_new.number
+                    og=page,
+                    new=page_new.number,
                 ),
             )
             return (True, redirect(new_fragment.url))
@@ -68,7 +71,8 @@ def paginate(view: ListView, **kwargs) -> tuple[bool, HTTPResponse]:
             return (False, redirect(new_fragment.url))
     except Exception:
         messages.warning(
-            view.request, message="Warning: Error trying to fix page number."
+            view.request,
+            message="Warning: Error trying to fix page number.",
         )
         # new = path.copy()
         return (True, redirect(new_fragment.path))
@@ -91,7 +95,8 @@ def redirect_to_next(request: HttpRequest, default_redirect, **kwargs) -> HTTPRe
     else:
         if "slug" in kwargs:
             redirect_url = reverse(
-                default_redirect, kwargs={"slug": kwargs.get("slug")}
+                default_redirect,
+                kwargs={"slug": kwargs.get("slug")},
             )
         else:
             redirect_url = reverse(default_redirect)
@@ -140,13 +145,16 @@ class PaginatedListMixin(FilterViewMixin, MultipleObjectMixin, View):
         if page_obj.has_previous():
             previous_page = page_obj.previous_page_number()
             context["previous_page_fragment"] = get_new_page_fragment(
-                self, previous_page
+                self,
+                previous_page,
             )
         if page_obj.has_next():
             next_page = page_obj.next_page_number()
             context["next_page_fragment"] = get_new_page_fragment(self, next_page)
         simple_page_list = context["paginator"].get_elided_page_range(
-            context["page_obj"].number, on_each_side=2, on_ends=1
+            context["page_obj"].number,
+            on_each_side=2,
+            on_ends=1,
         )
 
         page_fragments = []
@@ -284,12 +292,12 @@ def is_number(s):
 
 
 def sort_title(title: str) -> str:
-    ARTICLES = {"a", "an", "the"}
+    articles = {"a", "an", "the"}
 
     title = title.lower()
 
     first, _, rest = title.partition(" ")
-    rtitle = f"{rest}, {first}" if first in ARTICLES else title
+    rtitle = f"{rest}, {first}" if first in articles else title
 
     return rtitle
 
@@ -335,7 +343,11 @@ class LoginRequiredMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        return self.get_response(request)
+        try:
+            response = self.get_response(request)
+        except Exception as e:
+            print(f"LoginRequiredMiddleware exception: {e}")
+        return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):
         import inspect
@@ -348,10 +360,10 @@ class LoginRequiredMiddleware:
         if request.user.is_authenticated:
             return
 
-        ALLOWED_ANONYMOUS_VIEWS = settings.ALLOWED_ANONYMOUS_VIEWS
+        allowed_anonymous_views = settings.ALLOWED_ANONYMOUS_VIEWS
         all_auth_views = inspect.getmembers(auth_views)
         allowed_views = (
-            x[1] for x in all_auth_views if x[0] in ALLOWED_ANONYMOUS_VIEWS
+            x[1] for x in all_auth_views if x[0] in allowed_anonymous_views
         )
 
         if view_func.view_class in allowed_views:
@@ -374,10 +386,7 @@ def redirect_object_or_next(object, request, next_param="next"):
     :type next_param: str, optional
     """
     next = request.GET.get(next_param, None)
-    if next:
-        url = next
-    else:
-        url = object
+    url = next if next else object
 
     return redirect(url)
 
@@ -394,23 +403,5 @@ class AdminResponseMixin(admin.ModelAdmin):
         return redirect_object_or_next(obj, request)
 
 
-# def sort_list_by_lower():
-#     # TODO: make this more elegant
-#     # sort vendor as lower case (python sorts lower different than upper by default)
-#     filter_name = "purchase_request__vendor"
-
-#     # django-listview-filters added `get_filter_by_name` in later versions
-#     # (should be removed)
-#     try:
-#         filter = self.get_filter_by_name(filter_name)
-#     except Exception:
-#         if len(self.filter_specs) > 0:
-#             for filter_spec in self.filter_specs:
-#                filter = filter_spec if filter_spec.field_path == filter_name else None
-#         else:
-#             filter = None
-
-#     if filter:
-#         filter.lookup_choices = sorted(
-#             filter.lookup_choices, key=lambda x: x[1].lower()
-#         )
+# TODO(karl): create a function to sort values by their .lower selves
+# https://github.com/wsutc/SEAS-purchase-system/issues/154

@@ -251,12 +251,6 @@ class PurchaseRequestListViewBase(ListView):
 class PurchaseRequestListView(ListView):
     model = PurchaseRequest
     template_name = "purchases/purchaserequest_list.html"
-    # @silk_profile(name="PR List View")
-    # def get(self, request):
-    #     pr = PurchaseRequest.objects.all()
-    #     return render(
-    #         request, "purchases/purchaserequest_list.html", {"object_list": pr}
-    #     )
 
     def get_queryset(self):
         class SimpleObject:
@@ -289,15 +283,12 @@ class PurchaseRequestListView(ListView):
         qs = super().get_queryset()
 
         first_tracker_sq = Tracker.objects.filter(purchase_request=OuterRef("pk"))
-        # first_tracker_event_sq = TrackingEvent.objects.filter(
-        #     tracker=Subquery(first_tracker_sq)
-        # )
 
         object_list = []
         for pr in (
             qs.annotate(
                 first_tracker_status=Subquery(
-                    Subquery(first_tracker_sq.values("status")[:1]),
+                    first_tracker_sq.values("status")[:1],
                 ),
             )
             .values(
@@ -324,12 +315,6 @@ class PurchaseRequestListView(ListView):
                 "requisitioner_detail",
                 name_dict={"name": "user__username", "slug": "slug"},
             )
-            # request = SimpleObject(
-            #     pr,
-            #     "purchaserequest",
-            #     "purchaserequest_detail",
-            #     name_dict={"name": "number", "slug": "slug"},
-            # )
 
             request_slug = pr.get("slug")
             request_url = reverse(
@@ -337,11 +322,6 @@ class PurchaseRequestListView(ListView):
                 kwargs={"slug": request_slug},
             )
 
-            # first_tracker_status = (
-            #     Tracker.objects.filter(purchase_request__id=pr.get("pk"))
-            #     .values("status")
-            #     .first()
-            # )
             first_tracker_status = pr.get("first_tracker_status")
             first_tracker_status = first_tracker_status if first_tracker_status else ""
 
