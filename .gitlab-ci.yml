@@ -1,0 +1,25 @@
+workflow:
+    rules:
+        - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+
+image: python:"3.10"
+
+variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  paths:
+    - .cache/pip
+
+before_script:
+    - python --version ; pip --version # for debugging
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+
+test:
+    script:
+        - pip install --upgrade pip
+        - pip install -r requirements/production.txt
+        - pip install model-bakery
+        - python -m manage test
