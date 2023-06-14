@@ -1,6 +1,8 @@
 {% extends "purchases/list_page.html" %}
 {% load purchases_extras %}
-{% block title %}All Requisitioners{% endblock %}
+{% block title %}
+  All Requisitioners
+{% endblock title %}
 {% block header %}
   Requisitioners
 {% endblock header %}
@@ -22,7 +24,7 @@
           </tr>
         </thead>
         <tbody>
-          {% for v in object_list %}
+          {% for v in requisitioners %}
             <tr>
               <td>{{ v.user.get_full_name|urlizespecify:v.get_absolute_url }}</td>
               <td>{{ v.user.last_name }}</td>
@@ -59,7 +61,7 @@
           { orderable: false, targets: 4 },
         ],
         dom: '<"dtsp-dataTable"prftilp>',
-        pageLength: 10
+        pageLength: 25
       });
       table.searchPanes()
       let verticalPanes = $("div.dtsp-verticalPanes");
@@ -70,4 +72,4 @@
       }
     });
   </script>
-{% endblock %}
+{% endblock page %}

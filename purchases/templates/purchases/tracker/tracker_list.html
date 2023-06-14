@@ -1,6 +1,8 @@
 {% extends "purchases/list_page.html" %}
 {% load purchases_extras %}
-{% block title %}Trackers{% endblock %}
+{% block title %}
+  Trackers
+{% endblock title %}
 {% block header %}
   Trackers
 {% endblock header %}
@@ -12,6 +14,8 @@
   <script>
     $(document).ready( function () {
       var table = $('#trackers').DataTable({
+        order: [[7, "asc"]],
+        responsive: true,
         "language": {
           emptyTable: "No records to show, check your filters if any..."
         },
@@ -30,13 +34,10 @@
                 data;
             }
           },
-          {
-            targets: [7],
-            render: DataTable.render.datetime('Do MMM YYYY')
-          }
+          { visible: false, targets: [7]},
         ],
         dom: '<"dtsp-dataTable"frtip>',
-        pageLength: 20
+        pageLength: 25
       });
       table.searchPanes()
       let verticalPanes = $("div.dtsp-verticalPanes");
@@ -47,4 +48,4 @@
       }
     });
   </script>
-{% endblock %}
+{% endblock page %}

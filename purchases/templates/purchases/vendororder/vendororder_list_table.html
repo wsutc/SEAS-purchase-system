@@ -16,11 +16,13 @@
           <th>{% translate "Grand Total" %}</th>
           <th>{% translate "Calculated Total" %}</th>
           <th>{% translate "Tracker" %}</th>
+          <th>Order Placed</th>
+          <th>Open</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
-        {% for o in object_list %}
+        {% for o in vendor_orders %}
           <tr>
             <td>{{ o.vendor|urlizeobject }}</td>
             <td class="text-center">{{ o.name|urlizespecify:o.get_absolute_url }}</td>
@@ -33,7 +35,15 @@
               {{ o.grand_total|usd_accounting }}
             </td>
             <td>{{ o.calculated_total|usd_accounting }}</td>
-            <td>{{ o.purchase_requests.last.tracker_set.last.status|camel_case_split }}</td>
+            <td>{{ o.purchase_request.last.tracker_set.last.status|camel_case_split }}</td>
+            <td>{{ o.order_placed }}</td>
+            <td>
+              {% if o.purchase_requests.first.status.open %}
+                <i class="fa-regular fa-circle-check"></i>
+              {% else %}
+                <i class="fa-regular fa-circle"></i>
+              {% endif %}
+            </td>
             <td class="text-end">
               <div class="btn-group">
                 {% if o.approved_request %}
@@ -57,3 +67,4 @@
       </tbody>
     </table>
   </div>
+</div>

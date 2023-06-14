@@ -1,17 +1,17 @@
-from django.contrib import messages
-from django.contrib.auth.models import User
-from django.http import HttpRequest
+# from django.contrib import messages
+# from django.contrib.auth.models import User
+# from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
-from django.utils.text import slugify
+
+# from django.utils.text import slugify
 from django.views.generic import CreateView, DeleteView, DetailView, ListView
-from furl import furl
 
-from purchases.exceptions import Error
-from purchases.views import (  # , PartRevisionFilter, PartCreatedByFilter
-    PaginatedListMixin,
-)
-
+# from furl import furl
+# from purchases.exceptions import Error
+# from purchases.views import (  # , PartRevisionFilter, PartCreatedByFilter
+#     PaginatedListMixin,
+# )
 # from web_project.helpers import (
 #     ListViewFilter,
 #     # copy_no_page,
@@ -53,7 +53,7 @@ class SetupSheetCreateView(CreateView):
     #     return reverse_lazy('setup_sheet_detail_view', kwargs={'pk': self.object.pk})
 
 
-class SetupSheetListView(PaginatedListMixin, ListView):
+class SetupSheetListView(ListView):
     context_object_name = "setupsheet"
     queryset = SetupSheet.objects.order_by("operation")
     filters = [
@@ -74,15 +74,15 @@ class PartDetailView(DetailView):
     query_pk_and_slug = True
 
 
-class PartListView(PaginatedListMixin, ListView):
+class PartListView(ListView):
     context_object_name = "part"
     queryset = Part.objects.order_by("number")
     # filters = [
-    #     # ListViewFilter('revision', 'partrevision', 'revision', PartRevision, 'part', order_by='revision', main_model=Part),
-    #     # ListViewFilterBase('created by', 'setup_sheets_part_related', Part, 'created_by', 'created-by', 'last_name', User),
+    #     # ListViewFilter('revision', 'partrevision', 'revision', PartRevision, 'part', order_by='revision', main_model=Part),  # noqa: E501
+    #     # ListViewFilterBase('created by', 'setup_sheets_part_related', Part, 'created_by', 'created-by', 'last_name', User),  # noqa: E501
     #     # ("revision", {'field':'revision', 'parent_model':PartRevision}),
-    #     # # ("revision", {'model':PartRevision, 'parent_model':Part, 'field':'part', 'order_by':'revision'}),
-    #     # ("created-by", {'model':User, 'parent_model':Part, 'field':'setup_sheets_part_related', 'order_by':'last_name'}),
+    #     # # ("revision", {'model':PartRevision, 'parent_model':Part, 'field':'part', 'order_by':'revision'}),  # noqa: E501
+    #     # ("created-by", {'model':User, 'parent_model':Part, 'field':'setup_sheets_part_related', 'order_by':'last_name'}),  # noqa: E501
     # ]
 
 
@@ -100,7 +100,9 @@ class PartRevisionCreateView(CreateView):
     def get_initial(self):
         initial_og = super().get_initial()
         part_obj = get_object_or_404(
-            Part, slug=self.kwargs.get("slug"), pk=self.kwargs.get("pk")
+            Part,
+            slug=self.kwargs.get("slug"),
+            pk=self.kwargs.get("pk"),
         )
         initial = initial_og.copy()
         initial["part"] = part_obj.pk
@@ -116,13 +118,12 @@ class PartRevisionCreateView(CreateView):
 
     # def get_context_data(self, **kwargs):
     #     context = super().get_context_data(**kwargs)
-    #     part_obj = get_object_or_404(Part,slug=self.kwargs.get('slug'),pk=self.kwargs.get('pk'))
+    #     part_obj = get_object_or_404(Part,slug=self.kwargs.get('slug'),pk=self.kwargs.get('pk'))  # noqa: E501
     #     context['part'] = part_obj
     #     return context
 
 
 def redirect_to_next(view, default_redirect="home"):
-
     next = view.request.GET.get("next", None)
     if next:
         return next
@@ -146,10 +147,14 @@ class PartRevisionDeleteView(DeleteView):
 
     def get_context_data(self, **kwargs):
         part_obj = get_object_or_404(
-            Part, slug=self.kwargs.get("slug"), pk=self.kwargs.get("pk")
+            Part,
+            slug=self.kwargs.get("slug"),
+            pk=self.kwargs.get("pk"),
         )
         self.object = get_object_or_404(
-            PartRevision, part=part_obj, revision=self.kwargs.get("revision")
+            PartRevision,
+            part=part_obj,
+            revision=self.kwargs.get("revision"),
         )
         kwargs["object"] = self.object
         context = super().get_context_data(**kwargs)
@@ -159,10 +164,14 @@ class PartRevisionDeleteView(DeleteView):
 
     def form_valid(self, *args, **kwargs):
         part_obj = get_object_or_404(
-            Part, slug=self.kwargs.get("slug"), pk=self.kwargs.get("pk")
+            Part,
+            slug=self.kwargs.get("slug"),
+            pk=self.kwargs.get("pk"),
         )
         object = get_object_or_404(
-            PartRevision, part=part_obj, revision=self.kwargs.get("revision")
+            PartRevision,
+            part=part_obj,
+            revision=self.kwargs.get("revision"),
         )
         # object = self.get_object()
         object.delete()

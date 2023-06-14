@@ -38,6 +38,7 @@ from .views import (  # LedgersListView,
     VendorOrderListView,
     VendorUpdateView,
     generate_pr_pdf,
+    purchaserequest_list_json,
     tracking_webhook,
     update_balance,
     update_pr_status,
@@ -45,6 +46,7 @@ from .views import (  # LedgersListView,
     update_tracker,
 )
 
+# fmt: off
 urlpatterns = [
     # path("", RedirectView.as_view(url="purchases/")),
     path("", PurchaseRequestListView.as_view(), name="home"),
@@ -83,9 +85,11 @@ urlpatterns = [
     path("all-requisitioners", RequisitionerListView.as_view(), name="all_requisitioners"),
     path("requisitioner/new", RequisitionerCreateView.as_view(), name="new_requisitioner"),
     path("requisitioner/<int:pk>-<slug:slug>/", RequisitionerDetailView.as_view(), name="requisitioner_detail"),
-    path("simple-products/copy/<int:pk>", SimpleProductCopyView.as_view(), name="copy_simpleproduct"),
+    path("simple-products/copy/<int:pk>",SimpleProductCopyView.as_view(),name="copy_simpleproduct"),
     path("simple-products/<purchaserequest>/", SimpleProductPRListView.as_view(), name="pr_filtered_simpleproducts"),
     path("simple-products/", SimpleProductListView.as_view(), name="simpleproducts"),
     path("select2/", include("django_select2.urls")),
+    path("json/", purchaserequest_list_json, name="json_list"),
     path("<requisitioner>/", RequisitionerPurchaseRequestListView.as_view(), name="req_filtered_pr"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# fmt: on
