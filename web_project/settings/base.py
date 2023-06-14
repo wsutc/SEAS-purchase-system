@@ -113,6 +113,7 @@ _THIRD_PARTY_APPS = [
     "django_select2",
     "modelclone",
     "widget_tweaks",
+    "silk",
 ]
 
 _LOCAL_APPS = [
@@ -127,10 +128,13 @@ _LOCAL_APPS = [
 
 INSTALLED_APPS = _DJANGO_APPS + _THIRD_PARTY_APPS + _LOCAL_APPS
 
+SILKY_PYTHON_PROFILER = True
+
 MIDDLEWARE = [
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "silk.middleware.SilkyMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -138,7 +142,7 @@ MIDDLEWARE = [
     "web_project.helpers.LoginRequiredMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "django_cprofile_middleware.middleware.ProfileMiddleware",
+    "django_cprofile_middleware.middleware.ProfilerMiddleware",
 ]
 
 ROOT_URLCONF = "web_project.urls"

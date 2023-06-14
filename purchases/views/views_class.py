@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 # from django.contrib.auth.models import User
 from django.db.models import ExpressionWrapper, F, OuterRef, Subquery, Sum
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import (
@@ -25,6 +25,7 @@ from django_listview_filters.filters import (  # AllValuesFieldListFilter,
     RelatedFieldListViewFilter,
 )
 from djmoney.models.fields import MoneyField
+from silk.profiling.profiler import silk_profile
 
 from globals.models import DefaultValue
 from purchases.forms import (
@@ -240,7 +241,13 @@ class PurchaseRequestListViewBase(ListView):
 
 
 class PurchaseRequestListView(ListView):
-    model = PurchaseRequest
+    @silk_profile(name="home")
+    # model = PurchaseRequest
+    def get(self, request):
+        pr = PurchaseRequest.objects.all()
+        return render(
+            request, "purchases/purchaserequest_list.html", {"object_list": pr}
+        )
 
 
 class RequisitionerPurchaseRequestListView(PurchaseRequestListViewBase):
