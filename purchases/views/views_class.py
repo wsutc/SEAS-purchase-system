@@ -241,8 +241,8 @@ class PurchaseRequestListViewBase(ListView):
 
 
 class PurchaseRequestListView(ListView):
-    @silk_profile(name="home")
     # model = PurchaseRequest
+    @silk_profile(name="PR List View")
     def get(self, request):
         pr = PurchaseRequest.objects.all()
         return render(

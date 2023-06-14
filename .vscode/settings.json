@@ -15,13 +15,13 @@
             "comments": true,
             "strings": true
         },
-        "editor.wordWrap":"on",
+        "editor.wordWrap": "on",
     },
     "emmet.includeLanguages": {
         "django-html": "html",
     },
     "python.linting.flake8Enabled": true,
-    "python.linting.enabled": true,
+    "python.linting.enabled": false,
     "python.analysis.extraPaths": [
         "./django-listview-filters/src"
     ],
