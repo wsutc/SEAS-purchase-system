@@ -21,7 +21,8 @@
     "editor.codeActionsOnSave": {
       "source.fixAll": true,
       "source.organizeImports": true,
-    }
+    },
+    "editor.defaultFormatter": "ms-python.black-formatter"
   },
   // "python.linting.flake8Enabled": true,
   "python.linting.enabled": true,
@@ -29,7 +30,7 @@
   // "[python]": {
   //   "editor.defaultFormatter": "ms-python.black-formatter"
   // },
-  "python.formatting.provider": "black",
+  // "python.formatting.provider": "black",
   // "files.associations": {
   //   "*urls.py": "urls"
   // },
@@ -40,4 +41,5 @@
     "django-html": "html",
     // "urls": "python",
   },
+  "python.analysis.typeCheckingMode": "off",
 }
