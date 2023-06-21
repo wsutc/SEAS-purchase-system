@@ -1,6 +1,8 @@
 from typing import Any
 
-from django.contrib.auth.models import User
+from django.conf import settings
+
+# from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
@@ -66,7 +68,7 @@ class Command(BaseCommand):
 
             qs.delete()
 
-        User.objects.all().exclude(is_superuser=True).delete()
+        settings.AUTH_USER_MODEL.objects.all().exclude(is_superuser=True).delete()
 
         self.stdout.write("Creating NEW sample data...")
 
