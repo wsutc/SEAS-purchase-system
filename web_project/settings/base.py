@@ -142,7 +142,6 @@ _LOCAL_APPS = [
     "purchases",
     "setup_sheets",
     "tool_compatibility",
-    "users",
 ]
 
 INSTALLED_APPS = _DJANGO_APPS + _THIRD_PARTY_APPS + _LOCAL_APPS
@@ -229,7 +228,7 @@ DATABASES = {
 # AUTHENTICATION
 # --------------------------------------------------------------------------------
 AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.ModelBackend"]
-AUTH_USER_MODEL = "users.User"
+# AUTH_USER_MODEL = "users.User"
 LOGIN_REDIRECT_URL = "/"
 # LOGIN_URL = "account_login"
 
