@@ -5,7 +5,8 @@ from json import JSONDecodeError
 from random import choice
 
 import pytz
-from django.contrib.auth.models import Permission, User
+from django.conf import settings
+from django.contrib.auth.models import Permission
 
 # from django.core.management import call_command
 from django.db import models
@@ -25,7 +26,11 @@ from .models import PurchaseRequest, Requisitioner, Tracker, Urgency
 
 
 def create_pr_deps():
-    user = baker.make(User, first_name=seq("Test"), last_name=seq("User"))
+    user = baker.make(
+        settings.AUTH_USER_MODEL,
+        first_name=seq("Test"),
+        last_name=seq("User"),
+    )
     # from purchases.signals import create_requisitioner
     requisitioner = Requisitioner.objects.get(user=user)
     # requisitioner.save()
