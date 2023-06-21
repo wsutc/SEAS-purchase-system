@@ -1,7 +1,9 @@
 # import http.client, json
 # from django.conf import settings
 # from django.apps import apps
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
+
+from django.conf import settings
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 
@@ -41,11 +43,12 @@ def validate_account_program(sender, instance, **kwargs):
         return first_true(instance.identity_list)
 
 
-@receiver(post_save, sender=User)
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_requisitioner(sender, instance, created, **kwargs):
     if created:
         department, _ = Department.objects.get_or_create(
-            code="SEAS", defaults={"name": "School of Engineering and Applied Sciences"}
+            code="SEAS",
+            defaults={"name": "School of Engineering and Applied Sciences"},
         )
         Requisitioner.objects.create(user=instance, department=department)
     instance.requisitioner.save()
@@ -60,7 +63,8 @@ def create_requisitioner(sender, instance, created, **kwargs):
 def create_link(sender, instance, **kwargs):
     if not instance.link:
         instance.link = link_from_identifier(
-            instance.identifier, instance.purchase_request.vendor
+            instance.identifier,
+            instance.purchase_request.vendor,
         )
 
 

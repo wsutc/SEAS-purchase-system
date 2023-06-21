@@ -1,4 +1,6 @@
-from django.contrib.auth.models import User
+from django.conf import settings
+
+# from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
@@ -18,7 +20,7 @@ from purchases.models import Manufacturer
 class BaseModel(models.Model):
     name = models.CharField(max_length=50, blank=True, null=True)
     created_by = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         null=True,
         related_name="%(app_label)s_%(class)s_related",
@@ -49,7 +51,9 @@ class ToolComponents(models.Model):
     manufacturer = models.ForeignKey(Manufacturer, on_delete=models.SET_NULL, null=True)
     product_number = models.CharField("MFG Number", max_length=30)
     tool_type = models.CharField(
-        choices=COMPONENT_TYPE, default="holder", max_length=15
+        choices=COMPONENT_TYPE,
+        default="holder",
+        max_length=15,
     )
 
     def __str__(self):
@@ -120,8 +124,9 @@ class PartRevision(models.Model):
         get_latest_by = ["revision"]
         constraints = [
             models.UniqueConstraint(
-                fields=("part", "revision"), name="unique_part_revision"
-            )
+                fields=("part", "revision"),
+                name="unique_part_revision",
+            ),
         ]
 
     def get_absolute_url(self):
@@ -136,7 +141,8 @@ class PartRevision(models.Model):
 
     def __str__(self) -> str:
         value = "{part_number} | Rev {revision}".format(
-            part_number=self.part.number, revision=self.revision
+            part_number=self.part.number,
+            revision=self.revision,
         )
         return value
 
@@ -145,7 +151,10 @@ class SetupSheet(BaseModel):
     name = models.CharField("Setup Name", max_length=50)
     part = models.ForeignKey(Part, on_delete=models.PROTECT, null=True)
     part_revision = models.ForeignKey(
-        PartRevision, on_delete=models.PROTECT, blank=True, null=True
+        PartRevision,
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
     )
     program_name = models.CharField(max_length=30)
     operation = models.CharField(max_length=30)

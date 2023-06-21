@@ -3,7 +3,9 @@ import random
 from random import choice  # , randint  # random,
 
 import pytz  # , mute_signals
-from django.contrib.auth.models import User
+from django.conf import settings
+
+# from django.contrib.auth.models import User
 from factory import (  # Iterator,; List,; random,; RelatedFactory,; SelfAttribute,
     Faker,
     LazyAttribute,
@@ -121,7 +123,7 @@ class SimpleProductFactory(DjangoModelFactory):
 
 class UserFactory(DjangoModelFactory):
     class Meta:
-        model = User
+        model = settings.AUTH_USER_MODEL
         exclude = "sequence"
 
     sequence = Sequence(lambda n: f"{n}")
@@ -133,8 +135,10 @@ class UserFactory(DjangoModelFactory):
 
     username = LazyAttribute(
         lambda n: "{}.{}{}".format(
-            n.first_name.lower(), n.last_name.lower(), n.sequence
-        )
+            n.first_name.lower(),
+            n.last_name.lower(),
+            n.sequence,
+        ),
     )
 
     # requisitioner = RelatedFactory(
@@ -190,14 +194,14 @@ class PurchaseRequestFactory(DjangoModelFactory):
     # req = Requisitioner.objects.get(user=user)
 
     qsr = Requisitioner.objects.all()
-    print(f"Random Requisitioner: {choice(qsr)}")
+    print(f"Random Requisitioner: {choice(qsr)}")  # noqa: S311
 
     requisitioner = Faker("random_element", elements=qsr.all())
     vendor = Faker("random_element", elements=Vendor.objects.all())
     accounts = RelatedFactoryList(
         PurchaseRequestAccountFactory,
         factory_related_name="purchase_request",
-        size=lambda: random.randint(1, 3),
+        size=lambda: random.randint(1, 3),  # noqa: S311
     )
     shipping = Faker("pyfloat", right_digits=2, positive=True, max_value=100)
     sales_tax_rate = 0.087
@@ -212,6 +216,6 @@ class PurchaseRequestFactory(DjangoModelFactory):
     items = RelatedFactoryList(
         SimpleProductFactory,
         factory_related_name="purchase_request",
-        size=lambda: random.randint(1, 10),
+        size=lambda: random.randint(1, 10),  # noqa: S311
     )
     # item2 = RelatedFactory(SimpleProductFactory, factory_related_name="number")

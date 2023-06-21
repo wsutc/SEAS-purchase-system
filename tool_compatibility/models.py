@@ -1,4 +1,5 @@
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
+from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
@@ -8,7 +9,7 @@ from django.utils.text import slugify
 class BaseModel(models.Model):
     name = models.CharField(max_length=50, blank=True, null=True)
     created_by = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         null=True,
         related_name="%(app_label)s_%(class)s_related",
@@ -40,7 +41,9 @@ class Manufacturer(BaseModel):
 class Grade(BaseModel):
     abbreviation = models.CharField(max_length=15)
     description = models.TextField(
-        help_text="Best applications, further explanation, etc.", blank=True, null=True
+        help_text="Best applications, further explanation, etc.",
+        blank=True,
+        null=True,
     )
 
     class Meta:
@@ -62,7 +65,9 @@ class Grade(BaseModel):
 class Coating(BaseModel):
     abbreviation = models.CharField(max_length=15)
     description = models.TextField(
-        help_text="Best applications, further explanation, etc.", blank=True, null=True
+        help_text="Best applications, further explanation, etc.",
+        blank=True,
+        null=True,
     )
 
     class Meta:
@@ -88,8 +93,9 @@ class Shape(BaseModel):
         ordering = ["name", "designation"]
         constraints = [
             models.UniqueConstraint(
-                fields=("name", "designation"), name="unique_insert_shape"
-            )
+                fields=("name", "designation"),
+                name="unique_insert_shape",
+            ),
         ]
 
     def save(self, *args, **kwargs) -> None:
@@ -109,10 +115,15 @@ class Shape(BaseModel):
 class Tool(BaseModel):
     name = None
     manufacturer = models.ForeignKey(
-        Manufacturer, on_delete=models.PROTECT, blank=True, null=True
+        Manufacturer,
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
     )
     part_number = models.CharField(
-        help_text="Manufacturer or Vendor Number", max_length=50, blank=True
+        help_text="Manufacturer or Vendor Number",
+        max_length=50,
+        blank=True,
     )
     description = models.CharField(max_length=100, blank=False)
     website = models.URLField(blank=True, null=True)
@@ -121,12 +132,12 @@ class Tool(BaseModel):
         ordering = ["part_number"]
         constraints = [
             models.UniqueConstraint(
-                fields=("manufacturer", "part_number"), name="unique_tool"
-            )
+                fields=("manufacturer", "part_number"),
+                name="unique_tool",
+            ),
         ]
 
     def get_absolute_url(self):
-
         return reverse("tool_detail", kwargs={"pk": self.pk, "slug": self.slug})
 
     def save(self, *args, **kwargs) -> None:
@@ -144,7 +155,9 @@ class Tool(BaseModel):
 
 class Holder(Tool):
     designation = models.CharField(
-        help_text="e.g. SER0500H11", max_length=50, unique=True
+        help_text="e.g. SER0500H11",
+        max_length=50,
+        unique=True,
     )
 
     MACHINE_TYPE_CHOICES = [
@@ -199,19 +212,31 @@ class Insert(Tool):
     holder = models.ManyToManyField(Holder)
     size = models.CharField(max_length=30, blank=True, null=True)
     thickness = models.DecimalField(
-        max_digits=15, decimal_places=3, blank=True, null=True
+        max_digits=15,
+        decimal_places=3,
+        blank=True,
+        null=True,
     )
     application = models.CharField(
-        help_text="Internal/External/etc.", max_length=50, blank=True, null=True
+        help_text="Internal/External/etc.",
+        max_length=50,
+        blank=True,
+        null=True,
     )
     shape = models.ForeignKey(Shape, on_delete=models.PROTECT, blank=True, null=True)
     hand = models.CharField(
-        help_text="Left/Right/Neutral", max_length=15, blank=True, null=True
+        help_text="Left/Right/Neutral",
+        max_length=15,
+        blank=True,
+        null=True,
     )
     corner_radius = models.CharField(max_length=15, blank=True, null=True)
     grade = models.ForeignKey(Grade, on_delete=models.PROTECT, blank=True, null=True)
     coating = models.ForeignKey(
-        Coating, on_delete=models.PROTECT, blank=True, null=True
+        Coating,
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
     )
     miscellaneous = models.TextField(
         help_text="e.g. pitch range, finish, preferred application",
