@@ -2,6 +2,7 @@ import hashlib
 import http.client
 import json
 import logging
+import re
 
 from benedict import benedict
 from django.conf import settings
@@ -14,13 +15,33 @@ from purchases.exceptions import (
     TrackerRejectedUnknownCode,
 )
 
+# csv_import/carriers.csv
+USPS_CARRIER_CODE = "21051"
+UPS_CARRIER_CODE = "100002"
+FEDEX_CARRIER_CODE = "100003"
+
+# https://stackoverflow.com/a/62784467
+USPS_REGEX = re.compile(
+    r"\b([A-Z]{2}\d{9}[A-Z]{2}|(420\d{9}(9[2345])?)?\d{20}|(420\d{5})?(9[12345])?(\d{24}|\d{20})|82\d{8})\b",
+)
+UPS_REGEX = re.compile(r"\b1Z[A-Z0-9]{16}\b")
+FEDEX_REGEX = re.compile(
+    r"\b([0-9]{12}|100\d{31}|\d{15}|\d{18}|96\d{20}|96\d{32})\b",
+)
+
+CARRIER_REGEX_LIST = [
+    (USPS_CARRIER_CODE, USPS_REGEX),
+    (UPS_CARRIER_CODE, UPS_REGEX),
+    (FEDEX_CARRIER_CODE, FEDEX_REGEX),
+]
+
 # from typing import TypeVar
 
 logger = logging.getLogger(__name__)
 
 
 def register_trackers(payload: list[tuple[str, str]]) -> dict[list[dict], list[dict]]:
-    """Register trackers if they doesn't already exist
+    """Register trackers if they don't already exist
 
     Argument:
 
@@ -43,7 +64,6 @@ def register_trackers(payload: list[tuple[str, str]]) -> dict[list[dict], list[d
 
     accepted_list = []
     for tracker in tracker_responses["accepted"]:
-
         accepted = {
             "response": True,
             "message": None,
@@ -61,7 +81,8 @@ def register_trackers(payload: list[tuple[str, str]]) -> dict[list[dict], list[d
         try:
             if rejected["code"] == -18019901:
                 raise TrackerPreviouslyRegistered(
-                    rejected["tracker"].tracking_number, rejected["message"]
+                    rejected["tracker"].tracking_number,
+                    rejected["message"],
                 )
             else:
                 raise TrackerRejectedUnknownCode(
@@ -86,7 +107,8 @@ REQUEST_METHODS = (
 
 
 def tracker_request(
-    request_method: REQUEST_METHODS, payload: list[tuple]
+    request_method: REQUEST_METHODS,
+    payload: list[tuple],
 ) -> JsonResponse:
     """Return data based on method from list of trackers.
 
@@ -108,13 +130,13 @@ def tracker_request(
                 {
                     "number": t,
                     "carrier": c,
-                }
+                },
             )
         elif t:
             payload_dict.append(
                 {
                     "number": t,
-                }
+                },
             )
         else:
             raise ValueError("All trackers MUST have a tracking number.")
@@ -130,9 +152,9 @@ def tracker_request(
             conn.request("POST", "/track/v2/gettrackinfo", payload, headers)
 
     res = conn.getresponse()
-    dataBytes = res.read()
-    dataJson = json.loads(dataBytes.decode("utf-8"))
-    data = dataJson.get("data")
+    data_bytes = res.read()
+    data_json = json.loads(data_bytes.decode("utf-8"))
+    data = data_json.get("data")
 
     return data
 
@@ -176,16 +198,17 @@ def update_tracking_details(trackers: list[tuple[str, str]]) -> list[dict]:
             match str(row_b["error.code"]):
                 case "-18019902":
                     raise TrackerNotRegistered(
-                        tracking_number=row_b["number"], message=row_b["error.message"]
+                        tracking_number=row_b["number"],
+                        message=row_b["error.message"],
                     )
-    except KeyError:
+    except KeyError as err:
         data_b = benedict(data)
         if "errors" in data_b:
             error_code = data_b["errors[0].code"]
             error_message = data_b["errors[0].message"]
             match str(error_code):
                 case "-18010002":
-                    raise TrackerInvalidApiKey(error_code, error_message)
+                    raise TrackerInvalidApiKey(error_code, error_message) from err
     else:
         return updated_trackers
 
@@ -197,6 +220,31 @@ def get_generated_signature(message: bytes, secret: str):
     return digest
 
 
+def get_carrier_from_tracking_number(tracking_number: str) -> str:
+    """Returns the "carrier code" based on the tracking number provided.
+    Only currently matches on:
+
+    - USPS/S10
+    - UPS
+    - FedEx
+
+    Based on this StackOverflow answer: # https://stackoverflow.com/a/62784467
+    Carrier code from csv_import/carriers.csv
+
+    :param tracking_number: tracking number
+    :type tracking_number: str
+    :return: carrier code
+    :rtype: str
+    """
+    cleaned_tracking_number = tracking_number.strip()
+
+    for c, r in CARRIER_REGEX_LIST:
+        if r.search(cleaned_tracking_number):
+            return c
+
+    return None
+
+
 class TrackerObject:
     def __init__(self, payload: benedict):
         payload_benedict = benedict(payload)
@@ -205,7 +253,7 @@ class TrackerObject:
         self.sub_status = payload_benedict.get_str(["sub_status"])
         self.delivery_estimate = payload_benedict.get_datetime(["estimated_delivery"])
         self.latest_update_time = payload_benedict.get_datetime(
-            ["latest_event.time_utc"]
+            ["latest_event.time_utc"],
         )
         self.providers_hash = payload_benedict.get_int(["providers_hash"])
         self.carrier_name = payload_benedict.get_str(["carrier.name"])
@@ -225,14 +273,14 @@ class TrackerObject:
         d["status"] = i.get_str(["track_info.latest_status.status"])
         d["sub_status"] = i.get_str(["track_info.latest_status.sub_status"])
         d["delivery_estimate"] = i.get_datetime(
-            ["track_info.time_metrics.estimated_delivery"]
+            ["track_info.time_metrics.estimated_delivery"],
         )
         d["latest_event.time_utc"] = i.get_datetime(
-            ["track_info.latest_event.time_utc"]
+            ["track_info.latest_event.time_utc"],
         )
         d["providers_hash"] = i.get_int(["track_info.tracking.providers_hash"])
         d["carrier.name"] = i.get_str(
-            ["track_info.tracking.providers[0].provider.name"]
+            ["track_info.tracking.providers[0].provider.name"],
         )
         d["carrier.code"] = i.get_int(["track_info.tracking.providers[0].provider.key"])
         d["events_hash"] = i.get_int(["track_info.tracking.providers[0].events_hash"])
