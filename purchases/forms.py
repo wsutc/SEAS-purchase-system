@@ -4,13 +4,14 @@ from crispy_forms.layout import Submit
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.forms.forms import ValidationError
 from django.forms.models import inlineformset_factory
 from django.utils.translation import gettext_lazy as _
 from django_select2 import forms as s2forms
 from phonenumber_field.formfields import PhoneNumberField
 
 from purchases.exceptions import TrackerPreviouslyRegistered, TrackerRejectedUnknownCode
-from purchases.tracking import register_trackers
+from purchases.tracking import get_carrier_from_tracking_number, register_trackers
 
 from .models import (
     Carrier,
@@ -199,21 +200,10 @@ class SimpleProductForm(forms.ModelForm):
             "manufacturer": forms.TextInput(attrs={"style": "width:100%"}),
             "link": forms.URLInput(attrs={"style": "width:100%"}),
             "unit_price": forms.NumberInput(attrs={"class": "currency"}),
-            "quantity": forms.NumberInput(attrs={"class": "quantity"})
+            "quantity": forms.NumberInput(attrs={"class": "quantity"}),
             # 'specification': forms.Textarea(attrs={'rows':8})
         }
 
-
-# class CustomInlineFormSet(forms.BaseInlineFormSet): """Checks that there are not two
-#     items on one purchase request with the same part number/ID""" def clean(self):
-#     super().clean() if any(self.errors): return products = [] for form in self.forms:
-#         if self.can_delete and self._should_delete_form(form): continue product =
-#         (form.cleaned_data.get('purchase_request'),form.cleaned_data.get('identifier'))
-#             print("%s" % product[1]) if product in products: print("Duplicate Found")
-#         raise forms.ValidationError("Part Numbers must be unique per Purchase
-#         Request.") products.append(product)
-
-#         print(products.count)
 
 SimpleProductFormset = inlineformset_factory(
     PurchaseRequest,
@@ -232,14 +222,17 @@ class PurchaseRequestAccountForm(forms.ModelForm):
             "distribution_type": forms.RadioSelect(),
             "account": AccountWidget(attrs={"class": "select-account"}),
             "spend_category_ext": SpendCategoryWidget(
-                attrs={"class": "select-spendcat"}
+                attrs={"class": "select-spendcat"},
             ),
             "distribution_input": forms.TextInput(attrs={"style": "width:100%"}),
         }
 
 
 PurchaseRequestAccountFormset = inlineformset_factory(
-    PurchaseRequest, PurchaseRequestAccount, form=PurchaseRequestAccountForm, extra=1
+    PurchaseRequest,
+    PurchaseRequestAccount,
+    form=PurchaseRequestAccountForm,
+    extra=1,
 )
 
 
@@ -264,17 +257,18 @@ class SimpleProductCopyForm(forms.ModelForm):
         # Reduce list of purchase requests to only those that are the same
         # vendor and exclude those that already include this item
         self.fields["purchase_request"].queryset = PurchaseRequest.objects.filter(
-            vendor=vendor
+            vendor=vendor,
         ).exclude(simpleproduct__identifier=self.instance.identifier)
-        self.fields["link"].disabled
-        self.fields["identifier"].disabled
-        self.fields["manufacturer"].disabled
+        self.fields["link"].disabled = True
+        self.fields["identifier"].disabled = True
+        self.fields["manufacturer"].disabled = True
 
     def clean(self):
         purchase_request = self.cleaned_data.get("purchase_request")
         identifier = self.instance.identifier
         if SimpleProduct.objects.filter(
-            purchase_request=purchase_request, identifier=identifier
+            purchase_request=purchase_request,
+            identifier=identifier,
         ).exists():
             raise forms.ValidationError(
                 "Product with part number %(identifier)s already exists on \
@@ -287,6 +281,8 @@ class SimpleProductCopyForm(forms.ModelForm):
 
 
 class TrackerForm(forms.ModelForm):
+    form_confirmed = forms.BooleanField(widget=forms.HiddenInput, required=False)
+
     class Meta:
         model = Tracker
         widgets = {
@@ -307,10 +303,8 @@ class TrackerForm(forms.ModelForm):
 
     def clean(self):
         tracking_number = self.cleaned_data.get("tracking_number")
-        if self.data.get("carrier"):
-            carrier = self.cleaned_data.get("carrier")
-        else:
-            carrier = None
+        carrier = self.cleaned_data.get("carrier") if self.data.get("carrier") else None
+        form_confirmed = self.cleaned_data.get("form_confirmed")
 
         if carrier:
             tracker_list = [(tracking_number, carrier.carrier_code)]
@@ -324,10 +318,12 @@ class TrackerForm(forms.ModelForm):
             raise
 
         accepted_response = next(
-            iter(responses["accepted"] or []), None
+            iter(responses["accepted"] or []),
+            None,
         )  # get first (only) accepted response, None if empty
         rejected_response = next(
-            iter(responses["rejected"] or []), None
+            iter(responses["rejected"] or []),
+            None,
         )  # get first rejected response
 
         # check if the register was accepted or rejected
@@ -346,13 +342,26 @@ class TrackerForm(forms.ModelForm):
                 self.message = response_dict["message"]
             else:
                 raise forms.ValidationError(
-                    rejected_response["message"], rejected_response["code"]
+                    rejected_response["message"],
+                    rejected_response["code"],
                 )
+
+        if (
+            get_carrier_from_tracking_number(response_dict["tracker"].tracking_number)
+            != response_dict["tracker"].carrier_code
+        ) and not form_confirmed:
+            self.data = self.data.copy()
+            self.data["form_confirmed"] = True
+            raise ValidationError(
+                "Carrier does not seem to match tracking number. Press 'Save' again "
+                "to confirm.",
+                code="mismatch",
+            )
 
         # get carrier by code; on the off chance that there's an unrecognized code,
         # create a new carrier
         if carrier:
-            self.carrier, bleh = Carrier.objects.get_or_create(
+            self.carrier, _ = Carrier.objects.get_or_create(
                 carrier_code=response_dict["tracker"].carrier_code,
                 defaults={"name": response_dict["tracker"].carrier_name},
             )
