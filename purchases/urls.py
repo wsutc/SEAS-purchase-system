@@ -4,8 +4,6 @@ from django.conf.urls.static import static
 from django.urls import include, path
 from django.views.generic import RedirectView
 
-from purchases.views.views_class import VendorOrderAddApprovedPR
-
 from .views import (  # LedgersListView,
     AccountDetailView,
     BalancesDetailView,
@@ -32,6 +30,7 @@ from .views import (  # LedgersListView,
     VendorDeleteView,
     VendorDetailView,
     VendorListView,
+    VendorOrderAddApprovedPR,
     VendorOrderCreateView,
     VendorOrderCurrentListView,
     VendorOrderDetailView,
