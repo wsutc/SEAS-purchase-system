@@ -1,5 +1,7 @@
 import csv
-import os
+
+# import os
+from pathlib import Path
 
 # import MySQLdb
 from django.conf import settings
@@ -18,9 +20,9 @@ class Command(BaseCommand):
         row_count = 0
         added_rows = 0
         skipped_rows = 0
-        path = os.path.join(settings.BASE_DIR, kwargs["csv_file"][0])
+        path = Path(settings.BASE_DIR, kwargs["csv_file"][0])
         self.stdout.write(self.style.NOTICE("Path: %s" % path))
-        with open(path, encoding="utf8") as f:
+        with Path.open(path, encoding="utf8") as f:
             reader = csv.reader(f)
             for row in reader:
                 try:
@@ -31,16 +33,16 @@ class Command(BaseCommand):
                     row_count += 1
                     if created:
                         self.stdout.write(
-                            self.style.NOTICE('Created "%s".' % carrier.name)
+                            self.style.NOTICE('Created "%s".' % carrier.name),
                         )
                         added_rows += 1
                     else:
                         self.stdout.write(
-                            self.style.NOTICE('"%s" updated.' % carrier.name)
+                            self.style.NOTICE('"%s" updated.' % carrier.name),
                         )
                 except Exception:
                     self.stdout.write(
-                        self.style.ERROR("Unable to create/update carrier %s" % row[1])
+                        self.style.ERROR("Unable to create/update carrier %s" % row[1]),
                     )
                     skipped_rows += 1
 
