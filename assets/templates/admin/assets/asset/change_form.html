@@ -1,0 +1,31 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block admin_change_form_document_ready %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/quagga/dist/quagga.min.js"></script>
+<script>
+    Quagga.init({
+        inputStream: {
+            name: "Live",
+            type: "LiveStream",
+            target: "#field-tag",
+        },
+        decoder: {
+            readers: ["ean_reader"],
+        },
+    }, function (err) {
+        if (err) {
+            console.error(err);
+            return;
+        }
+        console.log("Initialization finished. Ready to start");
+        Quagga.start();
+    });
+
+    Quagga.onDetected(function (result) {
+        document.getElementById("id_tag").value = result.codeResult.code;
+        Quagga.stop();
+    });
+</script>
+{% endblock admin_change_form_document_ready %}
