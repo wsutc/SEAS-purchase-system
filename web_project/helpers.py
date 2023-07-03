@@ -351,6 +351,7 @@ class LoginRequiredMiddleware:
             raise
         except Exception as e:
             print(f"LoginRequiredMiddleware exception: {e}")
+            raise
         return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):
