@@ -7,7 +7,9 @@ from django.utils.translation import gettext_lazy as _
 
 class SettingsManager(models.Manager):
     def get_value(
-        self, setting_name: str, default: (str | int | float) = None
+        self,
+        setting_name: str,
+        default: (str | int | float) = None,
     ) -> str | int | float:
         """Return setting value given correctly spelled setting_name
 
@@ -40,7 +42,10 @@ class DefaultValue(models.Model):
         INT = "INT", _("Integer")
 
     data_type = models.CharField(
-        _("data type"), choices=DataType.choices, default=DataType.TEXT, max_length=50
+        _("data type"),
+        choices=DataType.choices,
+        default=DataType.TEXT,
+        max_length=50,
     )
     value = models.TextField(_("setting value"))
 
@@ -62,27 +67,27 @@ class DefaultValue(models.Model):
             case types.FLOAT:
                 try:
                     self.value = float(self.value)
-                except ValueError:
+                except ValueError as e:
                     raise ValidationError(
                         _("'%(value)s' must be of type '%(type)s'"),
                         params={"value": self.value, "type": types.FLOAT.title()},
-                    )
+                    ) from e
             case types.TEXT:
                 try:
                     self.value = str(self.value)
-                except ValueError:
+                except ValueError as e:
                     raise ValidationError(
                         _("'%(value)s' must be of type '%(type)s'"),
                         params={"value": self.value, "type": types.TEXT.title()},
-                    )
+                    ) from e
             case types.INT:
                 try:
                     self.value = int(self.value)
-                except ValueError:
+                except ValueError as e:
                     raise ValidationError(
                         _("'%(value)s' must be of type '%(type)s'"),
                         params={"value": self.value, "type": types.INT.title()},
-                    )
+                    ) from e
             case _:
                 raise ValidationError(_("uknown data type chosen"))
 

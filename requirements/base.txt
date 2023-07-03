@@ -15,6 +15,7 @@ django-modelclone-next==0.8.2
 django-money==3.1.0
 django-phonenumber-field==7.1.0
 django-select2==8.1.2
+django-redis==5.3.0
 django-silk==5.0.3
 django-widget-tweaks==1.4.12
 factory-boy==3.2.1

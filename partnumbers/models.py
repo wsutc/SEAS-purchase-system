@@ -14,7 +14,10 @@ class PartType(BaseModel):
 
 class Part(BaseModel):
     number = models.CharField(
-        _("part number"), max_length=25, unique=True, editable=False
+        _("part number"),
+        max_length=25,
+        unique=True,
+        editable=False,
     )
     type = models.ForeignKey(PartType, on_delete=models.PROTECT)
 

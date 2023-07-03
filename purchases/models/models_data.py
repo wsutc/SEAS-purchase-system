@@ -853,7 +853,7 @@ class Balance(models.Model):
 def set_initial_balance(sender, instance, created, **kwargs):
     if created:
         instance.balance = instance.starting_balance
-        instance.save()
+        _ = instance.save()
 
 
 # class Transaction(models.Model):

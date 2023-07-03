@@ -1,4 +1,4 @@
-from .base import *  # noqa: F40
+from .base import *  # noqa: F403
 from .base import env
 
 # GENERAL
@@ -57,3 +57,5 @@ SILKY_DYNAMIC_PROFILING = [
 ]
 
 DEBUG_PROPAGATE_EXCEPTIONS = True
+
+# SELECT2_CACHE_BACKEND = "select2"
