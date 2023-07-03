@@ -15,7 +15,7 @@ def purchase_request_defaults(apps, schema_editor):
         value=sales_tax_default,
     )
 
-    print(f"Sales Tax Rate (Created): {sales_tax_rate.value:.3f} ({created})")
+    print(f"Sales Tax Rate (Created): {sales_tax_rate.value} ({created})")
 
     instructions, created = DefaultValue.objects.get_or_create(
         name="Purchase Request Instructions",
