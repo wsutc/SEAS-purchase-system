@@ -35,6 +35,11 @@ class Building(AssetBaseModel):
 
 
 class Room(AssetBaseModel):
+    building = models.ForeignKey(
+        Building,
+        verbose_name=_("building"),
+        on_delete=models.PROTECT,
+    )
     number = models.CharField(
         _("room number"),
         help_text=_("do not include building prefix"),
@@ -80,11 +85,12 @@ class EnumerableAssetGroup(AssetBaseModel):
     next_digit = models.PositiveSmallIntegerField(_("next counter digit"), default=1)
 
     def get_next_digit(self) -> int:
-        new_next_digit = self.next_digit + 1
+        current_next_digit = self.next_digit
+        new_next_digit = current_next_digit + 1
         self.next_digit = new_next_digit
         self.save()
 
-        return self.next_digit
+        return current_next_digit
 
 
 class Asset(AssetBaseModel):
