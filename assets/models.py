@@ -144,6 +144,7 @@ class Asset(AssetBaseModel):
         settings.AUTH_USER_MODEL,
         verbose_name=_("principal investigator"),
         on_delete=models.PROTECT,
+        related_name="principal_investigator_related",
     )
     department = models.ForeignKey(
         "purchases.Department",
