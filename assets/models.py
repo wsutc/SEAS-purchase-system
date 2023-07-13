@@ -46,6 +46,14 @@ class Room(AssetBaseModel):
         max_length=50,
     )
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("building", "number"),
+                name="unique_room_number",
+            ),
+        ]
+
 
 class AssetCondition(models.Model):
     name = models.CharField(_("name"), max_length=50)
