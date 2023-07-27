@@ -566,7 +566,7 @@ class SimpleProduct(models.Model):
         blank=True,
         null=True,
     )
-    link = models.URLField(blank=True, null=True)
+    link = models.URLField(blank=True)
     unit_price = models.DecimalField(max_digits=14, decimal_places=4)
     quantity = models.DecimalField(max_digits=14, decimal_places=3, default=1)
     unit = models.ForeignKey(Unit, on_delete=models.PROTECT, default=1)

@@ -20,7 +20,8 @@ from purchases.tracking import get_generated_signature
 from purchases.views import tracking_webhook
 
 # from .management.commands import create_sample_data  # noqa: F401
-from .models import PurchaseRequest, Requisitioner, Tracker, Urgency
+from .models import PurchaseRequest, Requisitioner, Tracker, Urgency, Vendor
+from .vendor_linking import link_from_identifier
 
 # from .timer import Timer
 
@@ -74,6 +75,24 @@ class PurchaseRequestTestModel(TestCase):
         self.assertIsInstance(self.purchase_request, PurchaseRequest)
         self.assertNotEqual(self.purchase_request.slug, "")
         self.assertNotEqual(self.purchase_request.requisitioner.slug, "")
+
+
+class TestVendorLinks(TestCase):
+    def test_product_link(self):
+        mcmaster = baker.make(
+            Vendor,
+            name="McMaster-Carr",
+            product_link="https://www.mcmaster.com/{number}",
+            website="https://www.mcmaster.com/",
+        )
+        mcm_link = link_from_identifier("6111K311", mcmaster)
+        # lms_link = link_from_identifier("7450", "LittleMachineShop.com")
+
+        self.assertEqual(mcm_link, "https://www.mcmaster.com/6111K311")
+        # self.assertEqual(
+        #     lms_link,
+        #     "https://littlemachineshop.com/products/product_view.php?ProductID=7450",
+        # )
 
 
 class TestCreatePRView(TestCase):
