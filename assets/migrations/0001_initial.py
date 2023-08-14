@@ -64,14 +64,14 @@ class Migration(migrations.Migration):
                         verbose_name="abbreviated code",
                     ),
                 ),
-                (
-                    "created_by",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.PROTECT,
-                        related_name="%(app_label)s_%(class)s_related",
-                        to=settings.AUTH_USER_MODEL,
-                    ),
-                ),
+                # (
+                #     "created_by",
+                #     models.ForeignKey(
+                #         on_delete=django.db.models.deletion.PROTECT,
+                #         related_name="%(app_label)s_%(class)s_related",
+                #         to=settings.AUTH_USER_MODEL,
+                #     ),
+                # ),
             ],
             options={
                 "abstract": False,
@@ -109,14 +109,14 @@ class Migration(migrations.Migration):
                         verbose_name="building",
                     ),
                 ),
-                (
-                    "created_by",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.PROTECT,
-                        related_name="%(app_label)s_%(class)s_related",
-                        to=settings.AUTH_USER_MODEL,
-                    ),
-                ),
+                # (
+                #     "created_by",
+                #     models.ForeignKey(
+                #         on_delete=django.db.models.deletion.PROTECT,
+                #         related_name="%(app_label)s_%(class)s_related",
+                #         to=settings.AUTH_USER_MODEL,
+                #     ),
+                # ),
             ],
             options={
                 "abstract": False,
@@ -166,14 +166,14 @@ class Migration(migrations.Migration):
                         blank=True, max_length=254, verbose_name="contact email"
                     ),
                 ),
-                (
-                    "created_by",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.PROTECT,
-                        related_name="%(app_label)s_%(class)s_related",
-                        to=settings.AUTH_USER_MODEL,
-                    ),
-                ),
+                # (
+                #     "created_by",
+                #     models.ForeignKey(
+                #         on_delete=django.db.models.deletion.PROTECT,
+                #         related_name="%(app_label)s_%(class)s_related",
+                #         to=settings.AUTH_USER_MODEL,
+                #     ),
+                # ),
             ],
             options={
                 "abstract": False,
@@ -207,14 +207,14 @@ class Migration(migrations.Migration):
                         default=1, verbose_name="next counter digit"
                     ),
                 ),
-                (
-                    "created_by",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.PROTECT,
-                        related_name="%(app_label)s_%(class)s_related",
-                        to=settings.AUTH_USER_MODEL,
-                    ),
-                ),
+                # (
+                #     "created_by",
+                #     models.ForeignKey(
+                #         on_delete=django.db.models.deletion.PROTECT,
+                #         related_name="%(app_label)s_%(class)s_related",
+                #         to=settings.AUTH_USER_MODEL,
+                #     ),
+                # ),
             ],
             options={
                 "abstract": False,
@@ -1008,14 +1008,14 @@ class Migration(migrations.Migration):
                         verbose_name="equipment condition",
                     ),
                 ),
-                (
-                    "created_by",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.PROTECT,
-                        related_name="%(app_label)s_%(class)s_related",
-                        to=settings.AUTH_USER_MODEL,
-                    ),
-                ),
+                # (
+                #     "created_by",
+                #     models.ForeignKey(
+                #         on_delete=django.db.models.deletion.PROTECT,
+                #         related_name="%(app_label)s_%(class)s_related",
+                #         to=settings.AUTH_USER_MODEL,
+                #     ),
+                # ),
                 (
                     "department",
                     models.ForeignKey(

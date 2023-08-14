@@ -13,12 +13,12 @@ from web_project.models import BaseModel
 
 # Create your models here.
 class AssetBaseModel(BaseModel):
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,
-        related_name="%(app_label)s_%(class)s_related",
-        # editable=False,
-    )
+    # created_by = models.ForeignKey(
+    #     settings.AUTH_USER_MODEL,
+    #     on_delete=models.PROTECT,
+    #     related_name="%(app_label)s_%(class)s_related",
+    #     # editable=False,
+    # )
     modified_date = models.DateTimeField(auto_now=True, blank=True)
 
     class Meta:
