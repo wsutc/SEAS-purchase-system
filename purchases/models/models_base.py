@@ -35,7 +35,9 @@ class Manufacturer(BaseModel):  # still used in `setup_sheets`
     wsu_discount = models.BooleanField("Does WSU get a discount?", default=False)
     discount_percentage = models.FloatField(default=0)
     mfg_logo = models.ImageField(
-        "Manufacturer Logo (optional)", upload_to="manufacturers", blank=True
+        "Manufacturer Logo (optional)",
+        upload_to="manufacturers",
+        blank=True,
     )
     phone = PhoneNumberField("Manufacturer Phone Number (optional)", blank=True)
 
@@ -61,14 +63,14 @@ class RankManager(models.Manager):
             raise ValueError("Unable to set rank below '1'; already highest rank.")
         elif new_rank == obj.get_next_rank():
             raise ValueError(
-                f"Unable to set rank above '{obj.rank}'; already lowest rank."
+                f"Unable to set rank above '{obj.rank}'; already lowest rank.",
             )
 
         qs = self.get_queryset()
         current_rank = obj.rank  # set temp variable for filters below
         # obj.rank = 0
         qs.filter(pk=obj.pk).update(
-            rank=0
+            rank=0,
         )  # avoid unique constraint (no values should be zero)
 
         with transaction.atomic():
@@ -77,7 +79,7 @@ class RankManager(models.Manager):
                     parent_model=obj.parent_model,
                     rank__lt=current_rank,
                     rank__gte=new_rank,
-                ).exclude(pk=obj.pk,).order_by("-rank").update(
+                ).exclude(pk=obj.pk).order_by("-rank").update(
                     rank=F("rank") + 1,
                 )
             else:
@@ -85,7 +87,9 @@ class RankManager(models.Manager):
                     parent_model=obj.parent_model,
                     rank__lte=new_rank,
                     rank__gt=current_rank,
-                ).exclude(pk=obj.pk,).update(
+                ).exclude(
+                    pk=obj.pk,
+                ).update(
                     rank=F("rank") - 1,
                 )
 
@@ -106,7 +110,7 @@ class RankManager(models.Manager):
 
         if (obj.get_next_rank() - 1) == current_rank:
             raise ValueError(
-                f"Unable to move to end; '{current_rank}' already lowest rank."
+                f"Unable to move to end; '{current_rank}' already lowest rank.",
             )
 
         qs = self.get_queryset()
@@ -117,8 +121,11 @@ class RankManager(models.Manager):
             # if current_rank == obj.rank: raise ValueError("Unable to move to end; '{}'
             #     already lowest rank.".format(current_rank))
 
-            qs.filter(parent_model=obj.parent_model, rank__gt=current_rank,).order_by(
-                "rank"
+            qs.filter(
+                parent_model=obj.parent_model,
+                rank__gt=current_rank,
+            ).order_by(
+                "rank",
             ).update(rank=F("rank") - 1)
 
     def move_to_top(self, obj):
@@ -132,8 +139,11 @@ class RankManager(models.Manager):
         with transaction.atomic():
             qs.filter(pk=obj.pk).update(rank=0)
 
-            qs.filter(parent_model=obj.parent_model, rank__lt=current_rank,).order_by(
-                "-rank"
+            qs.filter(
+                parent_model=obj.parent_model,
+                rank__lt=current_rank,
+            ).order_by(
+                "-rank",
             ).update(rank=F("rank") + 1)
 
     def normalize_ranks(self, field: str, model: str = None):
@@ -179,7 +189,9 @@ class Status(BaseModel):
     created_date = None
     rank = models.PositiveSmallIntegerField(_("rank"), editable=False)
     open = models.BooleanField(
-        _("open"), help_text=_("purchase request not complete"), default=False
+        _("open"),
+        help_text=_("purchase request not complete"),
+        default=False,
     )
 
     class StatusModel(models.TextChoices):
@@ -198,8 +210,9 @@ class Status(BaseModel):
         verbose_name = _("status")
         constraints = [
             models.UniqueConstraint(
-                fields=["parent_model", "rank"], name="status_model_unique"
-            )
+                fields=["parent_model", "rank"],
+                name="status_model_unique",
+            ),
         ]
 
     objects = RankManager()
@@ -227,16 +240,14 @@ class Status(BaseModel):
         return value
 
 
-def something(something: Status):
-    something.parent_model.get_quer
-
-
 class Vendor(BaseModel):
     wsu_discount = models.BooleanField("Does WSU get a discount?", default=False)
     # discount_percentage = models.DecimalField(max_digits=15, decimal_places=2,
     # default=0)
     discount_percentage = SimplePercentageField(
-        decimal_places=2, max_digits=15, default=0
+        decimal_places=2,
+        max_digits=15,
+        default=0,
     )
     website = models.URLField("URL/Link to Vendor Website")
     # vendor_logo = models.ImageField("Vendor Logo (optional)",blank=True)
@@ -248,6 +259,12 @@ class Vendor(BaseModel):
     zip = models.CharField("ZIP Code", max_length=10, blank=True)
     email = models.EmailField(max_length=60, blank=True, null=True)
     sort_column = models.CharField(max_length=50, editable=False, null=True)
+    product_link = models.URLField(
+        _("format string for direct product links"),
+        help_text=_("use {number} as the placeholder for the identifier"),
+        max_length=200,
+        blank=True,
+    )
 
     class Meta:
         ordering = ["sort_column", "name"]
@@ -334,7 +351,9 @@ class Accounts(BaseModel):
     name = None
     slug = None
     account = models.CharField(
-        _("account"), help_text=_("in form XXXX-XXXX."), max_length=10
+        _("account"),
+        help_text=_("in form XXXX-XXXX."),
+        max_length=10,
     )
     budget_code = models.CharField(
         _("budget code"),
@@ -363,7 +382,7 @@ class Accounts(BaseModel):
             #             (
             #                 models.Q(
             #                     grant__isnull=False,
-            #                     # TODO grant__exact__not="",
+            #                     # TODO grant__exact__not="",  # noqa: TD002, TD003, TD004, E501
             #                     gift__isnull=True,
             #                     gift__exact="",
             #                     program_workday__isnull=True,
@@ -376,7 +395,7 @@ class Accounts(BaseModel):
             #                     grant__isnull=True,
             #                     grant__exact="",
             #                     gift__isnull=False,
-            #                     # TODO gift__exact="",
+            #                     # TODO gift__exact="",  # noqa: TD002, TD003, TD004
             #                     program_workday__isnull=True,
             #                     program_workday__exact="",
             #                 )
@@ -390,14 +409,17 @@ class Accounts(BaseModel):
             #                 gift__isnull=True,
             #                 gift__exact="",
             #                 program_workday__isnull=False,
-            #                 # TODO program_workday__exact="",
+            #                 # TODO program_workday__exact="",  # noqa: TD002, TD003, TD004, E501
             #             )
             #             & ~models.Q(program_workday__exact="")
             #         )
             #     ),
             # ),
             models.UniqueConstraint(
-                "gift", "grant", "program_workday", name="unique_program"
+                "gift",
+                "grant",
+                "program_workday",
+                name="unique_program",
             ),
             # models.UniqueConstraint("account", name="unique_account"),
         ]
