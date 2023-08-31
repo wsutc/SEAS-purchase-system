@@ -136,7 +136,7 @@ _THIRD_PARTY_APPS = [
 
 _LOCAL_APPS = [
     "accounts",
-    "assets",
+    # "assets",
     "globals",
     "inventory",
     "partnumbers",

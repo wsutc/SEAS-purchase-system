@@ -43,7 +43,42 @@
   {% block page %}{% endblock %}
   {% block related_pr_table %}
     {% if debug %}<div>debug ->count:{{ object.purchaserequest_set.count }}</div>{% endif %}
-    {% include "purchases/purchaserequest_list_table.html" with object_list=object.purchaserequest_set.all %}
+    {% include "purchases/purchaserequest_list_table.html" with purchase_requests=object.purchaserequest_set.all %}
+    <script>
+      $(document).ready( function () {
+        var table = $('#purchase_requests').DataTable({
+          order: [[1, "desc"]],
+          responsive: true,
+          "language": {
+            emptyTable: "No records to show, check your filters if any..."
+          },
+          searchPanes: {
+            layout: 'columns-1',
+            i18n: {
+              emptyPanes: null
+            },
+          },
+          columnDefs: [
+            { orderable: false, targets: 6 },
+            { visible: false, targets: 4 },
+            { searchPanes: {
+               className: "openPRClass"
+              },
+              targets: 4,
+            }
+          ],
+          dom: '<"dtsp-dataTable"Pprtilp>',
+          pageLength: 25
+        });
+        table.searchPanes()
+        let verticalPanes = $("div.dtsp-verticalPanes");
+        let verticalContainer = table.searchPanes.container()
+        verticalPanes.append(verticalContainer);
+        if (verticalContainer.hasClass("dtsp-hidden")) {
+          verticalPanes.remove()
+        }
+      });
+    </script>
   {% endblock related_pr_table %}
   {% block related_simpleproduct_table %}
     <div class="col-12">
