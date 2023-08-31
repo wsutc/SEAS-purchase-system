@@ -31,7 +31,7 @@ if RENDER_EXTERNAL_HOSTNAME:
 DATABASES["default"] = env.db("DATABASE_URL")  # noqa F405
 
 DATABASES["default"] = {  # noqa: F405
-    "ENGINE": "django.db.backends.mysql",
+    "ENGINE": "django.db.backends.postgresql",
     "NAME": env.str("DB_NAME", default="db_name"),
     "USER": env.str("DB_USER", default="db_username"),
     "PASSWORD": env.str("DB_PASSWORD", default="db_password"),
