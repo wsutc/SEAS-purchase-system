@@ -38,7 +38,7 @@ DATABASES["default"] = {  # noqa: F405
     "HOST": env.str("DB_HOST", default="localhost"),
     "PORT": env.str("DB_PORT", default=3306),
     "OPTIONS": {
-        "charset": "utf8mb4",
+        # "charset": "utf8mb4",
         "ssl": {"ca": env.path("AWS_CERT_PATH", default=None)},
     },
 }
