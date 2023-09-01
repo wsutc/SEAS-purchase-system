@@ -77,11 +77,11 @@ class Migration(migrations.Migration):
             name="last_generated_date",
             field=models.DateTimeField(auto_now=True),
         ),
-        migrations.AddField(
-            model_name="vendor",
-            name="created_date",
-            field=models.DateTimeField(auto_now_add=True),
-        ),
+        # migrations.AddField(
+        #     model_name="vendor",
+        #     name="created_date",
+        #     field=models.DateTimeField(auto_now_add=True),
+        # ),
         # migrations.AlterField(
         #     model_name="purchaserequest",
         #     name="sales_tax_rate",
@@ -135,9 +135,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="tracker",
             name="received",
-            field=models.BooleanField(
-                default=False, verbose_name="package received"
-            ),
+            field=models.BooleanField(default=False, verbose_name="package received"),
         ),
         migrations.AddField(
             model_name="tracker",
@@ -164,9 +162,7 @@ class Migration(migrations.Migration):
                 ("created_date", models.DateTimeField(auto_now_add=True)),
                 (
                     "name",
-                    models.CharField(
-                        max_length=50, verbose_name="order number"
-                    ),
+                    models.CharField(max_length=50, verbose_name="order number"),
                 ),
                 ("link", models.URLField(blank=True, verbose_name="link")),
                 (
@@ -256,9 +252,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "order_placed",
-                    models.DateField(
-                        blank=True, verbose_name="date order placed"
-                    ),
+                    models.DateField(blank=True, verbose_name="date order placed"),
                 ),
             ],
             options={
@@ -628,9 +622,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="vendor",
             name="discount_percentage",
-            field=models.DecimalField(
-                decimal_places=2, default=0, max_digits=15
-            ),
+            field=models.DecimalField(decimal_places=2, default=0, max_digits=15),
         ),
         migrations.AlterField(
             model_name="vendor",
@@ -887,9 +879,7 @@ class Migration(migrations.Migration):
                 help_text="pdf",
                 upload_to=purchases.models.models_data.vendor_order_attachments_path,
                 validators=[
-                    django.core.validators.FileExtensionValidator(
-                        ["pdf", "pdfa"]
-                    )
+                    django.core.validators.FileExtensionValidator(["pdf", "pdfa"])
                 ],
                 verbose_name="approved purchase request",
             ),
