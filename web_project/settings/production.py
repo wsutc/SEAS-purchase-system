@@ -37,10 +37,10 @@ DATABASES["default"] = {  # noqa: F405
     "PASSWORD": env.str("DB_PASSWORD", default="db_password"),
     "HOST": env.str("DB_HOST", default="localhost"),
     "PORT": env.str("DB_PORT", default=3306),
-    "OPTIONS": {
-        # "charset": "utf8mb4",
-        "ssl": {"ca": env.path("AWS_CERT_PATH", default=None)},
-    },
+    # "OPTIONS": {
+    #     # "charset": "utf8mb4",
+    #     "ssl": {"ca": env.path("AWS_CERT_PATH", default=None)},
+    # },
 }
 
 # logging.info(f"web_project.settings.production DATABASES: {DATABASES}")  # noqa: F405
