@@ -1,5 +1,5 @@
 crispy-bootstrap5==0.7
-Django==4.2.3 # dependabot.yml prevents major or minor updates, only patches allowed
+Django==4.2.7 # dependabot.yml prevents major or minor updates, only patches allowed
 django[argon2]
 # pydantic <2.0; see issue #99 https://github.com/monim67/django-bootstrap-datepicker-plus/issues/99
 pydantic~=1.10.13  # https://github.com/pydantic/pydantic
