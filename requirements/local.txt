@@ -2,17 +2,17 @@
 
 # Code quality
 # ------------------------------------------------------------
-black==23.3.0
-coverage==7.2.7
+black~=23.11  # https://github.com/psf/black
+coverage~=7.3  # https://github.com/nedbat/coveragepy
 # flake8==6.0.0
 # flake8-pyproject==1.2.3
 # isort==5.12.0
-ruff==0.0.272
-pre-commit==3.3.3
+ruff~=0.1.7  # https://github.com/astral-sh/ruff
+pre-commit~=3.5  # https://github.com/pre-commit/pre-commit
 
 # Django
 # ------------------------------------------------------------
 django-mysql==4.10.0
 model-bakery==1.12.0
-mysqlclient==2.1.1
+mysqlclient==2.2.0  # https://github.com/PyMySQL/mysqlclient
 factory-boy==3.2.1
