@@ -30,22 +30,25 @@ if RENDER_EXTERNAL_HOSTNAME:
 # can't use `env.db` because of sslca requirement
 DATABASES["default"] = env.db("DATABASE_URL")  # noqa F405
 
-DATABASES["default"] = {  # noqa: F405
-    "ENGINE": "django.db.backends.postgresql",
-    "NAME": env.str("DB_NAME", default="db_name"),
-    "USER": env.str("DB_USER", default="db_username"),
-    "PASSWORD": env.str("DB_PASSWORD", default="db_password"),
-    "HOST": env.str("DB_HOST", default="localhost"),
-    "PORT": env.str("DB_PORT", default=3306),
-    # "OPTIONS": {
-    #     # "charset": "utf8mb4",
-    #     "ssl": {"ca": env.path("AWS_CERT_PATH", default=None)},
-    # },
-}
+# DATABASES["default"] = {  # noqa: F405
+#     "ENGINE": "django.db.backends.postgresql",
+#     "NAME": env.str("DB_NAME", default="db_name"),
+#     "USER": env.str("DB_USER", default="db_username"),
+#     "PASSWORD": env.str("DB_PASSWORD", default="db_password"),
+#     "HOST": env.str("DB_HOST", default="localhost"),
+#     "PORT": env.str("DB_PORT", default=3306),
+#     # "OPTIONS": {
+#     #     # "charset": "utf8mb4",
+#     #     "ssl": {"ca": env.path("AWS_CERT_PATH", default=None)},
+#     # },
+# }
 
 # logging.info(f"web_project.settings.production DATABASES: {DATABASES}")  # noqa: F405
 
-# DATABASES["default"]["OPTIONS"]["ssl"]["ca"] =
+DATABASES["default"]["OPTIONS"]["ssl"]["ca"] = env.path(  # noqa: F405
+    "AWS_CERT_PATH",
+    default=None,
+)
 DATABASES["default"]["ATOMIC_REQUESTS"] = True  # noqa F405
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)  # noqa F405
 
