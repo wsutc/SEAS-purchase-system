@@ -1,3 +1,5 @@
+# ruff: noqa: F405
+
 try:
     import sentry_sdk  # type: ignore
     from sentry_sdk.integrations.django import DjangoIntegration  # type: ignore
@@ -45,7 +47,7 @@ DATABASES["default"] = env.db("DATABASE_URL")  # noqa F405
 
 # logging.info(f"web_project.settings.production DATABASES: {DATABASES}")  # noqa: F405
 
-DATABASES["default"]["OPTIONS"]["ssl"]["ca"] = env.path(  # noqa: F405
+DATABASES["default"]["OPTIONS"]["ssl"]["ca"] = env.path(
     "AWS_CERT_PATH",
     default=None,
 )
