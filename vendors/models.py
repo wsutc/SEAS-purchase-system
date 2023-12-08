@@ -10,7 +10,9 @@ from web_project.models import BaseModel
 # Create your models here.
 class Vendor(BaseModel):
     wsu_discount = models.BooleanField(
-        _("discount"), help_text=_("does WSU get a discount?"), default=False
+        _("discount"),
+        help_text=_("does WSU get a discount?"),
+        default=False,
     )
     discount = PercentageField(
         _("discount"),
@@ -24,13 +26,19 @@ class Vendor(BaseModel):
     phone = PhoneNumberField(_("phone number"), blank=True)
     street1 = models.CharField(_("address 1"), max_length=50, blank=True)
     street2 = models.CharField(
-        _("address 2"), help_text=_("optional"), max_length=50, blank=True
+        _("address 2"),
+        help_text=_("optional"),
+        max_length=50,
+        blank=True,
     )
     city = models.CharField(_("city"), max_length=50, blank=True)
     state = models.ForeignKey(_("US state"), "globals.state", blank=True)
     zip = models.CharField(_("ZIP code"), max_length=10, blank=True)
     email = models.EmailField(
-        _("email"), help_text=_("e.g., for main contact"), max_length=60, blank=True
+        _("email"),
+        help_text=_("e.g., for main contact"),
+        max_length=60,
+        blank=True,
     )
 
     class Meta:

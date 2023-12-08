@@ -57,7 +57,7 @@ class Account(BaseModel):
         default_currency="USD",
     )
     starting_balance_datetime = models.DateTimeField(
-        help_text=_("date and time that starting balance is valid from")
+        help_text=_("date and time that starting balance is valid from"),
     )
 
     current_balance = MoneyField(
@@ -109,7 +109,7 @@ class Account(BaseModel):
 
     def calculate_aggregate(self) -> MoneyField:
         result = BaseTransaction.objects.filter(account=self).aggregate(
-            Sum("amount", default=0)
+            Sum("amount", default=0),
         )
 
         result = result["amount__sum"]
@@ -171,7 +171,8 @@ class BalanceAdjustment(BaseTransaction):
 
 class Transaction(BaseTransaction):
     purchase_request = models.OneToOneField(
-        "purchases.purchaserequest", on_delete=models.CASCADE
+        "purchases.purchaserequest",
+        on_delete=models.CASCADE,
     )
 
 
@@ -187,3 +188,6 @@ class SpendCategory(BaseModel):
 
     def __str__(self):
         return f"{self.name} ({self.description}) [{self.object}{self.subobject}]"
+
+    def natural_key(self):
+        return self.name

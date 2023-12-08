@@ -10,6 +10,11 @@
   {% url 'new_pr' %}
 {% endblock new_url %}
 {% block page %}
+<div>
+  <a href="{% url "generate_csv" %}" class="save btn btn-primary col-2">Purchase Requests CSV</a>
+  <a href="{% url "generate_csv_vendors" %}" class="save btn btn-primary col-2">Vendors CSV</a>
+  <a href="{% url "generate_csv_items" %}" class="save btn btn-primary col-2">Items CSV</a>
+</div>
   {% include "purchases/purchaserequest_list_table.html" with purchase_requests=purchase_requests %}
   <script>
     $(document).ready( function () {
