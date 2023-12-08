@@ -59,9 +59,12 @@ def create_requisitioner(sender, instance, created, **kwargs):
 #     instance.requisitioner.save()
 
 
+# TODO(Karl Wooster): make this signal path work properly again
+# issue is in `vendor_linking.py`
+# https://git.tricity.wsu.edu/karl.wooster/SEAS-purchase-system/-/issues/145
 @receiver(pre_save, sender=SimpleProduct)
 def create_link(sender, instance, **kwargs):
-    if not instance.link:
+    if instance.identifier and not instance.link:
         instance.link = link_from_identifier(
             instance.identifier,
             instance.purchase_request.vendor,

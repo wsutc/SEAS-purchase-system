@@ -17,8 +17,8 @@ from model_bakery.recipe import seq
 
 from purchases.models.models_base import TrackingWebhookMessage
 from purchases.tracking import get_generated_signature
-from purchases.views import tracking_webhook
 
+# from purchases.views import tracking_webhook
 # from .management.commands import create_sample_data  # noqa: F401
 from .models import PurchaseRequest, Requisitioner, Tracker, Urgency, Vendor
 from .vendor_linking import link_from_identifier
@@ -157,19 +157,19 @@ class TrackingWebhookTests(TestCase):
         )
 
     def test_bad_method(self):
-        url = reverse(tracking_webhook)
+        url = reverse("tracking_webhook")
         print(f"Webhook URL: {url}")
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_missing_token(self):
-        response = self.client.post(reverse(tracking_webhook))
+        response = self.client.post(reverse("tracking_webhook"))
 
         self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
 
     def test_bad_token(self):
         response = self.client.post(
-            reverse(tracking_webhook),
+            reverse("tracking_webhook"),
             headers={"sign": "def456"},
         )
 
@@ -185,7 +185,7 @@ class TrackingWebhookTests(TestCase):
         self.assertRaises(
             JSONDecodeError,
             self.client.post,
-            path=reverse(tracking_webhook),
+            path=reverse("tracking_webhook"),
             headers={"sign": self.valid_signature},
         )
 
@@ -201,7 +201,7 @@ class TrackingWebhookTests(TestCase):
         sign = get_generated_signature(message, "abc123")
 
         response = self.client.post(
-            reverse(tracking_webhook),
+            reverse("tracking_webhook"),
             headers={"sign": sign},
             content_type="application/json",
             data=WEBHOOK_DATA,

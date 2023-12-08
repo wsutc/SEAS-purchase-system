@@ -69,6 +69,11 @@ class Requisitioner(models.Model):
     def __str__(self):
         return self.user.get_full_name()
 
+    def natural_key(self):
+        return self.user.get_full_name()
+
+    natural_key.dependencies = [settings.AUTH_USER_MODEL]
+
 
 def getsimpleattrs(object):
     """Return list of attributes of <object> that are not callable or private
@@ -289,6 +294,9 @@ class PurchaseRequest(models.Model):
     def __str__(self):
         return self.number
 
+    def natural_key(self):
+        return self.number
+
 
 def vendor_order_attachments_path(instance, filename):
     file_extension = Path(filename).suffix
@@ -417,10 +425,7 @@ class VendorOrder(BaseModel):
         return reverse("vendororder_detail", kwargs=kwargs)
 
     def __str__(self):
-        custom_str = "{vendor} {number}".format(
-            vendor=self.vendor.name,
-            number=self.name,
-        )
+        custom_str = f"{self.vendor.name} {self.name}"
         return custom_str
 
 
@@ -566,7 +571,7 @@ class SimpleProduct(models.Model):
         blank=True,
         null=True,
     )
-    link = models.URLField(blank=True)
+    link = models.URLField(blank=True, null=True)
     unit_price = models.DecimalField(max_digits=14, decimal_places=4)
     quantity = models.DecimalField(max_digits=14, decimal_places=3, default=1)
     unit = models.ForeignKey(Unit, on_delete=models.PROTECT, default=1)
@@ -620,6 +625,9 @@ class SimpleProduct(models.Model):
     def __str__(self):
         name = self.name
         return name
+
+    def natural_key(self):
+        return f"{self.purchase_request.number}|{self.name}"
 
 
 # class Shipment(BaseModel):
@@ -778,6 +786,9 @@ class Tracker(models.Model):
 
         return bool(tracker.update(active=False))
 
+    def natural_key(self):
+        return f"{self.carrier} {self.tracking_number}"
+
 
 class TrackingEvent(models.Model):
     tracker = models.ForeignKey(Tracker, on_delete=models.CASCADE)
@@ -791,12 +802,15 @@ class TrackingEvent(models.Model):
         get_latest_by = ["time_utc"]
 
     def __str__(self):
-        value = "{location}; {description}; {time}".format(
-            location=self.location,
-            description=self.description,
-            time=self.time_utc.strftime("%c %Z"),
-        )
+        location = self.location
+        description = self.description
+        time = self.time_utc.strftime("%c %Z")
+        value = f"{location}; {description}; {time}"
         return value
+
+    def natural_key(self):
+        # string = self.__str__
+        return f"{self.__str__}"
 
 
 class TrackerStatusSteps(models.Model):

@@ -1,3 +1,4 @@
+import csv
 import datetime as dt
 import io
 import json
@@ -38,9 +39,11 @@ from purchases.models import (
     Balance,
     Carrier,
     PurchaseRequest,
+    SimpleProduct,
     Status,
     Tracker,
     TrackingWebhookMessage,
+    Vendor,
 )
 from purchases.tracking import (
     TrackerObject,
@@ -79,10 +82,7 @@ def update_pr_status(request: HttpRequest, slug: str, *args, **kwargs) -> HttpRe
         messages.add_message(
             request,
             messages.SUCCESS,
-            message="{pr}'s status updated to '{status}.'".format(
-                pr=qs.first(),
-                status=status.name.title(),
-            ),
+            message=f"{qs.first()}'s status updated to '{status.name.title()}.'",
         )
 
     else:
@@ -231,6 +231,152 @@ def process_webhook_payload(payload: dict) -> str:
         return stop, success_message if stop else failure_message
 
     return None
+
+
+# def generate_csv(model, filename, column_headers, column_value_objects):
+#     qs = model.objects.all()
+
+#     response = HttpResponse(
+#         content_type="text/scv",
+#         headers={
+#             "Content-Disposition": f"attachment; filename={filename}",
+#         },
+#     )
+
+#     # column_headers = [column.fiel]
+
+#     writer = csv.writer(response)
+#     writer.writerow(column_headers)
+
+
+def generate_csv_prs(request):
+    qs_purchase_request = PurchaseRequest.objects.all()
+
+    current_datetime = dt.datetime.now()
+    export_filename = f"csv_export_{current_datetime.strftime('%Y%m%d-%H%M%S')}"
+
+    response_pr = HttpResponse(
+        content_type="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename={export_filename}_pr.csv",  # noqa: E501
+        },
+    )
+
+    pr_writer = csv.writer(response_pr)
+    pr_writer.writerow(
+        [
+            "Number",
+            "Requisitioner",
+            "Created Date",
+            "Vendor",
+            "Status",
+            "Subtotal",
+            "Shipping",
+            "Sales Tax",
+            "Grand Total",
+            "Justification",
+            "Special Instructions",
+        ],
+    )
+    for purchase_request in qs_purchase_request:
+        pr_writer.writerow(
+            [
+                purchase_request.number,
+                purchase_request.requisitioner,
+                purchase_request.created_date.date(),
+                purchase_request.vendor.natural_key(),
+                purchase_request.status.natural_key(),
+                purchase_request.subtotal,
+                purchase_request.shipping,
+                purchase_request.sales_tax,
+                purchase_request.grand_total,
+                purchase_request.justification,
+                purchase_request.instruction,
+            ],
+        )
+
+    return response_pr
+
+
+def generate_csv_vendors(request):
+    qs_vendor = Vendor.objects.all()
+
+    current_datetime = dt.datetime.now()
+    export_filename = f"csv_export_{current_datetime.strftime('%Y%m%d-%H%M%S')}"
+
+    response_vd = HttpResponse(
+        content_type="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename={export_filename}_vendor.csv",  # noqa: E501
+        },
+    )
+
+    vendor_writer = csv.writer(response_vd)
+    vendor_writer.writerow(
+        [
+            "Name",
+            "URL",
+            "Email",
+            "Phone Number",
+        ],
+    )
+    for vendor in qs_vendor:
+        vendor_writer.writerow(
+            [
+                vendor.name,
+                vendor.website,
+                vendor.email,
+                vendor.phone,
+            ],
+        )
+
+    return response_vd
+
+
+def generate_csv_items(request):
+    qs_items = SimpleProduct.objects.all()
+
+    current_datetime = dt.datetime.now()
+    export_filename = f"csv_export_{current_datetime.strftime('%Y%m%d-%H%M%S')}"
+
+    response_items = HttpResponse(
+        content_type="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename={export_filename}_items.csv",  # noqa: E501
+        },
+    )
+
+    items_writer = csv.writer(response_items)
+    items_writer.writerow(
+        [
+            "Name",
+            "Vendor",
+            "Part/MFG Number",
+            "Link",
+            "Manufacturer",
+            "Price",
+            "Quantity",
+            "Taxable",
+            "Purchase Request",
+        ],
+    )
+
+    for item in qs_items:
+        items_writer.writerow(
+            [
+                item.name,
+                item.vendor.natural_key(),
+                item.identifier,
+                item.manufacturer,
+                item.link,
+                item.unit_price,
+                item.quantity,
+                item.taxable,
+                item.purchase_request.natural_key(),
+            ],
+        )
+
+    return response_items
 
 
 def generate_pr_pdf(request, slug):

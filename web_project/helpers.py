@@ -61,10 +61,7 @@ def paginate(view: ListView, **kwargs) -> tuple[bool, HTTPResponse]:
 
             messages.info(
                 view.request,
-                "Page '{og}' not valid, changed to '{new}.'".format(
-                    og=page,
-                    new=page_new.number,
-                ),
+                f"Page '{page}' not valid, changed to '{page_new.number}.'",
             )
             return (True, redirect(new_fragment.url))
         else:
@@ -348,6 +345,9 @@ class LoginRequiredMiddleware:
             response = self.get_response(request)
         except JSONDecodeError as e:
             print(f"Invalid JSON: {e}")
+            raise
+        except TypeError as e:
+            print(f"Invalid or missing argument(s): {e}")
             raise
         except Exception as e:
             print(f"LoginRequiredMiddleware exception: {e}")

@@ -13,7 +13,9 @@ from . import PurchaseRequest
 class PurchaseRequestAccount(models.Model):
     purchase_request = models.ForeignKey(PurchaseRequest, on_delete=models.CASCADE)
     account = models.ForeignKey(
-        "accounts.account", verbose_name=_("account"), on_delete=models.PROTECT
+        "accounts.account",
+        verbose_name=_("account"),
+        on_delete=models.PROTECT,
     )
     spend_category_ext = models.ForeignKey(
         "accounts.spendcategory",
@@ -26,7 +28,9 @@ class PurchaseRequestAccount(models.Model):
         AMOUNT = "A", _("Amount")
 
     distribution_type = models.CharField(
-        choices=DistributionType.choices, default=DistributionType.PERCENT, max_length=1
+        choices=DistributionType.choices,
+        default=DistributionType.PERCENT,
+        max_length=1,
     )
 
     distribution_input = models.FloatField(default=100)
@@ -36,3 +40,15 @@ class PurchaseRequestAccount(models.Model):
 
     def __str__(self):
         return f"{self.account.fund} | {self.spend_category_ext.name}"
+
+    def natural_key(self):
+        fund = self.account.natural_key()
+        spend_category = self.spend_category_ext.natural_key()
+        purchase_request = self.purchase_request.natural_key()
+        return f"{purchase_request}|{fund}|{spend_category}"
+
+    natural_key.dependencies = [
+        "accounts.Account",
+        "accounts.SpendCategory",
+        "purchases.PurchaseRequest",
+    ]

@@ -28,6 +28,9 @@ class BaseModel(models.Model):
             self.slug = slugify(self.name, allow_unicode=True)
         super().save(*args, **kwargs)
 
+    def natural_key(self):
+        return self.name
+
 
 class Manufacturer(BaseModel):  # still used in `setup_sheets`
     name = models.CharField("Name of Manufacturer", max_length=50)
@@ -55,6 +58,9 @@ class State(models.Model):
 
     def __str__(self):
         return self.name
+
+    def natural_key(self):
+        return self.abbreviation
 
 
 class RankManager(models.Manager):
@@ -293,6 +299,9 @@ class Unit(models.Model):
         name = self.abbreviation
         return name
 
+    def natural_key(self):
+        return self.abbreviation
+
 
 class Urgency(models.Model):
     name = models.CharField(unique=True, max_length=50)
@@ -302,8 +311,10 @@ class Urgency(models.Model):
         verbose_name_plural = "Urgencies"
 
     def __str__(self):
-        name = self.name
-        return name
+        return self.name
+
+    def natural_key(self):
+        return self.name
 
 
 class Department(models.Model):
@@ -312,6 +323,9 @@ class Department(models.Model):
 
     def __str__(self):
         return self.name
+
+    def natural_key(self):
+        return self.code
 
 
 class DocumentNumber(models.Model):
@@ -447,6 +461,9 @@ class Accounts(BaseModel):
         value = f"{value} | {self.account_title}"
         return value
 
+    def natural_key(self):
+        return self.__str__()
+
 
 class AccountGroup(BaseModel):
     name = models.CharField(_("group name"), max_length=50, unique=True)
@@ -473,9 +490,7 @@ class SpendCategory(BaseModel):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return "{} ({}) [{}{}]".format(
-            self.code,
-            self.description,
-            self.object,
-            self.subobject,
-        )
+        return f"{self.code} ({self.description}) [{self.object}{self.subobject}]"
+
+    def natural_key(self):
+        return self.code

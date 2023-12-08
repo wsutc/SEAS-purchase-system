@@ -25,10 +25,13 @@ def link_from_identifier(identifier: str, vendor: Vendor) -> str:
     #     case _:
     #         link = None
 
-    if format_string := vendor.product_link:
-        link = format_string.replace("{number}", identifier)
+    format_string = vendor.product_link
 
-    return link
+    if format_string:
+        link = format_string.replace("{number}", identifier)
+        return link
+    else:
+        return ""
 
 
 class VendorBaseClass:
