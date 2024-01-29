@@ -27,7 +27,7 @@ phonenumberslite==8.13.14
 Pillow==9.5.0
 python-benedict==0.31.0
 python-benedict[parse]
-pytz==2023.3
+pytz==2023.4
 reportlab==4.0.4
 # django-bootstrap-modal-forms>=2.2.0
 shortuuid==1.0.11
