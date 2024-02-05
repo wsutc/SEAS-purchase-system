@@ -14,5 +14,5 @@ pre-commit~=3.5  # https://github.com/pre-commit/pre-commit
 # ------------------------------------------------------------
 django-mysql==4.10.0
 model-bakery==1.12.0
-mysqlclient==2.2.0  # https://github.com/PyMySQL/mysqlclient
+mysqlclient==2.2.3  # https://github.com/PyMySQL/mysqlclient
 factory-boy==3.2.1
